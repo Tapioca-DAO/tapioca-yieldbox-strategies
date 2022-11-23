@@ -1,0 +1,11 @@
+node_modules
+.env
+coverage
+coverage.json
+typechain
+tapioca-sdk
+yarn.lock
+__MACOSX
+#Hardhat files
+cache
+artifacts
