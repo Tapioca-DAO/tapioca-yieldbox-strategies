@@ -27,6 +27,8 @@ export interface ITricryptoLPGaugeInterface extends utils.Interface {
   functions: {
     "balanceOf(address)": FunctionFragment;
     "claim_rewards(address,address)": FunctionFragment;
+    "claimable_reward(address,address)": FunctionFragment;
+    "claimable_reward_write(address,address)": FunctionFragment;
     "claimable_tokens(address)": FunctionFragment;
     "crv_token()": FunctionFragment;
     "deposit(uint256,address,bool)": FunctionFragment;
@@ -37,6 +39,8 @@ export interface ITricryptoLPGaugeInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "balanceOf"
       | "claim_rewards"
+      | "claimable_reward"
+      | "claimable_reward_write"
       | "claimable_tokens"
       | "crv_token"
       | "deposit"
@@ -49,6 +53,14 @@ export interface ITricryptoLPGaugeInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "claim_rewards",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "claimable_reward",
+    values: [PromiseOrValue<string>, PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "claimable_reward_write",
     values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
@@ -72,6 +84,14 @@ export interface ITricryptoLPGaugeInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "claim_rewards",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "claimable_reward",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "claimable_reward_write",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -123,6 +143,18 @@ export interface ITricryptoLPGauge extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    claimable_reward(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    claimable_reward_write(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     claimable_tokens(
       _addr: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -152,6 +184,18 @@ export interface ITricryptoLPGauge extends BaseContract {
   claim_rewards(
     _addr: PromiseOrValue<string>,
     _receiver: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  claimable_reward(
+    _addr: PromiseOrValue<string>,
+    _token: PromiseOrValue<string>,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  claimable_reward_write(
+    _addr: PromiseOrValue<string>,
+    _token: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -186,6 +230,18 @@ export interface ITricryptoLPGauge extends BaseContract {
       _receiver: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    claimable_reward(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    claimable_reward_write(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     claimable_tokens(
       _addr: PromiseOrValue<string>,
@@ -222,6 +278,18 @@ export interface ITricryptoLPGauge extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    claimable_reward(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    claimable_reward_write(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     claimable_tokens(
       _addr: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -252,6 +320,18 @@ export interface ITricryptoLPGauge extends BaseContract {
     claim_rewards(
       _addr: PromiseOrValue<string>,
       _receiver: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    claimable_reward(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    claimable_reward_write(
+      _addr: PromiseOrValue<string>,
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

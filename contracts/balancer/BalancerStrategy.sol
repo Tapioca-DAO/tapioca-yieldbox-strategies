@@ -13,7 +13,6 @@ import './IBalancerVault.sol';
 import './IBalancerPool.sol';
 import './IBalancerHelpers.sol';
 import '../interfaces/IUniswapV2Router02.sol';
-
 /*
 
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -206,10 +205,13 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             uint256 toWithdraw = (((amount - queued) * (10**decimals)) /
                 pricePerShare);
 
-            uint256 obtained = _vaultWithdraw(toWithdraw);
-            require(obtained >= amount, 'BalancerStrategy: not enough');
+            _vaultWithdraw(toWithdraw);
         }
 
+        require(
+            amount <= wrappedNative.balanceOf(address(this)),
+            'BalancerStrategy: not enough'
+        );
         wrappedNative.safeTransfer(to, amount);
         updateCache();
 

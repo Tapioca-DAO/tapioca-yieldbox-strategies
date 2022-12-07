@@ -15,6 +15,8 @@ import './ILPStaking.sol';
 import './IStargateSwapper.sol';
 import '../interfaces/INative.sol';
 
+import 'hardhat/console.sol';
+
 /*
 
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -195,7 +197,10 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
         compound('');
 
-        (uint256 toWithdraw, ) = lpStaking.userInfo(lpStakingPid, address(this));
+        (uint256 toWithdraw, ) = lpStaking.userInfo(
+            lpStakingPid,
+            address(this)
+        );
         lpStaking.withdraw(lpStakingPid, toWithdraw);
         router.instantRedeemLocal(
             uint16(lpRouterPid),
@@ -249,16 +254,20 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         if (amount > queued) {
             compound('');
             uint256 toWithdraw = amount - queued;
-            (amount, ) = lpStaking.userInfo(lpStakingPid, address(this));
             lpStaking.withdraw(lpStakingPid, toWithdraw);
             router.instantRedeemLocal(
                 uint16(lpRouterPid),
                 toWithdraw,
                 address(this)
             );
-            INative(address(wrappedNative)).deposit{value: amount}();
+
+            INative(address(wrappedNative)).deposit{value: toWithdraw}();
         }
 
+        require(
+            amount <= wrappedNative.balanceOf(address(this)),
+            'Stargate: not enough'
+        );
         wrappedNative.safeTransfer(to, amount);
 
         emit AmountWithdrawn(to, amount);

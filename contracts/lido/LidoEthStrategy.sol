@@ -149,7 +149,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
             uint256 toWithdraw = amount - queued; //1:1 between eth<>stEth
-            uint256 minAmount = (toWithdraw * 50) / 10_000; //2.5%
+            uint256 minAmount = toWithdraw - (toWithdraw * 250) / 10_000; //2.5%
             uint256 obtainedEth = curveStEthPool.exchange(
                 1,
                 0,

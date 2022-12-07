@@ -15,6 +15,7 @@ import './IConvexRewardPool.sol';
 import './IConvexZap.sol';
 import '../interfaces/IUniswapV2Router02.sol';
 
+
 /*
 
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -333,20 +334,18 @@ contract ConvexTricryptoStrategy is
             uint256 lpBalance = rewardPool.balanceOf(address(this));
             rewardPool.withdrawAndUnwrap(lpBalance, false);
             uint256 calcWithdraw = lpGetter.calcLpToWeth(lpBalance);
-            uint256 minAmount = (calcWithdraw * 50) / 10_000; //0.5%
-            uint256 assetAmount = lpGetter.removeLiquidityWeth(
-                lpBalance,
-                minAmount
-            );
-            require(
-                assetAmount + queued >= amount,
-                'ConvexTricryptoStrategy: not enough'
-            );
+            uint256 minAmount = calcWithdraw - (calcWithdraw * 50) / 10_000; //0.5%
+            lpGetter.removeLiquidityWeth(lpBalance, minAmount);
         }
+
+        require(
+            wrappedNative.balanceOf(address(this)) >= amount,
+            'ConvexTricryptoStrategy: not enough'
+        );
         wrappedNative.safeTransfer(to, amount);
 
         queued = wrappedNative.balanceOf(address(this));
-        if (queued > 0) {
+        if (queued > depositThreshold) {
             _addLiquidityAndStake(queued);
             emit AmountDeposited(queued);
         }

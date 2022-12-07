@@ -16,7 +16,6 @@ import '../interfaces/IUniswapV2Router02.sol';
 import 'hardhat/console.sol';
 
 /*
-
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
  _\///////\\\/////____/\\\\\\\\\\\\\__\/\\\/////////\\\_\/////\\\///______/\\\///\\\________/\\\////////____/\\\\\\\\\\\\\__       
   _______\/\\\________/\\\/////////\\\_\/\\\_______\/\\\_____\/\\\_______/\\\/__\///\\\____/\\\/____________/\\\/////////\\\_      
@@ -183,7 +182,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             path[0] = address(rewardToken);
             path[1] = address(wrappedNative);
             uint256 calcAmount = (swapper.getAmountsOut(aaveAmount, path))[1];
-            uint256 minAmount = (calcAmount * 50) / 10_000; //0.5%
+            uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
             swapper.swapExactTokensForTokens(
                 aaveAmount,
                 minAmount,
