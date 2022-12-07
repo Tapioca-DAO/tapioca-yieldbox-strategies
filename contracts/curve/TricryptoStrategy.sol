@@ -230,12 +230,11 @@ contract TricryptoStrategy is
                 lpBalance,
                 minAmount
             );
-            require(
-                assetAmount + queued >= amount,
-                'TricryptoStrategy: not enough'
-            );
         }
-
+        require(
+            wrappedNative.balanceOf(address(this)) >= amount,
+            'TricryptoStrategy: not enough'
+        );
         wrappedNative.safeTransfer(to, amount);
         queued = wrappedNative.balanceOf(address(this));
         if (queued > 0) {

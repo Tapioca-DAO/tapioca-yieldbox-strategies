@@ -1464,6 +1464,12 @@ export async function registerFork() {
     );
     await setBalance(eoa1.address, 100000);
 
+    const eoa2 = new ethers.Wallet(
+        ethers.Wallet.createRandom().privateKey,
+        ethers.provider,
+    );
+    await setBalance(eoa2.address, 100000);
+
     log('Using existing Tokens', false);
     const weth = await ethers.getContractAt('ERC20', process.env.WETH_ADDRESS!);
     const usdc = await ethers.getContractAt('ERC20', process.env.USDC_ADDRESS!);
@@ -1659,6 +1665,7 @@ export async function registerFork() {
         swapperMock,
         deployTricryptoLPGetter,
         eoa1,
+        eoa2,
     };
 
     const utilFuncs = {

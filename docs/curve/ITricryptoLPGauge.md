@@ -49,6 +49,52 @@ function claim_rewards(address _addr, address _receiver) external nonpayable
 | _addr | address | undefined |
 | _receiver | address | undefined |
 
+### claimable_reward
+
+```solidity
+function claimable_reward(address _addr, address _token) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _addr | address | undefined |
+| _token | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### claimable_reward_write
+
+```solidity
+function claimable_reward_write(address _addr, address _token) external nonpayable returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _addr | address | undefined |
+| _token | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### claimable_tokens
 
 ```solidity

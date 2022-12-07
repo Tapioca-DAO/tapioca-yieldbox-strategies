@@ -102,7 +102,7 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
         },
 
         //mainnets
-        ethereum: supportedChains['ethereum'],
+        mainnet: supportedChains['ethereum'],
     },
     dodoc: {
         runOnCompile: true,

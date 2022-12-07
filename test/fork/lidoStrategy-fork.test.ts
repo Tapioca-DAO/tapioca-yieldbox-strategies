@@ -120,7 +120,6 @@ describe('LidoStrategy fork test', () => {
         expect(stEthBalance.gt(0)).to.be.true;
     });
 
-    //todo: tbd
     it('should allow deposits and withdrawals', async () => {
         const {
             lidoEthStrategy,

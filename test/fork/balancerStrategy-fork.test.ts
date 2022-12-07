@@ -203,8 +203,12 @@ describe('BalancerStrategy fork test', () => {
             false,
         );
 
-        const obtainable = await balancerStrategy.callStatic.updateCache();
-        if (obtainable.gt(withdrawalAmount)) {
+        const wethStratBalance = await weth.balanceOf(balancerStrategy.address);
+        const obtainable = (
+            await balancerStrategy.callStatic.updateCache()
+        ).add(wethStratBalance);
+
+        if (obtainable.gte(withdrawalAmount)) {
             await yieldBox.withdraw(
                 wethStrategyAssetId,
                 deployer.address,
