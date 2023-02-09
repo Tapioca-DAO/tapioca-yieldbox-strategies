@@ -161,6 +161,42 @@ Allows batched call to self (this contract).
 | calls | bytes[] | An array of inputs for each call. |
 | revertOnFail | bool | If True then reverts after a failed call and stops doing further calls. |
 
+### batchBurn
+
+```solidity
+function batchBurn(uint256 tokenId, address[] froms, uint256[] amounts) external nonpayable
+```
+
+Burns tokens. This is only useful to be used by an operator.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | The token to be burned. |
+| froms | address[] | The accounts to burn tokens from. |
+| amounts | uint256[] | The amounts of tokens to burn. |
+
+### batchMint
+
+```solidity
+function batchMint(uint256 tokenId, address[] tos, uint256[] amounts) external nonpayable
+```
+
+The `owner` can mint tokens. If a fixed supply is needed, the `owner` should mint the totalSupply and renounce ownership.
+
+*If the tos array is longer than the amounts array there will be an out of bounds error. If the amounts array is longer, the extra amounts are simply ignored.For security reasons, operators are not allowed to mint. Only the actual owner can do this. Of course the owner can be a contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | The token to be minted. |
+| tos | address[] | The accounts to transfer the minted tokens to. |
+| amounts | uint256[] | The amounts of tokens to mint. |
+
 ### batchTransfer
 
 ```solidity
@@ -186,7 +222,7 @@ function batchTransfer(address from, address to, uint256[] assetIds_, uint256[] 
 function burn(uint256 tokenId, address from, uint256 amount) external nonpayable
 ```
 
-Burns tokens. Only the holder of tokens can burn them.
+Burns tokens. Only the holder of tokens can burn them or an approved operator.
 
 
 
@@ -213,51 +249,6 @@ Needs to be called by `pendingOwner` to claim ownership.
 | Name | Type | Description |
 |---|---|---|
 | tokenId | uint256 | The `tokenId` of the token that ownership is claimed for. |
-
-### clonesOf
-
-```solidity
-function clonesOf(address, uint256) external view returns (address)
-```
-
-Mapping from masterContract to an array of all clones On mainnet events can be used to get this list, but events aren&#39;t always easy to retrieve and barely work on sidechains. While this adds gas, it makes enumerating all clones much easier.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### clonesOfCount
-
-```solidity
-function clonesOfCount(address masterContract) external view returns (uint256 cloneCount)
-```
-
-Returns the count of clones that exists for a specific masterContract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| masterContract | address | The address of the master contract. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| cloneCount | uint256 | total number of clones for the masterContract. |
 
 ### createToken
 
@@ -305,30 +296,6 @@ function decimals(uint256 assetId) external view returns (uint8)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint8 | undefined |
-
-### deploy
-
-```solidity
-function deploy(address masterContract, bytes data, bool useCreate2) external payable returns (address cloneAddress)
-```
-
-Deploys a given master Contract as a clone. Any ETH transferred with this call is forwarded to the new clone. Emits `LogDeploy`.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| masterContract | address | The address of the contract to clone. |
-| data | bytes | Additional abi encoded calldata that is passed to the new clone via `IMasterContract.init`. |
-| useCreate2 | bool | Creates the clone by using the CREATE2 opcode, in this case `data` will be used as salt. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| cloneAddress | address | Address of the created clone contract. |
 
 ### deposit
 
@@ -510,28 +477,6 @@ function isApprovedForAll(address, address) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined |
 
-### masterContractOf
-
-```solidity
-function masterContractOf(address) external view returns (address)
-```
-
-Mapping from clone contracts to their masterContract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### mint
 
 ```solidity
@@ -540,7 +485,7 @@ function mint(uint256 tokenId, address to, uint256 amount) external nonpayable
 
 The `owner` can mint tokens. If a fixed supply is needed, the `owner` should mint the totalSupply and renounce ownership.
 
-
+*For security reasons, operators are not allowed to mint. Only the actual owner can do this. Of course the owner can be a contract.*
 
 #### Parameters
 
@@ -642,6 +587,31 @@ function onERC1155Received(address, address, uint256, uint256, bytes) external p
 | _2 | uint256 | undefined |
 | _3 | uint256 | undefined |
 | _4 | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined |
+
+### onERC721Received
+
+```solidity
+function onERC721Received(address, address, uint256, bytes) external pure returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | bytes | undefined |
 
 #### Returns
 
@@ -1093,24 +1063,6 @@ event AssetRegistered(enum TokenType indexed tokenType, address indexed contract
 | strategy  | contract IStrategy | undefined |
 | tokenId `indexed` | uint256 | undefined |
 | assetId  | uint256 | undefined |
-
-### LogDeploy
-
-```solidity
-event LogDeploy(address indexed masterContract, bytes data, address indexed cloneAddress)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| masterContract `indexed` | address | undefined |
-| data  | bytes | undefined |
-| cloneAddress `indexed` | address | undefined |
 
 ### OwnershipTransferred
 

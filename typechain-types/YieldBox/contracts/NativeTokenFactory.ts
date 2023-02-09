@@ -9,7 +9,6 @@ import type {
   CallOverrides,
   ContractTransaction,
   Overrides,
-  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -34,15 +33,13 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
     "assets(uint256)": FunctionFragment;
     "balanceOf(address,uint256)": FunctionFragment;
     "balanceOfBatch(address[],uint256[])": FunctionFragment;
+    "batchBurn(uint256,address[],uint256[])": FunctionFragment;
+    "batchMint(uint256,address[],uint256[])": FunctionFragment;
     "burn(uint256,address,uint256)": FunctionFragment;
     "claimOwnership(uint256)": FunctionFragment;
-    "clonesOf(address,uint256)": FunctionFragment;
-    "clonesOfCount(address)": FunctionFragment;
     "createToken(string,string,uint8,string)": FunctionFragment;
-    "deploy(address,bytes,bool)": FunctionFragment;
     "ids(uint8,address,address,uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "masterContractOf(address)": FunctionFragment;
     "mint(uint256,address,uint256)": FunctionFragment;
     "nativeTokens(uint256)": FunctionFragment;
     "owner(uint256)": FunctionFragment;
@@ -63,15 +60,13 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
       | "assets"
       | "balanceOf"
       | "balanceOfBatch"
+      | "batchBurn"
+      | "batchMint"
       | "burn"
       | "claimOwnership"
-      | "clonesOf"
-      | "clonesOfCount"
       | "createToken"
-      | "deploy"
       | "ids"
       | "isApprovedForAll"
-      | "masterContractOf"
       | "mint"
       | "nativeTokens"
       | "owner"
@@ -103,6 +98,22 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
     values: [PromiseOrValue<string>[], PromiseOrValue<BigNumberish>[]]
   ): string;
   encodeFunctionData(
+    functionFragment: "batchBurn",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>[],
+      PromiseOrValue<BigNumberish>[]
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "batchMint",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>[],
+      PromiseOrValue<BigNumberish>[]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "burn",
     values: [
       PromiseOrValue<BigNumberish>,
@@ -115,28 +126,12 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "clonesOf",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "clonesOfCount",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
     functionFragment: "createToken",
     values: [
       PromiseOrValue<string>,
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<string>
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deploy",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<boolean>
     ]
   ): string;
   encodeFunctionData(
@@ -151,10 +146,6 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "isApprovedForAll",
     values: [PromiseOrValue<string>, PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "masterContractOf",
-    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "mint",
@@ -238,28 +229,20 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
     functionFragment: "balanceOfBatch",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "batchBurn", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "batchMint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "claimOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "clonesOf", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "clonesOfCount",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "createToken",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "deploy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ids", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isApprovedForAll",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "masterContractOf",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
@@ -305,7 +288,6 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
   events: {
     "ApprovalForAll(address,address,bool)": EventFragment;
     "AssetRegistered(uint8,address,address,uint256,uint256)": EventFragment;
-    "LogDeploy(address,bytes,address)": EventFragment;
     "OwnershipTransferred(uint256,address,address)": EventFragment;
     "TokenCreated(address,string,string,uint8,uint256)": EventFragment;
     "TransferBatch(address,address,address,uint256[],uint256[])": EventFragment;
@@ -315,7 +297,6 @@ export interface NativeTokenFactoryInterface extends utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AssetRegistered"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogDeploy"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferBatch"): EventFragment;
@@ -348,18 +329,6 @@ export type AssetRegisteredEvent = TypedEvent<
 >;
 
 export type AssetRegisteredEventFilter = TypedEventFilter<AssetRegisteredEvent>;
-
-export interface LogDeployEventObject {
-  masterContract: string;
-  data: string;
-  cloneAddress: string;
-}
-export type LogDeployEvent = TypedEvent<
-  [string, string, string],
-  LogDeployEventObject
->;
-
-export type LogDeployEventFilter = TypedEventFilter<LogDeployEvent>;
 
 export interface OwnershipTransferredEventObject {
   tokenId: BigNumber;
@@ -477,6 +446,20 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber[]] & { balances: BigNumber[] }>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     burn(
       tokenId: PromiseOrValue<BigNumberish>,
       from: PromiseOrValue<string>,
@@ -489,30 +472,12 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { cloneCount: BigNumber }>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
       decimals: PromiseOrValue<BigNumberish>,
       uri: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
     ids(
@@ -528,11 +493,6 @@ export interface NativeTokenFactory extends BaseContract {
       arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
-
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
 
     mint(
       tokenId: PromiseOrValue<BigNumberish>,
@@ -645,6 +605,20 @@ export interface NativeTokenFactory extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber[]>;
 
+  batchBurn(
+    tokenId: PromiseOrValue<BigNumberish>,
+    froms: PromiseOrValue<string>[],
+    amounts: PromiseOrValue<BigNumberish>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  batchMint(
+    tokenId: PromiseOrValue<BigNumberish>,
+    tos: PromiseOrValue<string>[],
+    amounts: PromiseOrValue<BigNumberish>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   burn(
     tokenId: PromiseOrValue<BigNumberish>,
     from: PromiseOrValue<string>,
@@ -657,30 +631,12 @@ export interface NativeTokenFactory extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  clonesOf(
-    arg0: PromiseOrValue<string>,
-    arg1: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  clonesOfCount(
-    masterContract: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   createToken(
     name: PromiseOrValue<string>,
     symbol: PromiseOrValue<string>,
     decimals: PromiseOrValue<BigNumberish>,
     uri: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  deploy(
-    masterContract: PromiseOrValue<string>,
-    data: PromiseOrValue<BytesLike>,
-    useCreate2: PromiseOrValue<boolean>,
-    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
   ids(
@@ -696,11 +652,6 @@ export interface NativeTokenFactory extends BaseContract {
     arg1: PromiseOrValue<string>,
     overrides?: CallOverrides
   ): Promise<boolean>;
-
-  masterContractOf(
-    arg0: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<string>;
 
   mint(
     tokenId: PromiseOrValue<BigNumberish>,
@@ -813,6 +764,20 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber[]>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     burn(
       tokenId: PromiseOrValue<BigNumberish>,
       from: PromiseOrValue<string>,
@@ -825,17 +790,6 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
@@ -843,13 +797,6 @@ export interface NativeTokenFactory extends BaseContract {
       uri: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<number>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     ids(
       arg0: PromiseOrValue<BigNumberish>,
@@ -864,11 +811,6 @@ export interface NativeTokenFactory extends BaseContract {
       arg1: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<boolean>;
-
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     mint(
       tokenId: PromiseOrValue<BigNumberish>,
@@ -982,17 +924,6 @@ export interface NativeTokenFactory extends BaseContract {
       assetId?: null
     ): AssetRegisteredEventFilter;
 
-    "LogDeploy(address,bytes,address)"(
-      masterContract?: PromiseOrValue<string> | null,
-      data?: null,
-      cloneAddress?: PromiseOrValue<string> | null
-    ): LogDeployEventFilter;
-    LogDeploy(
-      masterContract?: PromiseOrValue<string> | null,
-      data?: null,
-      cloneAddress?: PromiseOrValue<string> | null
-    ): LogDeployEventFilter;
-
     "OwnershipTransferred(uint256,address,address)"(
       tokenId?: PromiseOrValue<BigNumberish> | null,
       previousOwner?: PromiseOrValue<string> | null,
@@ -1079,6 +1010,20 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     burn(
       tokenId: PromiseOrValue<BigNumberish>,
       from: PromiseOrValue<string>,
@@ -1091,30 +1036,12 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
       decimals: PromiseOrValue<BigNumberish>,
       uri: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     ids(
@@ -1128,11 +1055,6 @@ export interface NativeTokenFactory extends BaseContract {
     isApprovedForAll(
       arg0: PromiseOrValue<string>,
       arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1234,6 +1156,20 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     burn(
       tokenId: PromiseOrValue<BigNumberish>,
       from: PromiseOrValue<string>,
@@ -1246,30 +1182,12 @@ export interface NativeTokenFactory extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
       decimals: PromiseOrValue<BigNumberish>,
       uri: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     ids(
@@ -1283,11 +1201,6 @@ export interface NativeTokenFactory extends BaseContract {
     isApprovedForAll(
       arg0: PromiseOrValue<string>,
       arg1: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 

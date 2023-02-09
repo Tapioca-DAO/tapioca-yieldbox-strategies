@@ -2,5 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export { ERC20Mock__factory } from "./ERC20Mock__factory";
+export { ERC20WithoutStrategyMock__factory } from "./ERC20WithoutStrategyMock__factory";
 export { SwapperMock__factory } from "./SwapperMock__factory";
 export { WETH9Mock__factory } from "./WETH9Mock__factory";

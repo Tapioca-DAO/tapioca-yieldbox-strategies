@@ -8,6 +8,7 @@ export type { strategies };
 export type { AssetRegister } from "./AssetRegister";
 export type { ERC1155 } from "./ERC1155";
 export type { ERC1155TokenReceiver } from "./ERC1155TokenReceiver";
+export type { ERC721TokenReceiver } from "./ERC721TokenReceiver";
 export type { NativeTokenFactory } from "./NativeTokenFactory";
 export type { YieldBox } from "./YieldBox";
 export type { YieldBoxURIBuilder } from "./YieldBoxURIBuilder";

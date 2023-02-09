@@ -3,5 +3,4 @@
 /* eslint-disable */
 export type { BaseERC1155Strategy } from "./BaseERC1155Strategy";
 export type { BaseERC20Strategy } from "./BaseERC20Strategy";
-export type { BaseNativeStrategy } from "./BaseNativeStrategy";
 export type { BaseStrategy } from "./BaseStrategy";

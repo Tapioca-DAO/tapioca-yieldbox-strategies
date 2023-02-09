@@ -8,4 +8,5 @@ export type { ierc721Sol };
 export type { IERC1155 } from "./IERC1155";
 export type { IERC1155TokenReceiver } from "./IERC1155TokenReceiver";
 export type { IERC165 } from "./IERC165";
+export type { IERC721TokenReceiver } from "./IERC721TokenReceiver";
 export type { IMasterContract } from "./IMasterContract";

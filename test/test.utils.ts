@@ -1252,6 +1252,19 @@ async function registerConvexStrategy(
     return { convexTricryptoStrategy, cvxReward1Token, cvxReward2Token };
 }
 
+export async function createTokenEmptyStrategy(
+    yieldBox: string,
+    token: string,
+) {
+    const noStrategy = await (
+        await ethers.getContractFactory('ERC20WithoutStrategy')
+    ).deploy(yieldBox, token, {
+        gasPrice: gasPrice,
+    });
+    await noStrategy.deployed();
+    return noStrategy;
+}
+
 export async function registerMocks(staging?: boolean) {
     /**
      * INITIAL SETUP
@@ -1381,36 +1394,32 @@ export async function registerMocks(staging?: boolean) {
         staging,
     );
 
+    const wethStrategy = await createTokenEmptyStrategy(
+        yieldBox.address,
+        weth.address,
+    );
     await (
-        await yieldBox.registerAsset(
-            1,
-            weth.address,
-            ethers.constants.AddressZero,
-            0,
-            { gasPrice: gasPrice },
-        )
+        await yieldBox.registerAsset(1, weth.address, wethStrategy.address, 0, {
+            gasPrice: gasPrice,
+        })
     ).wait();
     const wethAssetId = await yieldBox.ids(
         1,
         weth.address,
-        ethers.constants.AddressZero,
+        wethStrategy.address,
         0,
+    );
+
+    const usdcStrategy = await createTokenEmptyStrategy(
+        yieldBox.address,
+        usdc.address,
     );
     await (
-        await yieldBox.registerAsset(
-            1,
-            usdc.address,
-            ethers.constants.AddressZero,
-            0,
-            { gasPrice: gasPrice },
-        )
+        await yieldBox.registerAsset(1, usdc.address, usdcStrategy.address, 0, {
+            gasPrice: gasPrice,
+        })
     ).wait();
-    const usdcAssetId = await yieldBox.ids(
-        1,
-        usdc.address,
-        ethers.constants.AddressZero,
-        0,
-    );
+    const usdcAssetId = await yieldBox.ids(1, usdc.address, usdcStrategy.address, 0);
 
     const initialSetup = {
         deployer,
@@ -1432,6 +1441,8 @@ export async function registerMocks(staging?: boolean) {
         cvxReward2Token,
         deployTricryptoLPGetter,
         swapperMock,
+        wethStrategy,
+        usdcStrategy,
     };
 
     const utilFuncs = {
@@ -1487,34 +1498,23 @@ export async function registerFork() {
     );
     log(`Deployed YieldBox ${yieldBox.address}`, false);
 
-    await (
-        await yieldBox.registerAsset(
-            1,
-            weth.address,
-            ethers.constants.AddressZero,
-            0,
-        )
-    ).wait();
-    const wethAssetId = await yieldBox.ids(
-        1,
+    const wethStrategy = await createTokenEmptyStrategy(
+        yieldBox.address,
         weth.address,
-        ethers.constants.AddressZero,
-        0,
     );
     await (
-        await yieldBox.registerAsset(
-            1,
-            usdc.address,
-            ethers.constants.AddressZero,
-            0,
-        )
+        await yieldBox.registerAsset(1, weth.address, wethStrategy.address, 0)
     ).wait();
-    const usdcAssetId = await yieldBox.ids(
-        1,
+    const wethAssetId = await yieldBox.ids(1, weth.address, wethStrategy.address, 0);
+
+    const usdcStrategy = await createTokenEmptyStrategy(
+        yieldBox.address,
         usdc.address,
-        ethers.constants.AddressZero,
-        0,
     );
+    await (
+        await yieldBox.registerAsset(1, usdc.address, usdcStrategy.address, 0)
+    ).wait();
+    const usdcAssetId = await yieldBox.ids(1, usdc.address, usdcStrategy.address, 0);
 
     log('Deploying SwapperMock', false);
     const { swapperMock } = await registerSwapperMock(false);
@@ -1666,6 +1666,8 @@ export async function registerFork() {
         deployTricryptoLPGetter,
         eoa1,
         eoa2,
+        wethStrategy,
+        usdcStrategy,
     };
 
     const utilFuncs = {

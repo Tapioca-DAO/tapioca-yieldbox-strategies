@@ -81,6 +81,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC721Metadata__factory>;
     getContractFactory(
+      name: "IERC721TokenReceiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721TokenReceiver__factory>;
+    getContractFactory(
       name: "IMasterContract",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IMasterContract__factory>;
@@ -297,6 +301,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20Mock__factory>;
     getContractFactory(
+      name: "ERC20WithoutStrategyMock",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20WithoutStrategyMock__factory>;
+    getContractFactory(
       name: "SwapperMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SwapperMock__factory>;
@@ -369,6 +377,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC1155TokenReceiver__factory>;
     getContractFactory(
+      name: "ERC721TokenReceiver",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC721TokenReceiver__factory>;
+    getContractFactory(
       name: "IStrategy",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IStrategy__factory>;
@@ -393,13 +405,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseERC20Strategy__factory>;
     getContractFactory(
-      name: "BaseNativeStrategy",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.BaseNativeStrategy__factory>;
-    getContractFactory(
       name: "BaseStrategy",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BaseStrategy__factory>;
+    getContractFactory(
+      name: "ERC20WithoutStrategy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20WithoutStrategy__factory>;
     getContractFactory(
       name: "YieldBox",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -494,6 +506,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC721Metadata>;
+    getContractAt(
+      name: "IERC721TokenReceiver",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721TokenReceiver>;
     getContractAt(
       name: "IMasterContract",
       address: string,
@@ -765,6 +782,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ERC20Mock>;
     getContractAt(
+      name: "ERC20WithoutStrategyMock",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20WithoutStrategyMock>;
+    getContractAt(
       name: "SwapperMock",
       address: string,
       signer?: ethers.Signer
@@ -855,6 +877,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ERC1155TokenReceiver>;
     getContractAt(
+      name: "ERC721TokenReceiver",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC721TokenReceiver>;
+    getContractAt(
       name: "IStrategy",
       address: string,
       signer?: ethers.Signer
@@ -885,15 +912,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.BaseERC20Strategy>;
     getContractAt(
-      name: "BaseNativeStrategy",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.BaseNativeStrategy>;
-    getContractAt(
       name: "BaseStrategy",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.BaseStrategy>;
+    getContractAt(
+      name: "ERC20WithoutStrategy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20WithoutStrategy>;
     getContractAt(
       name: "YieldBox",
       address: string,
