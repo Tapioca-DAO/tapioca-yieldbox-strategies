@@ -3,3 +3,4 @@
 /* eslint-disable */
 import type * as baseStrategySol from "./BaseStrategy.sol";
 export type { baseStrategySol };
+export type { ERC20WithoutStrategy } from "./ERC20WithoutStrategy";

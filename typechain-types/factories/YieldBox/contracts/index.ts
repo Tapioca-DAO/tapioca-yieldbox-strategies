@@ -6,6 +6,7 @@ export * as strategies from "./strategies";
 export { AssetRegister__factory } from "./AssetRegister__factory";
 export { ERC1155__factory } from "./ERC1155__factory";
 export { ERC1155TokenReceiver__factory } from "./ERC1155TokenReceiver__factory";
+export { ERC721TokenReceiver__factory } from "./ERC721TokenReceiver__factory";
 export { NativeTokenFactory__factory } from "./NativeTokenFactory__factory";
 export { YieldBox__factory } from "./YieldBox__factory";
 export { YieldBoxURIBuilder__factory } from "./YieldBoxURIBuilder__factory";

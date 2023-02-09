@@ -3,5 +3,4 @@
 /* eslint-disable */
 export { BaseERC1155Strategy__factory } from "./BaseERC1155Strategy__factory";
 export { BaseERC20Strategy__factory } from "./BaseERC20Strategy__factory";
-export { BaseNativeStrategy__factory } from "./BaseNativeStrategy__factory";
 export { BaseStrategy__factory } from "./BaseStrategy__factory";

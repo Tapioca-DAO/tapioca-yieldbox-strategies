@@ -1,4 +1,4 @@
-# BaseNativeStrategy
+# ERC20WithoutStrategy
 
 
 
@@ -80,7 +80,7 @@ Is called by YieldBox to signal funds have been added, the strategy may choose t
 ### description
 
 ```solidity
-function description() external view returns (string description_)
+function description() external view returns (string)
 ```
 
 Returns a description for this strategy
@@ -92,12 +92,12 @@ Returns a description for this strategy
 
 | Name | Type | Description |
 |---|---|---|
-| description_ | string | undefined |
+| _0 | string | undefined |
 
 ### name
 
 ```solidity
-function name() external view returns (string name_)
+function name() external view returns (string)
 ```
 
 Returns a name for this strategy
@@ -109,7 +109,7 @@ Returns a name for this strategy
 
 | Name | Type | Description |
 |---|---|---|
-| name_ | string | undefined |
+| _0 | string | undefined |
 
 ### tokenId
 

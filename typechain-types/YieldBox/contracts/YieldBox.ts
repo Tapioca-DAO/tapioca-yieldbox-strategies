@@ -37,14 +37,13 @@ export interface YieldBoxInterface extends utils.Interface {
     "balanceOf(address,uint256)": FunctionFragment;
     "balanceOfBatch(address[],uint256[])": FunctionFragment;
     "batch(bytes[],bool)": FunctionFragment;
+    "batchBurn(uint256,address[],uint256[])": FunctionFragment;
+    "batchMint(uint256,address[],uint256[])": FunctionFragment;
     "batchTransfer(address,address,uint256[],uint256[])": FunctionFragment;
     "burn(uint256,address,uint256)": FunctionFragment;
     "claimOwnership(uint256)": FunctionFragment;
-    "clonesOf(address,uint256)": FunctionFragment;
-    "clonesOfCount(address)": FunctionFragment;
     "createToken(string,string,uint8,string)": FunctionFragment;
     "decimals(uint256)": FunctionFragment;
-    "deploy(address,bytes,bool)": FunctionFragment;
     "deposit(uint8,address,address,uint256,address,address,uint256,uint256)": FunctionFragment;
     "depositAsset(uint256,address,address,uint256,uint256)": FunctionFragment;
     "depositETH(address,address,uint256)": FunctionFragment;
@@ -52,12 +51,12 @@ export interface YieldBoxInterface extends utils.Interface {
     "depositNFTAsset(uint256,address,address)": FunctionFragment;
     "ids(uint8,address,address,uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "masterContractOf(address)": FunctionFragment;
     "mint(uint256,address,uint256)": FunctionFragment;
     "name(uint256)": FunctionFragment;
     "nativeTokens(uint256)": FunctionFragment;
     "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)": FunctionFragment;
     "onERC1155Received(address,address,uint256,uint256,bytes)": FunctionFragment;
+    "onERC721Received(address,address,uint256,bytes)": FunctionFragment;
     "owner(uint256)": FunctionFragment;
     "pendingOwner(uint256)": FunctionFragment;
     "permitToken(address,address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
@@ -88,14 +87,13 @@ export interface YieldBoxInterface extends utils.Interface {
       | "balanceOf"
       | "balanceOfBatch"
       | "batch"
+      | "batchBurn"
+      | "batchMint"
       | "batchTransfer"
       | "burn"
       | "claimOwnership"
-      | "clonesOf"
-      | "clonesOfCount"
       | "createToken"
       | "decimals"
-      | "deploy"
       | "deposit"
       | "depositAsset"
       | "depositETH"
@@ -103,12 +101,12 @@ export interface YieldBoxInterface extends utils.Interface {
       | "depositNFTAsset"
       | "ids"
       | "isApprovedForAll"
-      | "masterContractOf"
       | "mint"
       | "name"
       | "nativeTokens"
       | "onERC1155BatchReceived"
       | "onERC1155Received"
+      | "onERC721Received"
       | "owner"
       | "pendingOwner"
       | "permitToken"
@@ -159,6 +157,22 @@ export interface YieldBoxInterface extends utils.Interface {
     values: [PromiseOrValue<BytesLike>[], PromiseOrValue<boolean>]
   ): string;
   encodeFunctionData(
+    functionFragment: "batchBurn",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>[],
+      PromiseOrValue<BigNumberish>[]
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "batchMint",
+    values: [
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<string>[],
+      PromiseOrValue<BigNumberish>[]
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "batchTransfer",
     values: [
       PromiseOrValue<string>,
@@ -180,14 +194,6 @@ export interface YieldBoxInterface extends utils.Interface {
     values: [PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "clonesOf",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "clonesOfCount",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
     functionFragment: "createToken",
     values: [
       PromiseOrValue<string>,
@@ -199,14 +205,6 @@ export interface YieldBoxInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "decimals",
     values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deploy",
-    values: [
-      PromiseOrValue<string>,
-      PromiseOrValue<BytesLike>,
-      PromiseOrValue<boolean>
-    ]
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
@@ -269,10 +267,6 @@ export interface YieldBoxInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
-    functionFragment: "masterContractOf",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
     functionFragment: "mint",
     values: [
       PromiseOrValue<BigNumberish>,
@@ -304,6 +298,15 @@ export interface YieldBoxInterface extends utils.Interface {
       PromiseOrValue<string>,
       PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BigNumberish>,
+      PromiseOrValue<BytesLike>
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "onERC721Received",
+    values: [
+      PromiseOrValue<string>,
+      PromiseOrValue<string>,
       PromiseOrValue<BigNumberish>,
       PromiseOrValue<BytesLike>
     ]
@@ -453,6 +456,8 @@ export interface YieldBoxInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "batch", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "batchBurn", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "batchMint", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "batchTransfer",
     data: BytesLike
@@ -462,17 +467,11 @@ export interface YieldBoxInterface extends utils.Interface {
     functionFragment: "claimOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "clonesOf", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "clonesOfCount",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "createToken",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "deploy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "depositAsset",
@@ -492,10 +491,6 @@ export interface YieldBoxInterface extends utils.Interface {
     functionFragment: "isApprovedForAll",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "masterContractOf",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(
@@ -508,6 +503,10 @@ export interface YieldBoxInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "onERC1155Received",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "onERC721Received",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -566,7 +565,6 @@ export interface YieldBoxInterface extends utils.Interface {
   events: {
     "ApprovalForAll(address,address,bool)": EventFragment;
     "AssetRegistered(uint8,address,address,uint256,uint256)": EventFragment;
-    "LogDeploy(address,bytes,address)": EventFragment;
     "OwnershipTransferred(uint256,address,address)": EventFragment;
     "TokenCreated(address,string,string,uint8,uint256)": EventFragment;
     "TransferBatch(address,address,address,uint256[],uint256[])": EventFragment;
@@ -576,7 +574,6 @@ export interface YieldBoxInterface extends utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AssetRegistered"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "LogDeploy"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TokenCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferBatch"): EventFragment;
@@ -609,18 +606,6 @@ export type AssetRegisteredEvent = TypedEvent<
 >;
 
 export type AssetRegisteredEventFilter = TypedEventFilter<AssetRegisteredEvent>;
-
-export interface LogDeployEventObject {
-  masterContract: string;
-  data: string;
-  cloneAddress: string;
-}
-export type LogDeployEvent = TypedEvent<
-  [string, string, string],
-  LogDeployEventObject
->;
-
-export type LogDeployEventFilter = TypedEventFilter<LogDeployEvent>;
 
 export interface OwnershipTransferredEventObject {
   tokenId: BigNumber;
@@ -757,6 +742,20 @@ export interface YieldBox extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
     batchTransfer(
       from: PromiseOrValue<string>,
       to: PromiseOrValue<string>,
@@ -777,17 +776,6 @@ export interface YieldBox extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { cloneCount: BigNumber }>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
@@ -800,13 +788,6 @@ export interface YieldBox extends BaseContract {
       assetId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<[number]>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
 
     deposit(
       tokenType: PromiseOrValue<BigNumberish>,
@@ -864,11 +845,6 @@ export interface YieldBox extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
     mint(
       tokenId: PromiseOrValue<BigNumberish>,
       to: PromiseOrValue<string>,
@@ -908,6 +884,14 @@ export interface YieldBox extends BaseContract {
       arg2: PromiseOrValue<BigNumberish>,
       arg3: PromiseOrValue<BigNumberish>,
       arg4: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    onERC721Received(
+      arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
+      arg2: PromiseOrValue<BigNumberish>,
+      arg3: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
@@ -1082,6 +1066,20 @@ export interface YieldBox extends BaseContract {
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  batchBurn(
+    tokenId: PromiseOrValue<BigNumberish>,
+    froms: PromiseOrValue<string>[],
+    amounts: PromiseOrValue<BigNumberish>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  batchMint(
+    tokenId: PromiseOrValue<BigNumberish>,
+    tos: PromiseOrValue<string>[],
+    amounts: PromiseOrValue<BigNumberish>[],
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
   batchTransfer(
     from: PromiseOrValue<string>,
     to: PromiseOrValue<string>,
@@ -1102,17 +1100,6 @@ export interface YieldBox extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  clonesOf(
-    arg0: PromiseOrValue<string>,
-    arg1: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  clonesOfCount(
-    masterContract: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   createToken(
     name: PromiseOrValue<string>,
     symbol: PromiseOrValue<string>,
@@ -1125,13 +1112,6 @@ export interface YieldBox extends BaseContract {
     assetId: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
   ): Promise<number>;
-
-  deploy(
-    masterContract: PromiseOrValue<string>,
-    data: PromiseOrValue<BytesLike>,
-    useCreate2: PromiseOrValue<boolean>,
-    overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
 
   deposit(
     tokenType: PromiseOrValue<BigNumberish>,
@@ -1189,11 +1169,6 @@ export interface YieldBox extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  masterContractOf(
-    arg0: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
   mint(
     tokenId: PromiseOrValue<BigNumberish>,
     to: PromiseOrValue<string>,
@@ -1233,6 +1208,14 @@ export interface YieldBox extends BaseContract {
     arg2: PromiseOrValue<BigNumberish>,
     arg3: PromiseOrValue<BigNumberish>,
     arg4: PromiseOrValue<BytesLike>,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  onERC721Received(
+    arg0: PromiseOrValue<string>,
+    arg1: PromiseOrValue<string>,
+    arg2: PromiseOrValue<BigNumberish>,
+    arg3: PromiseOrValue<BytesLike>,
     overrides?: CallOverrides
   ): Promise<string>;
 
@@ -1407,6 +1390,20 @@ export interface YieldBox extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     batchTransfer(
       from: PromiseOrValue<string>,
       to: PromiseOrValue<string>,
@@ -1427,17 +1424,6 @@ export interface YieldBox extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
@@ -1450,13 +1436,6 @@ export interface YieldBox extends BaseContract {
       assetId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<number>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: CallOverrides
-    ): Promise<string>;
 
     deposit(
       tokenType: PromiseOrValue<BigNumberish>,
@@ -1524,11 +1503,6 @@ export interface YieldBox extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
     mint(
       tokenId: PromiseOrValue<BigNumberish>,
       to: PromiseOrValue<string>,
@@ -1568,6 +1542,14 @@ export interface YieldBox extends BaseContract {
       arg2: PromiseOrValue<BigNumberish>,
       arg3: PromiseOrValue<BigNumberish>,
       arg4: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    onERC721Received(
+      arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
+      arg2: PromiseOrValue<BigNumberish>,
+      arg3: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<string>;
 
@@ -1726,17 +1708,6 @@ export interface YieldBox extends BaseContract {
       assetId?: null
     ): AssetRegisteredEventFilter;
 
-    "LogDeploy(address,bytes,address)"(
-      masterContract?: PromiseOrValue<string> | null,
-      data?: null,
-      cloneAddress?: PromiseOrValue<string> | null
-    ): LogDeployEventFilter;
-    LogDeploy(
-      masterContract?: PromiseOrValue<string> | null,
-      data?: null,
-      cloneAddress?: PromiseOrValue<string> | null
-    ): LogDeployEventFilter;
-
     "OwnershipTransferred(uint256,address,address)"(
       tokenId?: PromiseOrValue<BigNumberish> | null,
       previousOwner?: PromiseOrValue<string> | null,
@@ -1840,6 +1811,20 @@ export interface YieldBox extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
     batchTransfer(
       from: PromiseOrValue<string>,
       to: PromiseOrValue<string>,
@@ -1860,17 +1845,6 @@ export interface YieldBox extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
@@ -1882,13 +1856,6 @@ export interface YieldBox extends BaseContract {
     decimals(
       assetId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
     deposit(
@@ -1947,11 +1914,6 @@ export interface YieldBox extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     mint(
       tokenId: PromiseOrValue<BigNumberish>,
       to: PromiseOrValue<string>,
@@ -1984,6 +1946,14 @@ export interface YieldBox extends BaseContract {
       arg2: PromiseOrValue<BigNumberish>,
       arg3: PromiseOrValue<BigNumberish>,
       arg4: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    onERC721Received(
+      arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
+      arg2: PromiseOrValue<BigNumberish>,
+      arg3: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -2150,6 +2120,20 @@ export interface YieldBox extends BaseContract {
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
+    batchBurn(
+      tokenId: PromiseOrValue<BigNumberish>,
+      froms: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    batchMint(
+      tokenId: PromiseOrValue<BigNumberish>,
+      tos: PromiseOrValue<string>[],
+      amounts: PromiseOrValue<BigNumberish>[],
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
     batchTransfer(
       from: PromiseOrValue<string>,
       to: PromiseOrValue<string>,
@@ -2170,17 +2154,6 @@ export interface YieldBox extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    clonesOf(
-      arg0: PromiseOrValue<string>,
-      arg1: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    clonesOfCount(
-      masterContract: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     createToken(
       name: PromiseOrValue<string>,
       symbol: PromiseOrValue<string>,
@@ -2192,13 +2165,6 @@ export interface YieldBox extends BaseContract {
     decimals(
       assetId: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    deploy(
-      masterContract: PromiseOrValue<string>,
-      data: PromiseOrValue<BytesLike>,
-      useCreate2: PromiseOrValue<boolean>,
-      overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
     deposit(
@@ -2257,11 +2223,6 @@ export interface YieldBox extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    masterContractOf(
-      arg0: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     mint(
       tokenId: PromiseOrValue<BigNumberish>,
       to: PromiseOrValue<string>,
@@ -2294,6 +2255,14 @@ export interface YieldBox extends BaseContract {
       arg2: PromiseOrValue<BigNumberish>,
       arg3: PromiseOrValue<BigNumberish>,
       arg4: PromiseOrValue<BytesLike>,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    onERC721Received(
+      arg0: PromiseOrValue<string>,
+      arg1: PromiseOrValue<string>,
+      arg2: PromiseOrValue<BigNumberish>,
+      arg3: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
