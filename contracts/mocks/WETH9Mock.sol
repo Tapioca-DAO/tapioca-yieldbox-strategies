@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.6.12;
 
 contract WETH9Mock {
