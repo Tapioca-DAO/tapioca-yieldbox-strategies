@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -53,15 +53,15 @@ contract BalancerVaultMock {
         );
     }
 
-    function getPool(bytes32)
-        external
-        view
-        returns (address, IBalancerVault.PoolSpecialization)
-    {
+    function getPool(
+        bytes32
+    ) external view returns (address, IBalancerVault.PoolSpecialization) {
         return (stablePool, IBalancerVault.PoolSpecialization.GENERAL);
     }
 
-    function getPoolTokens(bytes32)
+    function getPoolTokens(
+        bytes32
+    )
         external
         view
         returns (

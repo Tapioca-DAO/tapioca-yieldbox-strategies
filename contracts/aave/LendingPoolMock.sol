@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -13,12 +13,7 @@ contract LendingPoolMock {
         asset = IERC20(_asset);
     }
 
-    function deposit(
-        address,
-        uint256 amount,
-        address,
-        uint16
-    ) external {
+    function deposit(address, uint256 amount, address, uint16) external {
         asset.safeTransferFrom(msg.sender, address(this), amount);
     }
 
@@ -32,7 +27,9 @@ contract LendingPoolMock {
         return amount + extraAmount;
     }
 
-    function getUserAccountData(address)
+    function getUserAccountData(
+        address
+    )
         external
         view
         returns (

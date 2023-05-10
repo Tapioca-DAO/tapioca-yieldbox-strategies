@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 interface IIncentivesController {
     /**
@@ -25,13 +25,12 @@ interface IIncentivesController {
      * @param user the address of the user
      * @return the unclaimed user rewards
      */
-    function getUserUnclaimedRewards(address user)
-        external
-        view
-        returns (uint256);
+    function getUserUnclaimedRewards(
+        address user
+    ) external view returns (uint256);
 
-    function getRewardsBalance(address[] calldata assets, address user)
-        external
-        view
-        returns (uint256);
+    function getRewardsBalance(
+        address[] calldata assets,
+        address user
+    ) external view returns (uint256);
 }

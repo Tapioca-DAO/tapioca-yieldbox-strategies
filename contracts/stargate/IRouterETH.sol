@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 interface IRouterETH {
     function addLiquidityETH() external payable;
@@ -9,5 +9,4 @@ interface IRouterETH {
     function poolId() external view returns (uint16);
 
     function stargateRouter() external view returns (address);
-
 }

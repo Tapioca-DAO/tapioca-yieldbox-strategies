@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 interface IAsset {
     // solhint-disable-previous-line no-empty-blocks
@@ -104,10 +104,9 @@ interface IBalancerVault {
     /**
      * @dev Returns a Pool's contract address and specialization setting.
      */
-    function getPool(bytes32 poolId)
-        external
-        view
-        returns (address, PoolSpecialization);
+    function getPool(
+        bytes32 poolId
+    ) external view returns (address, PoolSpecialization);
 
     // Pools
     //
@@ -132,7 +131,9 @@ interface IBalancerVault {
         TWO_TOKEN
     }
 
-    function getPoolTokens(bytes32 poolId)
+    function getPoolTokens(
+        bytes32 poolId
+    )
         external
         view
         returns (

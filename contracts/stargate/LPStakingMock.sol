@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -31,25 +31,17 @@ contract LPStakingMock {
         lpToken.transfer(msg.sender, amount);
     }
 
-    function userInfo(uint256, address)
-        external
-        view
-        returns (uint256 amount, uint256 rewardDebt)
-    {
+    function userInfo(
+        uint256,
+        address
+    ) external view returns (uint256 amount, uint256 rewardDebt) {
         amount = lpToken.balanceOf(address(this));
         rewardDebt = 0;
     }
 
-    function poolInfo(uint256)
-        external
-        view
-        returns (
-            address,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function poolInfo(
+        uint256
+    ) external view returns (address, uint256, uint256, uint256) {
         return (address(lpToken), 0, 0, 0);
     }
 

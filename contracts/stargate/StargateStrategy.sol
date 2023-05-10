@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -7,7 +7,7 @@ import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
 
 import './IRouter.sol';
 import './IRouterETH.sol';
@@ -242,11 +242,10 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns stgToken in exchange of Native and withdraws from Stargate Staking & Router
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(available >= amount, 'StargateStrategy: amount not valid');
 

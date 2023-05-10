@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -18,7 +18,7 @@ contract YearnVaultMock {
     }
 
     function pricePerShare() external pure returns (uint256) {
-        return 10**decimals();
+        return 10 ** decimals();
     }
 
     function decimals() public pure returns (uint256) {
@@ -39,7 +39,9 @@ contract YearnVaultMock {
         return amount;
     }
 
-    function getUserAccountData(address)
+    function getUserAccountData(
+        address
+    )
         external
         view
         returns (

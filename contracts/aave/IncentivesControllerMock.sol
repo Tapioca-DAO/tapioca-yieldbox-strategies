@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -23,7 +23,7 @@ contract IncentivesControllerMock {
     }
 
     function getUserUnclaimedRewards(address) external pure returns (uint256) {
-        return 100 * 10**18;
+        return 100 * 10 ** 18;
     }
 
     function claimRewards(
@@ -31,16 +31,15 @@ contract IncentivesControllerMock {
         uint256,
         address to
     ) external returns (uint256) {
-        token.freeMint(100 * 10**18);
-        token.transfer(to, 100 * 10**18);
-        return 100 * 10**18;
+        token.freeMint(100 * 10 ** 18);
+        token.transfer(to, 100 * 10 ** 18);
+        return 100 * 10 ** 18;
     }
 
-    function getRewardsBalance(address[] calldata, address)
-        external
-        pure
-        returns (uint256)
-    {
-        return 100 * 10**18;
+    function getRewardsBalance(
+        address[] calldata,
+        address
+    ) external pure returns (uint256) {
+        return 100 * 10 ** 18;
     }
 }

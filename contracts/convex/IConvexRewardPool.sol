@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 interface IConvexRewardPool {
-    function withdrawAndUnwrap(uint256 _amount, bool claim)
-        external
-        returns (bool);
+    function withdrawAndUnwrap(
+        uint256 _amount,
+        bool claim
+    ) external returns (bool);
 
     function rewardToken() external view returns (address);
 
@@ -16,9 +17,10 @@ interface IConvexRewardPool {
 
     function balanceOf(address _user) external view returns (uint256);
 
-    function getReward(address _account, bool _claimExtras)
-        external
-        returns (bool);
+    function getReward(
+        address _account,
+        bool _claimExtras
+    ) external returns (bool);
 
     function stakeFor(address _for, uint256 _amount) external;
 

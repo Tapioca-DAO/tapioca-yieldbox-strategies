@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 // solhint-disable var-name-mixedcase
 // solhint-disable func-name-mixedcase
@@ -17,7 +17,7 @@ contract TricryptoLiquidityPoolMock {
 
     constructor(address _weth) {
         weth = _weth;
-        token = new ERC20Mock(10_000**18);
+        token = new ERC20Mock(10_000 ** 18);
     }
 
     function add_liquidity(uint256[3] calldata amounts, uint256) external {
@@ -36,19 +36,17 @@ contract TricryptoLiquidityPoolMock {
         IERC20(weth).safeTransfer(msg.sender, _token_amount);
     }
 
-    function calc_withdraw_one_coin(uint256 token_amount, uint256)
-        external
-        pure
-        returns (uint256)
-    {
+    function calc_withdraw_one_coin(
+        uint256 token_amount,
+        uint256
+    ) external pure returns (uint256) {
         return token_amount;
     }
 
-    function calc_token_amount(uint256[3] calldata amounts, bool)
-        external
-        pure
-        returns (uint256)
-    {
+    function calc_token_amount(
+        uint256[3] calldata amounts,
+        bool
+    ) external pure returns (uint256) {
         return amounts[2];
     }
 }

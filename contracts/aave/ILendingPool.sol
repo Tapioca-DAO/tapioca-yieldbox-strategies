@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 interface ILendingPool {
-   
     /**
      * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
      * - E.g. User deposits 100 USDC and gets in return 100 aUSDC
@@ -103,8 +102,10 @@ interface ILendingPool {
      * @param asset The address of the underlying asset deposited
      * @param useAsCollateral `true` if the user wants to use the deposit as collateral, `false` otherwise
      **/
-    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
-        external;
+    function setUserUseReserveAsCollateral(
+        address asset,
+        bool useAsCollateral
+    ) external;
 
     /**
      * @dev Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1
@@ -162,7 +163,9 @@ interface ILendingPool {
      * @return ltv the loan to value of the user
      * @return healthFactor the current health factor of the user
      **/
-    function getUserAccountData(address user)
+    function getUserAccountData(
+        address user
+    )
         external
         view
         returns (

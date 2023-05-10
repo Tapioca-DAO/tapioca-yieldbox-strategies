@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -7,14 +7,13 @@ import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
 import '../curve/ITricryptoLPGetter.sol';
 
 import './IConvexBooster.sol';
 import './IConvexRewardPool.sol';
 import './IConvexZap.sol';
 import '../interfaces/IUniswapV2Router02.sol';
-
 
 /*
 
@@ -213,10 +212,9 @@ contract ConvexTricryptoStrategy is
         emit AmountDeposited(queued);
     }
 
-    function _executeClaim(bytes memory data)
-        private
-        returns (uint256[] memory, address[] memory)
-    {
+    function _executeClaim(
+        bytes memory data
+    ) private returns (uint256[] memory, address[] memory) {
         ClaimTempData memory tempData;
 
         (
@@ -317,11 +315,10 @@ contract ConvexTricryptoStrategy is
     }
 
     /// @dev unstakes from Convex and withdraws from Curve
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(
             available >= amount,
@@ -352,11 +349,7 @@ contract ConvexTricryptoStrategy is
         emit AmountWithdrawn(to, amount);
     }
 
-    function _safeApprove(
-        address token,
-        address to,
-        uint256 value
-    ) private {
+    function _safeApprove(address token, address to, uint256 value) private {
         // solhint-disable-next-line avoid-low-level-calls
         (bool successEmtptyApproval, ) = token.call(
             abi.encodeWithSelector(

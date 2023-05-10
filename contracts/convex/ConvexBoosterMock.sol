@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -16,11 +16,7 @@ contract ConvexBoosterMock {
     IERC20 public receiptToken;
     address public crvRewards;
 
-    constructor(
-        address _lpToken,
-        address _receiptToken,
-        address _crvRewards
-    ) {
+    constructor(address _lpToken, address _receiptToken, address _crvRewards) {
         lpToken = IERC20(_lpToken);
         receiptToken = IERC20(_receiptToken);
         crvRewards = _crvRewards;
@@ -28,11 +24,9 @@ contract ConvexBoosterMock {
         lpToken.approve(_crvRewards, type(uint256).max);
     }
 
-    function poolInfo(uint256)
-        external
-        view
-        returns (IConvexBooster.PoolInfo memory)
-    {
+    function poolInfo(
+        uint256
+    ) external view returns (IConvexBooster.PoolInfo memory) {
         IConvexBooster.PoolInfo memory info;
         info.lptoken = address(lpToken);
         info.token = address(receiptToken);
@@ -44,11 +38,7 @@ contract ConvexBoosterMock {
         return info;
     }
 
-    function deposit(
-        uint256,
-        uint256 _amount,
-        bool
-    ) external returns (bool) {
+    function deposit(uint256, uint256 _amount, bool) external returns (bool) {
         lpToken.safeTransferFrom(msg.sender, address(this), _amount);
 
         IConvexRewardPool(crvRewards).stakeFor(msg.sender, _amount);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -7,7 +7,7 @@ import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
 
 import '../interfaces/INative.sol';
 import './ICToken.sol';
@@ -113,7 +113,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 shares = cToken.balanceOf(address(this));
         uint256 pricePerShare = cToken.exchangeRateStored();
-        uint256 invested = (shares * pricePerShare) / (10**18);
+        uint256 invested = (shares * pricePerShare) / (10 ** 18);
         uint256 queued = wrappedNative.balanceOf(address(this));
         return queued + invested;
     }
@@ -133,18 +133,17 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns yToken in exchange of Token and withdraws from Yearn Vault
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(available >= amount, 'CompoundStrategy: amount not valid');
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
             uint256 pricePerShare = cToken.exchangeRateStored();
-            uint256 toWithdraw = (((amount - queued) * (10**18)) /
+            uint256 toWithdraw = (((amount - queued) * (10 ** 18)) /
                 pricePerShare);
 
             cToken.redeem(toWithdraw);

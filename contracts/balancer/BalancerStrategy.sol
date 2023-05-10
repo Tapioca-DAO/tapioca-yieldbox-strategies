@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -7,12 +7,13 @@ import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
 
 import './IBalancerVault.sol';
 import './IBalancerPool.sol';
 import './IBalancerHelpers.sol';
 import '../interfaces/IUniswapV2Router02.sol';
+
 /*
 
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -190,11 +191,10 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns yToken in exchange of Token and withdraws from Yearn Vault
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(available >= amount, 'BalancerStrategy: amount not valid');
 
@@ -202,7 +202,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         if (amount > queued) {
             uint256 pricePerShare = pool.getRate();
             uint256 decimals = IStrictERC20(address(pool)).decimals();
-            uint256 toWithdraw = (((amount - queued) * (10**decimals)) /
+            uint256 toWithdraw = (((amount - queued) * (10 ** decimals)) /
                 pricePerShare);
 
             _vaultWithdraw(toWithdraw);

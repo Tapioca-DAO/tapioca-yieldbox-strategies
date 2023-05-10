@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -30,10 +30,10 @@ contract ConvexZapMock is IConvexZap {
         uint256,
         uint256
     ) public override {
-        ERC20Mock(reward1).freeMint(10**19);
-        ERC20Mock(reward2).freeMint(10**19);
+        ERC20Mock(reward1).freeMint(10 ** 19);
+        ERC20Mock(reward2).freeMint(10 ** 19);
 
-        IERC20(reward1).safeTransfer(msg.sender, 10**19);
-        IERC20(reward2).safeTransfer(msg.sender, 10**19);
+        IERC20(reward1).safeTransfer(msg.sender, 10 ** 19);
+        IERC20(reward2).safeTransfer(msg.sender, 10 ** 19);
     }
 }

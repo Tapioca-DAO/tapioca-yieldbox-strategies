@@ -417,6 +417,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.YieldBox__factory>;
     getContractFactory(
+      name: "YieldBoxPermit",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.YieldBoxPermit__factory>;
+    getContractFactory(
       name: "YieldBoxURIBuilder",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.YieldBoxURIBuilder__factory>;
@@ -926,6 +930,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.YieldBox>;
+    getContractAt(
+      name: "YieldBoxPermit",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.YieldBoxPermit>;
     getContractAt(
       name: "YieldBoxURIBuilder",
       address: string,

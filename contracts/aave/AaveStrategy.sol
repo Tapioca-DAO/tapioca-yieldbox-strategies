@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -7,13 +7,11 @@ import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
 import './IStkAave.sol';
 import './ILendingPool.sol';
 import './IIncentivesController.sol';
 import '../interfaces/IUniswapV2Router02.sol';
-
-import 'hardhat/console.sol';
 
 /*
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -245,11 +243,10 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns aToken in exchange of Token and withdraws from AAVE LendingPool
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(available >= amount, 'AaveStrategy: amount not valid');
 

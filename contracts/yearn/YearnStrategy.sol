@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -7,7 +7,7 @@ import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
 
 import './IYearnVault.sol';
 
@@ -113,7 +113,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 shares = vault.balanceOf(address(this));
         uint256 pricePerShare = vault.pricePerShare();
-        uint256 invested = (shares * pricePerShare) / (10**vault.decimals());
+        uint256 invested = (shares * pricePerShare) / (10 ** vault.decimals());
         uint256 queued = wrappedNative.balanceOf(address(this));
         return queued + invested;
     }
@@ -131,23 +131,22 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns yToken in exchange of Token and withdraws from Yearn Vault
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(available >= amount, 'YearnStrategy: amount not valid');
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
             uint256 pricePerShare = vault.pricePerShare();
-            uint256 toWithdraw = (((amount - queued) * (10**vault.decimals())) /
-                pricePerShare);
+            uint256 toWithdraw = (((amount - queued) *
+                (10 ** vault.decimals())) / pricePerShare);
 
             vault.withdraw(toWithdraw, address(this), 0);
         }
-        wrappedNative.safeTransfer(to, amount - 1);//rounding error
+        wrappedNative.safeTransfer(to, amount - 1); //rounding error
 
         emit AmountWithdrawn(to, amount);
     }

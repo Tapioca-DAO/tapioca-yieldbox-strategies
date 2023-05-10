@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import './ITricryptoLiquidityPool.sol';
 
@@ -49,42 +49,48 @@ interface ITricryptoLPGetter {
     /// @notice used to add USDT liquidity
     /// @param _amount the amount of token to be used in the add liquidity operation
     /// @param _minAmount the min amount of LP token to be received
-    function addLiquidityUsdt(uint256 _amount, uint256 _minAmount)
-        external
-        returns (uint256);
+    function addLiquidityUsdt(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external returns (uint256);
 
     /// @notice used to add WBTC liquidity
     /// @param _amount the amount of token to be used in the add liquidity operation
     /// @param _minAmount the min amount of LP token to be received
-    function addLiquidityWbtc(uint256 _amount, uint256 _minAmount)
-        external
-        returns (uint256);
+    function addLiquidityWbtc(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external returns (uint256);
 
     /// @notice used to add WETH liquidity
     /// @param _amount the amount of token to be used in the add liquidity operation
     /// @param _minAmount the min amount of LP token to be received
-    function addLiquidityWeth(uint256 _amount, uint256 _minAmount)
-        external
-        returns (uint256);
+    function addLiquidityWeth(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external returns (uint256);
 
     /// @notice used to remove liquidity and get USDT
     /// @param _amount the amount of LP token to be used in the remove liquidity operation
     /// @param _minAmount the min amount of token to be received
-    function removeLiquidityUsdt(uint256 _amount, uint256 _minAmount)
-        external
-        returns (uint256);
+    function removeLiquidityUsdt(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external returns (uint256);
 
     /// @notice used to remove liquidity and get WBTC
     /// @param _amount the amount of LP token to be used in the remove liquidity operation
     /// @param _minAmount the min amount of token to be received
-    function removeLiquidityWbtc(uint256 _amount, uint256 _minAmount)
-        external
-        returns (uint256);
+    function removeLiquidityWbtc(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external returns (uint256);
 
     /// @notice used to remove liquidity and get WETH
     /// @param _amount the amount of LP token to be used in the remove liquidity operation
     /// @param _minAmount the min amount of token to be received
-    function removeLiquidityWeth(uint256 _amount, uint256 _minAmount)
-        external
-        returns (uint256);
+    function removeLiquidityWeth(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external returns (uint256);
 }

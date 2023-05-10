@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -16,7 +16,7 @@ contract StkAaveMock is ERC20Mock {
     uint256 public lastCooldown;
 
     constructor() ERC20Mock(100_000 * 1e18) {
-        token = new ERC20Mock(10_000 * 10**18);
+        token = new ERC20Mock(10_000 * 10 ** 18);
     }
 
     function REWARD_TOKEN() external view returns (address) {

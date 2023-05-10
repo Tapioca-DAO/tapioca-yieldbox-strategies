@@ -2,10 +2,15 @@ node_modules
 .env
 coverage
 coverage.json
-typechain
-tapioca-sdk
 yarn.lock
+package-lock.json
+typechain
+
 __MACOSX
 #Hardhat files
 cache
 artifacts
+
+.vs
+
+.VSCodeCounter

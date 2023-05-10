@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -125,11 +125,10 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
     /// @notice used to add WETH liquidity
     /// @param _amount the amount of token to be used in the add liquidity operation
     /// @param _minAmount the min amount of LP token to be received
-    function addLiquidityWeth(uint256 _amount, uint256 _minAmount)
-        external
-        nonReentrant
-        returns (uint256)
-    {
+    function addLiquidityWeth(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external nonReentrant returns (uint256) {
         uint256[3] memory liquidityArr;
         liquidityArr[0] = 0;
         liquidityArr[1] = 0;
@@ -140,22 +139,20 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
     /// @notice used to remove liquidity and get WETH
     /// @param _amount the amount of LP token to be used in the remove liquidity operation
     /// @param _minAmount the min amount of token to be received
-    function removeLiquidityWeth(uint256 _amount, uint256 _minAmount)
-        external
-        nonReentrant
-        returns (uint256)
-    {
+    function removeLiquidityWeth(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external nonReentrant returns (uint256) {
         return _removeLiquidity(WETH, _amount, 2, _minAmount);
     }
 
     /// @notice used to add WBTC liquidity
     /// @param _amount the amount of token to be used in the add liquidity operation
     /// @param _minAmount the min amount of LP token to be received
-    function addLiquidityWbtc(uint256 _amount, uint256 _minAmount)
-        external
-        nonReentrant
-        returns (uint256)
-    {
+    function addLiquidityWbtc(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external nonReentrant returns (uint256) {
         uint256[3] memory liquidityArr;
         liquidityArr[0] = 0;
         liquidityArr[1] = _amount;
@@ -166,22 +163,20 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
     /// @notice used to remove liquidity and get WBTC
     /// @param _amount the amount of LP token to be used in the remove liquidity operation
     /// @param _minAmount the min amount of token to be received
-    function removeLiquidityWbtc(uint256 _amount, uint256 _minAmount)
-        external
-        nonReentrant
-        returns (uint256)
-    {
+    function removeLiquidityWbtc(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external nonReentrant returns (uint256) {
         return _removeLiquidity(WBTC, _amount, 1, _minAmount);
     }
 
     /// @notice used to add USDT liquidity
     /// @param _amount the amount of token to be used in the add liquidity operation
     /// @param _minAmount the min amount of LP token to be received
-    function addLiquidityUsdt(uint256 _amount, uint256 _minAmount)
-        external
-        nonReentrant
-        returns (uint256)
-    {
+    function addLiquidityUsdt(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external nonReentrant returns (uint256) {
         uint256[3] memory liquidityArr;
         liquidityArr[0] = _amount;
         liquidityArr[1] = 0;
@@ -192,30 +187,26 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
     /// @notice used to remove liquidity and get USDT
     /// @param _amount the amount of LP token to be used in the remove liquidity operation
     /// @param _minAmount the min amount of token to be received
-    function removeLiquidityUsdt(uint256 _amount, uint256 _minAmount)
-        external
-        nonReentrant
-        returns (uint256)
-    {
+    function removeLiquidityUsdt(
+        uint256 _amount,
+        uint256 _minAmount
+    ) external nonReentrant returns (uint256) {
         return _removeLiquidity(USDT, _amount, 0, _minAmount);
     }
 
     // ************************* //
     // *** PRIVATE FUNCTIONS *** //
     // ************************* //
-    function _calcDepositInOneCoin(uint256[3] memory arr)
-        private
-        view
-        returns (uint256)
-    {
+    function _calcDepositInOneCoin(
+        uint256[3] memory arr
+    ) private view returns (uint256) {
         return liquidityPool.calc_token_amount(arr, true);
     }
 
-    function _calcWithdrawInOneCoin(uint256 _lpAmount, uint256 _index)
-        private
-        view
-        returns (uint256)
-    {
+    function _calcWithdrawInOneCoin(
+        uint256 _lpAmount,
+        uint256 _index
+    ) private view returns (uint256) {
         if (_lpAmount == 0) return 0;
         return liquidityPool.calc_withdraw_one_coin(_lpAmount, _index);
     }

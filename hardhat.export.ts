@@ -21,29 +21,33 @@ if (!NODE_ENV || NODE_ENV === '') {
 }
 dotenv.config({ path: `./env/${process.env.NODE_ENV}.env` });
 
-const PRIVATE_KEY_1 = process.env.PRIVATE_KEY_1;
-const PUBLIC_KEY_1 = process.env.PUBLIC_KEY_1;
 
-let supportedChains: { [key: string]: HttpNetworkConfig } = SDK.API.utils
-    .getSupportedChains()
-    .reduce(
-        (sdkChains, chain) => ({
-            ...sdkChains,
-            [chain.name]: <HttpNetworkConfig>{
-                accounts:
-                    process.env.PRIVATE_KEY !== undefined
-                        ? [process.env.PRIVATE_KEY]
-                        : [],
-                live: true,
-                url: chain.rpc.replace('<api_key>', process.env.ALCHEMY_KEY),
-                gasMultiplier: chain.tags.includes('testnet') ? 2 : 1,
-                chainId: Number(chain.chainId),
-            },
-        }),
-        {},
-    );
+const supportedChains = SDK.API.utils.getSupportedChains().reduce(
+    (sdkChains, chain) => ({
+        ...sdkChains,
+        [chain.name]: <HttpNetworkConfig>{
+            accounts:
+                process.env.PRIVATE_KEY !== undefined
+                    ? [process.env.PRIVATE_KEY]
+                    : [],
+            live: true,
+            url:
+                chain.rpc == 'https://api.avax-test.network/ext/bc/C/rpc'
+                    ? 'https://rpc.ankr.com/avalanche_fuji'
+                    : chain.rpc.replace(
+                          '<api_key>',
+                          process.env.ALCHEMY_API_KEY,
+                      ),
+            gasMultiplier: chain.tags[0] === 'testnet' ? 2 : 1,
+            chainId: Number(chain.chainId),
+            tags: [...chain.tags],
+        },
+    }),
+    {} as { [key in TNetwork]: HttpNetworkConfig },
+);
 
 const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
+    SDK: { project: 'tapioca-strategies' },
     defaultNetwork: 'hardhat',
     namedAccounts: {
         deployer: 0,
@@ -71,6 +75,7 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
             {
                 version: '0.8.9',
                 settings: {
+                    viaIR: true,
                     optimizer: {
                         enabled: true,
                         runs: 200,
@@ -78,8 +83,9 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
                 },
             },
             {
-                version: '0.8.15',
+                version: '0.8.18',
                 settings: {
+                    viaIR: true,
                     optimizer: {
                         enabled: true,
                         runs: 200,
@@ -96,7 +102,7 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
         hardhat: {
             saveDeployments: false,
             forking: {
-                url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+                url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
             },
             hardfork: 'merge',
         },
@@ -105,12 +111,19 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
         mainnet: supportedChains['ethereum'],
     },
     dodoc: {
-        runOnCompile: true,
+        runOnCompile: false,
         freshOutput: true,
         exclude: [],
     },
     etherscan: {
-        apiKey: process.env.ETHERSCAN_KEY,
+        apiKey: {
+            goerli: process.env.BLOCKSCAN_KEY ?? '',
+            arbitrumGoerli: process.env.ARBITRUM_GOERLI_KEY ?? '',
+            avalancheFujiTestnet: process.env.AVALANCHE_FUJI_KEY ?? '',
+            bscTestnet: process.env.BSC_KEY ?? '',
+            polygonMumbai: process.env.POLYGON_MUMBAI ?? '',
+            ftmTestnet: process.env.FTM_TESTNET ?? '',
+        },
         customChains: [],
     },
     mocha: {

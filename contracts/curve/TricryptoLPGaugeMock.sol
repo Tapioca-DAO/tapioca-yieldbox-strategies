@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
 import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
@@ -24,11 +24,7 @@ contract TricryptoLPGaugeMock {
         return rewardToken;
     }
 
-    function deposit(
-        uint256 _value,
-        address,
-        bool
-    ) external {
+    function deposit(uint256 _value, address, bool) external {
         IERC20(lpToken).safeTransferFrom(msg.sender, address(this), _value);
     }
 
