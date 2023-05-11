@@ -86,7 +86,7 @@ describe('TricryptoStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
@@ -111,6 +111,7 @@ describe('TricryptoStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await tricryptoStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -152,7 +153,7 @@ describe('TricryptoStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
@@ -188,6 +189,7 @@ describe('TricryptoStrategy test', () => {
 
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
 
+        await timeTravel(86400);
         await weth.freeMint(amount);
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -223,7 +225,7 @@ describe('TricryptoStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
@@ -249,6 +251,7 @@ describe('TricryptoStrategy test', () => {
 
         await tricryptoStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);

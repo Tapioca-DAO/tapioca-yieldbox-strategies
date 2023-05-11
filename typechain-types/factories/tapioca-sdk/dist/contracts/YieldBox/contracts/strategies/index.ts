@@ -2,4 +2,3 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as baseStrategySol from "./BaseStrategy.sol";
-export { ERC20WithoutStrategy__factory } from "./ERC20WithoutStrategy__factory";

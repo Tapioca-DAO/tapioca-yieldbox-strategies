@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
-
-import '../mocks/ERC20Mock.sol';
+import '../../tapioca-mocks/contracts/ERC20Mock.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 contract SwapperMock {
-    using BoringERC20 for IERC20;
+    using SafeERC20 for IERC20;
 
     function getAmountsOut(
         uint256 amountIn,
@@ -26,7 +24,7 @@ contract SwapperMock {
         uint256
     ) external returns (uint256[] memory amounts) {
         IERC20(path[0]).safeTransferFrom(msg.sender, address(this), amountIn);
-        ERC20Mock(path[1]).freeMint(amountIn);
+        ERC20Mock(payable(path[1])).freeMint(amountIn);
         IERC20(path[1]).safeTransfer(to, amountIn);
         amounts = new uint256[](2);
         amounts[0] = amountIn;

@@ -78,7 +78,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         helpers = IBalancerHelpers(_helpers);
 
         wrappedNative.approve(_vault, type(uint256).max);
-        pool.approve(_vault, type(uint256).max);
+        IERC20(address(pool)).approve(_vault, type(uint256).max);
     }
 
     // ********************** //

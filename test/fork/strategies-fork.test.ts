@@ -338,6 +338,7 @@ describe('Strategies time dependent fork tests', () => {
             ),
         ).to.be.true;
         timeTravel(10 * 86400);
+        await weth.connect(binanceWallet).transfer(eoa1.address, amount);
         await weth
             .connect(eoa1)
             .approve(yieldBox.address, ethers.constants.MaxUint256);

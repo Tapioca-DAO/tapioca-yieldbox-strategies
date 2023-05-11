@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
-
 import './IConvexBooster.sol';
 import './IConvexRewardPool.sol';
-
-import '../mocks/ERC20Mock.sol';
+import '../../tapioca-mocks/contracts/ERC20Mock.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 contract ConvexBoosterMock {
-    using BoringERC20 for IERC20;
+    using SafeERC20 for IERC20;
 
     IERC20 public lpToken;
     IERC20 public receiptToken;

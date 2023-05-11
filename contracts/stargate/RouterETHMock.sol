@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
-
-import '../mocks/ERC20Mock.sol';
+import '../../tapioca-mocks/contracts/ERC20Mock.sol';
 
 contract RouterETHMock {
-    address public stgRouter;
-    address public lpToken;
+    address payable public stgRouter;
+    address payable public lpToken;
 
-    constructor(address _stgRouter, address _lpToken) {
+    constructor(address payable _stgRouter, address payable _lpToken) {
         stgRouter = _stgRouter;
         lpToken = _lpToken;
     }

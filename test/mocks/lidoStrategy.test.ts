@@ -48,7 +48,7 @@ describe('LidoStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const stEthAddress = await lidoEthStrategy.stEth();
@@ -85,6 +85,7 @@ describe('LidoStrategy test', () => {
             value: amount.mul(5),
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -122,7 +123,7 @@ describe('LidoStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const stEthAddress = await lidoEthStrategy.stEth();
@@ -170,6 +171,7 @@ describe('LidoStrategy test', () => {
             value: amount.mul(20),
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount);
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -204,7 +206,7 @@ describe('LidoStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const stEthAddress = await lidoEthStrategy.stEth();
@@ -232,6 +234,7 @@ describe('LidoStrategy test', () => {
 
         await lidoEthStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);

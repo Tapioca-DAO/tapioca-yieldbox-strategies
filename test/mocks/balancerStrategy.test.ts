@@ -47,7 +47,7 @@ describe('BalancerStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { balancerStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { balancerStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const lpTokenAddress = await balancerStrategy.pool();
@@ -74,6 +74,7 @@ describe('BalancerStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await balancerStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -111,7 +112,7 @@ describe('BalancerStrategy test', () => {
     });
 
      it('should withdraw from queue', async () => {
-        const { balancerStrategy, weth, wethAssetId, yieldBox, deployer } =
+        const { balancerStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
             await loadFixture(registerMocks);
 
         const vaultAddress = await balancerStrategy.vault();
@@ -137,6 +138,7 @@ describe('BalancerStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await balancerStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 

@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
-
 import './IBalancerVault.sol';
 import './IBalancerPool.sol';
-
-import '../mocks/ERC20Mock.sol';
+import '../../tapioca-mocks/contracts/ERC20Mock.sol';
 
 contract BalancerHelpersMock {
     function queryJoin(
