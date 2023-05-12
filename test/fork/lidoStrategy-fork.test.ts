@@ -181,8 +181,10 @@ describe('LidoStrategy fork test', () => {
         );
 
         timeTravel(100 * 86400);
-        let strategyWethBalance = await weth.balanceOf(lidoEthStrategy.address);
-        let stEthBalance = await stEthContract.balanceOf(
+        const strategyWethBalance = await weth.balanceOf(
+            lidoEthStrategy.address,
+        );
+        const stEthBalance = await stEthContract.balanceOf(
             lidoEthStrategy.address,
         );
         expect(strategyWethBalance.eq(0)).to.be.true;
@@ -239,7 +241,11 @@ describe('LidoStrategy fork test', () => {
             .transfer(deployer.address, amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,
@@ -307,7 +313,11 @@ describe('LidoStrategy fork test', () => {
             .transfer(deployer.address, amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,

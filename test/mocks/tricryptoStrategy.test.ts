@@ -86,8 +86,14 @@ describe('TricryptoStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            tricryptoStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(
@@ -153,8 +159,14 @@ describe('TricryptoStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            tricryptoStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(
@@ -206,7 +218,7 @@ describe('TricryptoStrategy test', () => {
             tricryptoStrategy.address,
         );
 
-        let lpStakingBalance = await lpGaugeContract.balanceOf(
+        const lpStakingBalance = await lpGaugeContract.balanceOf(
             await tricryptoStrategy.address,
         );
         expect(strategyWethBalance.eq(0)).to.be.true;
@@ -225,8 +237,14 @@ describe('TricryptoStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { tricryptoStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            tricryptoStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(
@@ -256,7 +274,11 @@ describe('TricryptoStrategy test', () => {
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,

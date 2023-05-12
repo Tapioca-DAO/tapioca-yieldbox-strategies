@@ -74,7 +74,7 @@ describe('ConvexStrategy test', () => {
             wethAssetId,
             yieldBox,
             deployer,
-            timeTravel
+            timeTravel,
         } = await loadFixture(registerMocks);
 
         const lpToken = await convexTricryptoStrategy.lpToken();
@@ -174,7 +174,7 @@ describe('ConvexStrategy test', () => {
             wethAssetId,
             yieldBox,
             deployer,
-            timeTravel
+            timeTravel,
         } = await loadFixture(registerMocks);
 
         const lpToken = await convexTricryptoStrategy.lpToken();
@@ -254,7 +254,7 @@ describe('ConvexStrategy test', () => {
             wethAssetId,
             yieldBox,
             deployer,
-            timeTravel
+            timeTravel,
         } = await loadFixture(registerMocks);
 
         const lpToken = await convexTricryptoStrategy.lpToken();
@@ -334,7 +334,7 @@ describe('ConvexStrategy test', () => {
         } = await loadFixture(registerMocks);
 
         let hasMintRestriction = await weth.hasMintRestrictions();
-        if(hasMintRestriction){
+        if (hasMintRestriction) {
             await weth.toggleRestrictions();
         }
         hasMintRestriction = await weth.hasMintRestrictions();
@@ -367,7 +367,11 @@ describe('ConvexStrategy test', () => {
         await timeTravel(86401);
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await timeTravel(86401);
         await yieldBox.depositAsset(
             wethStrategyAssetId,

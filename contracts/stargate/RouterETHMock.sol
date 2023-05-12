@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '../../tapioca-mocks/contracts/ERC20Mock.sol';
+import "../../tapioca-mocks/contracts/ERC20Mock.sol";
 
 contract RouterETHMock {
     address payable public stgRouter;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '../../tapioca-mocks/contracts/ERC20Mock.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "../../tapioca-mocks/contracts/ERC20Mock.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // solhint-disable func-name-mixedcase
 
@@ -14,11 +14,11 @@ contract StkAaveMock is ERC20Mock {
     uint256 public lastCooldown;
 
     constructor()
-        ERC20Mock('StkAaveMock', 'STKM', 100_000 * 1e18, 18, msg.sender)
+        ERC20Mock("StkAaveMock", "STKM", 100_000 * 1e18, 18, msg.sender)
     {
         token = new ERC20Mock(
-            'InputTokenMock',
-            'ITM',
+            "InputTokenMock",
+            "ITM",
             10_000 * 1e18,
             18,
             msg.sender

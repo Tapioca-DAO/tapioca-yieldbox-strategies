@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 contract CurveEthStEthPoolMock {
     using BoringERC20 for IERC20;
@@ -34,7 +34,7 @@ contract CurveEthStEthPoolMock {
 
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, 'StargateStrategy: ETH transfer failed');
+        require(success, "StargateStrategy: ETH transfer failed");
     }
 
     receive() external payable {}

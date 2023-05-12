@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import './ITricryptoLPGetter.sol';
-import './ITricryptoLPGauge.sol';
-import './ICurveMinter.sol';
-import '../interfaces/IUniswapV2Router02.sol';
+import "./ITricryptoLPGetter.sol";
+import "./ITricryptoLPGauge.sol";
+import "./ICurveMinter.sol";
+import "../interfaces/IUniswapV2Router02.sol";
 
 /*
 
@@ -86,7 +86,7 @@ contract TricryptoStrategy is
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Curve-Tricrypto';
+        return "Curve-Tricrypto";
     }
 
     /// @notice Returns the description of this strategy
@@ -96,7 +96,7 @@ contract TricryptoStrategy is
         override
         returns (string memory description_)
     {
-        return 'Curve-Tricrypto strategy for wrapped native assets';
+        return "Curve-Tricrypto strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -178,7 +178,7 @@ contract TricryptoStrategy is
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         uint256 lpBalance = lpGauge.balanceOf(address(this));
         lpGauge.withdraw(lpBalance, true);
@@ -216,11 +216,11 @@ contract TricryptoStrategy is
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'TricryptoStrategy: amount not valid');
+        require(available >= amount, "TricryptoStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound('');
+            compound("");
             uint256 lpBalance = lpGauge.balanceOf(address(this));
             lpGauge.withdraw(lpBalance, true);
             uint256 calcWithdraw = lpGetter.calcLpToWeth(lpBalance);
@@ -229,7 +229,7 @@ contract TricryptoStrategy is
         }
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
-            'TricryptoStrategy: not enough'
+            "TricryptoStrategy: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
         queued = wrappedNative.balanceOf(address(this));

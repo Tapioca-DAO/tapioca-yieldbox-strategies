@@ -49,8 +49,14 @@ describe('YearnStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { yearnStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            yearnStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
 
         const wethYearnStrategyAssetId = await yieldBox.ids(
@@ -103,8 +109,14 @@ describe('YearnStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { yearnStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            yearnStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
 
@@ -164,8 +176,14 @@ describe('YearnStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { yearnStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            yearnStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
 
         const wethStrategyAssetId = await yieldBox.ids(

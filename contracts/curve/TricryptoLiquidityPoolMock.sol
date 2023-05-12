@@ -4,8 +4,8 @@ pragma solidity ^0.8.18;
 // solhint-disable var-name-mixedcase
 // solhint-disable func-name-mixedcase
 
-import '../../tapioca-mocks/contracts/ERC20Mock.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "../../tapioca-mocks/contracts/ERC20Mock.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TricryptoLiquidityPoolMock {
     using SafeERC20 for IERC20;
@@ -16,8 +16,8 @@ contract TricryptoLiquidityPoolMock {
     constructor(address _weth) {
         weth = _weth;
         token = new ERC20Mock(
-            'InputTokenMock',
-            'ITM',
+            "InputTokenMock",
+            "ITM",
             10_000 * 1e18,
             18,
             address(this)

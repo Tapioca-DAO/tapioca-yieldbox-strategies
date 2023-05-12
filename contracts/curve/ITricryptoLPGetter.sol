@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import './ITricryptoLiquidityPool.sol';
+import "./ITricryptoLiquidityPool.sol";
 
 interface ITricryptoLPGetter {
     /// @notice returns curve's liquidity pool

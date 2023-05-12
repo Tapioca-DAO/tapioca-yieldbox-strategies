@@ -12,7 +12,7 @@ import { HttpNetworkConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
 
 dotenv.config({ path: './env/.env' });
-let NODE_ENV = 'mainnet';
+const NODE_ENV = 'mainnet';
 if (!NODE_ENV || NODE_ENV === '') {
     throw `Please specify witch environment file you want to use\n \
     E.g: NODE_ENV={environmentFileHere} yarn hardhat ${process.argv
@@ -20,7 +20,6 @@ if (!NODE_ENV || NODE_ENV === '') {
         .join(' ')}`;
 }
 dotenv.config({ path: `./env/${process.env.NODE_ENV}.env` });
-
 
 const supportedChains = SDK.API.utils.getSupportedChains().reduce(
     (sdkChains, chain) => ({

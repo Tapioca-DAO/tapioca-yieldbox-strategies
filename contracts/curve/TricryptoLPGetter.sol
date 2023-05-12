@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import './ITricryptoLiquidityPool.sol';
-import './ITricryptoLPGetter.sol';
+import "./ITricryptoLiquidityPool.sol";
+import "./ITricryptoLPGetter.sol";
 
 /*
 
@@ -217,14 +217,14 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
         uint256[3] memory arr,
         uint256 _min
     ) private returns (uint256 result) {
-        require(_amount > 0, 'Amount not valid');
+        require(_amount > 0, "Amount not valid");
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
         IERC20(_token).approve(address(liquidityPool), _amount);
 
         uint256 lpBalanceBefore = lpToken.balanceOf(address(this));
         liquidityPool.add_liquidity(arr, _min);
         uint256 lpBalanceAfter = lpToken.balanceOf(address(this));
-        require(lpBalanceAfter > lpBalanceBefore, 'Add liquidity failed');
+        require(lpBalanceAfter > lpBalanceBefore, "Add liquidity failed");
 
         result = lpBalanceAfter - lpBalanceBefore;
         lpToken.safeTransfer(msg.sender, result);
@@ -237,7 +237,7 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
         uint256 _index,
         uint256 _min
     ) private returns (uint256 result) {
-        require(_amount > 0, 'Amount not valid');
+        require(_amount > 0, "Amount not valid");
 
         lpToken.safeTransferFrom(msg.sender, address(this), _amount);
         lpToken.approve(address(liquidityPool), _amount);
@@ -247,7 +247,7 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
         uint256 assetBalanceAfter = IERC20(_token).balanceOf(address(this));
         require(
             assetBalanceAfter > assetBalanceBefore,
-            'Remove liquidity failed'
+            "Remove liquidity failed"
         );
 
         result = assetBalanceAfter - assetBalanceBefore;

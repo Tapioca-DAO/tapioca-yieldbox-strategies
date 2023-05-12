@@ -50,7 +50,7 @@ async function registerERC20Tokens(deployer: any, staging?: boolean) {
         'USDCM',
         supplyStart,
         18,
-        deployer.address
+        deployer.address,
     );
     await usdc.updateMintLimit(supplyStart.mul(10));
     log(`Deployed USDC ${usdc.address} with args [${supplyStart}]`, staging);
@@ -60,7 +60,7 @@ async function registerERC20Tokens(deployer: any, staging?: boolean) {
         'WETHM',
         supplyStart,
         18,
-        deployer.address
+        deployer.address,
     );
     await weth.updateMintLimit(supplyStart.mul(10));
     log(`Deployed WETH ${weth.address} with no arguments`, staging);
@@ -311,7 +311,7 @@ async function deployStargateRouterETHMock(
         stargateRouterMockAddress = stargateRouterMock.address;
     }
 
-    const deployer = (await ethers.getSigners())[0];    
+    const deployer = (await ethers.getSigners())[0];
     const ERC20Mock = new ERC20Mock__factory(deployer);
     const lpTokenMock = await ERC20Mock.deploy(
         'LPTokenMock',
@@ -345,9 +345,8 @@ async function deployStargateLpStakingMock(
     lpTokenAddress: string,
     staging?: boolean,
 ) {
-         
     if (stgRewardAddress == ethers.constants.AddressZero) {
-        const deployer = (await ethers.getSigners())[0];   
+        const deployer = (await ethers.getSigners())[0];
         const ERC20Mock = new ERC20Mock__factory(deployer);
         const stgTokenMock = await ERC20Mock.deploy(
             'STGTokenMock',
@@ -468,7 +467,7 @@ async function deployTricryptoMinter(
     staging?: boolean,
 ) {
     if (rewardTokenAddress == ethers.constants.AddressZero) {
-        const deployer = (await ethers.getSigners())[0];   
+        const deployer = (await ethers.getSigners())[0];
         const ERC20Mock = new ERC20Mock__factory(deployer);
         const crvTokenMock = await ERC20Mock.deploy(
             'STGTokenMock',
@@ -599,7 +598,7 @@ async function registerTricryptoStrategy(
         liquidityPoolAddress = liquidityPoolMock.address;
     }
     if (rewardTokenAddress == ethers.constants.AddressZero) {
-        const deployer = (await ethers.getSigners())[0];   
+        const deployer = (await ethers.getSigners())[0];
         const ERC20Mock = new ERC20Mock__factory(deployer);
         const crvTokenMock = await ERC20Mock.deploy(
             'STGTokenMock',
@@ -650,7 +649,7 @@ async function registerTricryptoStrategy(
         lpGaugeAddress,
         lpGetterAddress,
         tricryptoMinterAddress,
-        swapper
+        swapper,
     );
     await tricryptoStrategy.deployed();
 
@@ -741,12 +740,7 @@ async function registerLidoStEthStrategy(
 
     const lidoEthStrategy = await (
         await ethers.getContractFactory('LidoEthStrategy')
-    ).deploy(
-        yieldBoxAddres,
-        wethAddress,
-        stEthAddress,
-        curveSthEThPoolAddress,
-    );
+    ).deploy(yieldBoxAddres, wethAddress, stEthAddress, curveSthEThPoolAddress);
     await lidoEthStrategy.deployed();
 
     log(
@@ -839,7 +833,7 @@ async function deployGaugeMock(stablePoolAddress: string, staging?: boolean) {
 
     const rewardTokenInitialBalance = ethers.utils.parseEther('100000000');
 
-    const deployer = (await ethers.getSigners())[0];   
+    const deployer = (await ethers.getSigners())[0];
     const ERC20Mock = new ERC20Mock__factory(deployer);
     const rewardToken1 = await ERC20Mock.deploy(
         'RewardToken1Mock',
@@ -1006,7 +1000,7 @@ async function deployConvexRewardPool(
     lpTokenAddress: string,
     staging?: boolean,
 ) {
-    const deployer = (await ethers.getSigners())[0];   
+    const deployer = (await ethers.getSigners())[0];
     const ERC20Mock = new ERC20Mock__factory(deployer);
     const cvxTokenMock = await ERC20Mock.deploy(
         'CVXTokenMock',
@@ -1052,8 +1046,8 @@ async function deployConvexBoosterMock(
     lpTokenAddress: string,
     rewardPoolAddress: string,
     staging?: boolean,
-) { 
-    const deployer = (await ethers.getSigners())[0];   
+) {
+    const deployer = (await ethers.getSigners())[0];
     const ERC20Mock = new ERC20Mock__factory(deployer);
     const receiptTokenMock = await ERC20Mock.deploy(
         'ReceiptTokenMock',
@@ -1062,7 +1056,9 @@ async function deployConvexBoosterMock(
         18,
         deployer.address,
     );
-    await receiptTokenMock.updateMintLimit(ethers.utils.parseEther('100000000'));
+    await receiptTokenMock.updateMintLimit(
+        ethers.utils.parseEther('100000000'),
+    );
 
     log(
         `Deployed ReceiptTokenMock ${
@@ -1098,7 +1094,7 @@ async function deployConvexBoosterMock(
 }
 
 async function deployConvexZapMock(staging?: boolean) {
-    const deployer = (await ethers.getSigners())[0];   
+    const deployer = (await ethers.getSigners())[0];
     const ERC20Mock = new ERC20Mock__factory(deployer);
     const reward1Mock = await ERC20Mock.deploy(
         'RewardToken1Mock',
@@ -1428,7 +1424,12 @@ export async function registerMocks(staging?: boolean) {
     await (
         await yieldBox.registerAsset(1, usdc.address, usdcStrategy.address, 0)
     ).wait();
-    const usdcAssetId = await yieldBox.ids(1, usdc.address, usdcStrategy.address, 0);
+    const usdcAssetId = await yieldBox.ids(
+        1,
+        usdc.address,
+        usdcStrategy.address,
+        0,
+    );
 
     const initialSetup = {
         deployer,
@@ -1469,9 +1470,10 @@ export async function impersonateAccount(address: string) {
     });
 }
 export async function registerFork() {
-    let binanceWallet;
     await impersonateAccount(process.env.BINANCE_WALLET_ADDRESS!);
-    binanceWallet = await ethers.getSigner(process.env.BINANCE_WALLET_ADDRESS!);
+    const binanceWallet = await ethers.getSigner(
+        process.env.BINANCE_WALLET_ADDRESS!,
+    );
 
     /**
      * INITIAL SETUP
@@ -1514,7 +1516,12 @@ export async function registerFork() {
     await (
         await yieldBox.registerAsset(1, weth.address, wethStrategy.address, 0)
     ).wait();
-    const wethAssetId = await yieldBox.ids(1, weth.address, wethStrategy.address, 0);
+    const wethAssetId = await yieldBox.ids(
+        1,
+        weth.address,
+        wethStrategy.address,
+        0,
+    );
 
     const usdcStrategy = await createTokenEmptyStrategy(
         yieldBox.address,
@@ -1523,7 +1530,12 @@ export async function registerFork() {
     await (
         await yieldBox.registerAsset(1, usdc.address, usdcStrategy.address, 0)
     ).wait();
-    const usdcAssetId = await yieldBox.ids(1, usdc.address, usdcStrategy.address, 0);
+    const usdcAssetId = await yieldBox.ids(
+        1,
+        usdc.address,
+        usdcStrategy.address,
+        0,
+    );
 
     log('Deploying SwapperMock', false);
     const { swapperMock } = await registerSwapperMock(false);

@@ -50,8 +50,14 @@ describe('AaveStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { aaveStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            aaveStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
 
         const wethAaveStrategyAssetId = await yieldBox.ids(
@@ -158,10 +164,10 @@ describe('AaveStrategy test', () => {
             share,
         );
 
-        let aaveStrategyWethBalance = await weth.balanceOf(
+        const aaveStrategyWethBalance = await weth.balanceOf(
             aaveStrategy.address,
         );
-        let aaveLendingPoolBalance = await weth.balanceOf(
+        const aaveLendingPoolBalance = await weth.balanceOf(
             await aaveStrategy.lendingPool(),
         );
         expect(aaveStrategyWethBalance.eq(0)).to.be.true;
@@ -184,8 +190,14 @@ describe('AaveStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { aaveStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            aaveStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
 
         const wethAaveStrategyAssetId = await yieldBox.ids(
@@ -201,7 +213,7 @@ describe('AaveStrategy test', () => {
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(
+        const share = await yieldBox.toShare(
             wethAaveStrategyAssetId,
             amount,
             false,
@@ -263,7 +275,7 @@ describe('AaveStrategy test', () => {
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(
+        const share = await yieldBox.toShare(
             wethAaveStrategyAssetId,
             amount,
             false,

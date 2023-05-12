@@ -188,7 +188,7 @@ describe('BalancerStrategy fork test', () => {
         const strategyWethBalance = await weth.balanceOf(
             balancerStrategy.address,
         );
-        let poolBalance = await lpTokenContract.balanceOf(
+        const poolBalance = await lpTokenContract.balanceOf(
             balancerStrategy.address,
         );
         expect(strategyWethBalance.lt(amount)).to.be.true;
@@ -197,7 +197,7 @@ describe('BalancerStrategy fork test', () => {
         timeTravel(100 * 86400);
 
         share = await yieldBox.balanceOf(deployer.address, wethStrategyAssetId);
-        let withdrawalAmount = await yieldBox.toAmount(
+        const withdrawalAmount = await yieldBox.toAmount(
             wethStrategyAssetId,
             share,
             false,
@@ -335,7 +335,11 @@ describe('BalancerStrategy fork test', () => {
             .transfer(deployer.address, amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import './IYearnVault.sol';
+import "./IYearnVault.sol";
 
 /*
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -64,7 +64,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Yearn';
+        return "Yearn";
     }
 
     /// @notice Returns the description of this strategy
@@ -74,7 +74,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'Yearn strategy for wrapped native assets';
+        return "Yearn strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -99,7 +99,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         uint256 toWithdraw = vault.balanceOf(address(this));
         result = vault.withdraw(toWithdraw, address(this), 0);
@@ -134,7 +134,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'YearnStrategy: amount not valid');
+        require(available >= amount, "YearnStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {

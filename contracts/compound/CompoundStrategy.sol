@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import 'tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import '../interfaces/INative.sol';
-import './ICToken.sol';
+import "../interfaces/INative.sol";
+import "./ICToken.sol";
 
 /*
 
@@ -63,7 +63,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Compound';
+        return "Compound";
     }
 
     /// @notice Returns the description of this strategy
@@ -73,7 +73,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'Compound strategy for wrapped native assets';
+        return "Compound strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -98,7 +98,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         uint256 toWithdraw = cToken.balanceOf(address(this));
         cToken.redeem(toWithdraw);
@@ -138,7 +138,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'CompoundStrategy: amount not valid');
+        require(available >= amount, "CompoundStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
@@ -154,7 +154,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
-            'CompoundStrategy: not enough'
+            "CompoundStrategy: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
 

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import './IBalancerVault.sol';
-import './IBalancerPool.sol';
-import '../../tapioca-mocks/contracts/ERC20Mock.sol';
+import "./IBalancerVault.sol";
+import "./IBalancerPool.sol";
+import "../../tapioca-mocks/contracts/ERC20Mock.sol";
 
 contract BalancerHelpersMock {
     function queryJoin(

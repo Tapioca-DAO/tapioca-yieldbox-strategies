@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '../../tapioca-mocks/contracts/ERC20Mock.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "../../tapioca-mocks/contracts/ERC20Mock.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract StargateRouterMock {
     using SafeERC20 for IERC20;
@@ -25,7 +25,7 @@ contract StargateRouterMock {
 
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, 'StargateStrategy: ETH transfer failed');
+        require(success, "StargateStrategy: ETH transfer failed");
     }
 
     receive() external payable {}

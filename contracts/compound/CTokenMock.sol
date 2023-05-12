@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import '../../tapioca-mocks/contracts/ERC20Mock.sol';
-import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import "../../tapioca-mocks/contracts/ERC20Mock.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract CTokenMock is ERC20Mock {
     using SafeERC20 for IERC20;
@@ -11,7 +11,7 @@ contract CTokenMock is ERC20Mock {
 
     constructor(
         address _underlying
-    ) ERC20Mock('CTokenMock', 'CTM', 100_000 * 1e18, 18, msg.sender) {
+    ) ERC20Mock("CTokenMock", "CTM", 100_000 * 1e18, 18, msg.sender) {
         underlying = _underlying;
     }
 

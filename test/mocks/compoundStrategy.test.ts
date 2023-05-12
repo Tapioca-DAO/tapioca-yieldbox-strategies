@@ -47,8 +47,14 @@ describe('CompoundStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { compoundStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            compoundStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(
             1,
             weth.address,
@@ -111,8 +117,14 @@ describe('CompoundStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { compoundStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            compoundStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         await yieldBox.registerAsset(
             1,
@@ -184,8 +196,14 @@ describe('CompoundStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { compoundStrategy, weth, wethAssetId, yieldBox, deployer, timeTravel } =
-            await loadFixture(registerMocks);
+        const {
+            compoundStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(
             1,
             weth.address,

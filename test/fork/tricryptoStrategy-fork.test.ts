@@ -204,7 +204,11 @@ describe('TricryptoStrategy fork test', () => {
             .transfer(deployer.address, amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,
