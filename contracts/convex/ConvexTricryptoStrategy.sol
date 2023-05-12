@@ -8,12 +8,12 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "../curve/ITricryptoLPGetter.sol";
+import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "../curve/interfaces/ITricryptoLPGetter.sol";
 
-import "./IConvexBooster.sol";
-import "./IConvexRewardPool.sol";
-import "./IConvexZap.sol";
-import "../interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IConvexBooster.sol";
+import "./interfaces/IConvexRewardPool.sol";
+import "./interfaces/IConvexZap.sol";
 
 /*
 

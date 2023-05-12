@@ -9,8 +9,8 @@ import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import "./IStEth.sol";
-import "./ICurveEthStEthPool.sol";
+import "./interfaces/IStEth.sol";
+import "./interfaces/ICurveEthStEthPool.sol";
 import "../interfaces/INative.sol";
 
 /*

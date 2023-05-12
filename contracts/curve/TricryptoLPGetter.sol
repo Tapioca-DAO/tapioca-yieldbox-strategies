@@ -7,8 +7,8 @@ import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
 import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import "./ITricryptoLiquidityPool.sol";
-import "./ITricryptoLPGetter.sol";
+import "./interfaces/ITricryptoLiquidityPool.sol";
+import "./interfaces/ITricryptoLPGetter.sol";
 
 /*
 

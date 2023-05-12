@@ -8,10 +8,10 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "./IStkAave.sol";
-import "./ILendingPool.sol";
-import "./IIncentivesController.sol";
-import "../interfaces/IUniswapV2Router02.sol";
+import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IStkAave.sol";
+import "./interfaces/ILendingPool.sol";
+import "./interfaces/IIncentivesController.sol";
 
 /*
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        

@@ -10,7 +10,7 @@ import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
 import "../interfaces/INative.sol";
-import "./ICToken.sol";
+import "./interfaces/ICToken.sol";
 
 /*
 
