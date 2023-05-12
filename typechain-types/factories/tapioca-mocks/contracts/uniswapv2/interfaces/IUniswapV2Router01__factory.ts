@@ -759,7 +759,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class IUniswapV2Router01__factory {
   static readonly abi = _abi;

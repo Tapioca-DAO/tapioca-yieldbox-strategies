@@ -132,7 +132,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class IBalancerHelpers__factory {
   static readonly abi = _abi;

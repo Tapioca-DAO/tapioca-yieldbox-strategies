@@ -273,18 +273,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.INative__factory>;
     getContractFactory(
-      name: "IStrategy",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IStrategy__factory>;
-    getContractFactory(
-      name: "IUniswapV2Router01",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IUniswapV2Router01__factory>;
-    getContractFactory(
-      name: "IUniswapV2Router02",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IUniswapV2Router02__factory>;
-    getContractFactory(
       name: "ICurveEthStEthPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICurveEthStEthPool__factory>;
@@ -372,6 +360,10 @@ declare module "hardhat/types/runtime" {
       name: "IUniswapV2Router02",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IUniswapV2Router02__factory>;
+    getContractFactory(
+      name: "INative",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.INative__factory>;
     getContractFactory(
       name: "AssetRegister",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -755,21 +747,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.INative>;
     getContractAt(
-      name: "IStrategy",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IStrategy>;
-    getContractAt(
-      name: "IUniswapV2Router01",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IUniswapV2Router01>;
-    getContractAt(
-      name: "IUniswapV2Router02",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IUniswapV2Router02>;
-    getContractAt(
       name: "ICurveEthStEthPool",
       address: string,
       signer?: ethers.Signer
@@ -879,6 +856,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IUniswapV2Router02>;
+    getContractAt(
+      name: "INative",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.INative>;
     getContractAt(
       name: "AssetRegister",
       address: string,

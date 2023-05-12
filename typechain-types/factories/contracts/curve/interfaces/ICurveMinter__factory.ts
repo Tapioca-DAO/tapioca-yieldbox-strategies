@@ -23,7 +23,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class ICurveMinter__factory {
   static readonly abi = _abi;

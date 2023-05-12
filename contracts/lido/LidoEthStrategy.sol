@@ -11,7 +11,7 @@ import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.so
 
 import "./interfaces/IStEth.sol";
 import "./interfaces/ICurveEthStEthPool.sol";
-import "../interfaces/INative.sol";
+import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
 

@@ -333,7 +333,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-];
+] as const;
 
 export class ITricryptoLPGetter__factory {
   static readonly abi = _abi;

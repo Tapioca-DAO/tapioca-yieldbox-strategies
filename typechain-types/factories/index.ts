@@ -6,4 +6,5 @@ export * as openzeppelin from "./@openzeppelin";
 export * as uniswap from "./@uniswap";
 export * as contracts from "./contracts";
 export * as tapiocaMocks from "./tapioca-mocks";
+export * as tapiocaPeriph from "./tapioca-periph";
 export * as tapiocaSdk from "./tapioca-sdk";

@@ -13,7 +13,7 @@ import "./interfaces/IRouter.sol";
 import "./interfaces/IRouterETH.sol";
 import "./interfaces/ILPStaking.sol";
 import "./interfaces/IStargateSwapper.sol";
-import "../interfaces/INative.sol";
+import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
 
