@@ -269,14 +269,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TricryptoStrategy__factory>;
     getContractFactory(
-      name: "INative",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.INative__factory>;
-    getContractFactory(
-      name: "IStrategy",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IStrategy__factory>;
-    getContractFactory(
       name: "ICurveEthStEthPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICurveEthStEthPool__factory>;
@@ -296,10 +288,6 @@ declare module "hardhat/types/runtime" {
       name: "StEthMock",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.StEthMock__factory>;
-    getContractFactory(
-      name: "SwapperMock",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SwapperMock__factory>;
     getContractFactory(
       name: "ILPStaking",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -746,16 +734,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TricryptoStrategy>;
     getContractAt(
-      name: "INative",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.INative>;
-    getContractAt(
-      name: "IStrategy",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IStrategy>;
-    getContractAt(
       name: "ICurveEthStEthPool",
       address: string,
       signer?: ethers.Signer
@@ -780,11 +758,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.StEthMock>;
-    getContractAt(
-      name: "SwapperMock",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SwapperMock>;
     getContractAt(
       name: "ILPStaking",
       address: string,

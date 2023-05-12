@@ -4,6 +4,7 @@ import hre, { ethers, network } from 'hardhat';
 import {
     ERC20Mock__factory,
     UniswapV2RouterMock__factory,
+    MockSwapper__factory,
 } from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
 

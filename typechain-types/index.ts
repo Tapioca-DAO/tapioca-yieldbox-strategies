@@ -142,10 +142,6 @@ export type { TricryptoLPGetter } from "./contracts/curve/TricryptoLPGetter";
 export { TricryptoLPGetter__factory } from "./factories/contracts/curve/TricryptoLPGetter__factory";
 export type { TricryptoStrategy } from "./contracts/curve/TricryptoStrategy";
 export { TricryptoStrategy__factory } from "./factories/contracts/curve/TricryptoStrategy__factory";
-export type { INative } from "./contracts/interfaces/INative";
-export { INative__factory } from "./factories/contracts/interfaces/INative__factory";
-export type { IStrategy } from "./contracts/interfaces/IStrategy";
-export { IStrategy__factory } from "./factories/contracts/interfaces/IStrategy__factory";
 export type { ICurveEthStEthPool } from "./contracts/lido/interfaces/ICurveEthStEthPool";
 export { ICurveEthStEthPool__factory } from "./factories/contracts/lido/interfaces/ICurveEthStEthPool__factory";
 export type { IStEth } from "./contracts/lido/interfaces/IStEth";
@@ -156,8 +152,6 @@ export type { CurveEthStEthPoolMock } from "./contracts/lido/mocks/CurveEthStEth
 export { CurveEthStEthPoolMock__factory } from "./factories/contracts/lido/mocks/CurveEthStEthPoolMock__factory";
 export type { StEthMock } from "./contracts/lido/mocks/StEthMock";
 export { StEthMock__factory } from "./factories/contracts/lido/mocks/StEthMock__factory";
-export type { SwapperMock } from "./contracts/mocks/SwapperMock";
-export { SwapperMock__factory } from "./factories/contracts/mocks/SwapperMock__factory";
 export type { ILPStaking } from "./contracts/stargate/interfaces/ILPStaking";
 export { ILPStaking__factory } from "./factories/contracts/stargate/interfaces/ILPStaking__factory";
 export type { IRouter } from "./contracts/stargate/interfaces/IRouter";
@@ -190,6 +184,8 @@ export type { IUniswapV2Router01 } from "./tapioca-mocks/contracts/uniswapv2/int
 export { IUniswapV2Router01__factory } from "./factories/tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router01__factory";
 export type { IUniswapV2Router02 } from "./tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02";
 export { IUniswapV2Router02__factory } from "./factories/tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02__factory";
+export type { INative } from "./tapioca-periph/contracts/interfaces/INative";
+export { INative__factory } from "./factories/tapioca-periph/contracts/interfaces/INative__factory";
 export type { AssetRegister } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/AssetRegister";
 export { AssetRegister__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/AssetRegister__factory";
 export type { ERC1155 } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/ERC1155";
@@ -198,6 +194,8 @@ export type { ERC1155TokenReceiver } from "./tapioca-sdk/dist/contracts/YieldBox
 export { ERC1155TokenReceiver__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/ERC1155TokenReceiver__factory";
 export type { ERC721TokenReceiver } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/ERC721TokenReceiver";
 export { ERC721TokenReceiver__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/ERC721TokenReceiver__factory";
+export type { IStrategy } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IStrategy";
+export { IStrategy__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IStrategy__factory";
 export type { IWrappedNative } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IWrappedNative";
 export { IWrappedNative__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IWrappedNative__factory";
 export type { IYieldBox } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IYieldBox";
