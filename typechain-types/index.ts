@@ -144,6 +144,8 @@ export type { TricryptoStrategy } from "./contracts/curve/TricryptoStrategy";
 export { TricryptoStrategy__factory } from "./factories/contracts/curve/TricryptoStrategy__factory";
 export type { INative } from "./contracts/interfaces/INative";
 export { INative__factory } from "./factories/contracts/interfaces/INative__factory";
+export type { IStrategy } from "./contracts/interfaces/IStrategy";
+export { IStrategy__factory } from "./factories/contracts/interfaces/IStrategy__factory";
 export type { ICurveEthStEthPool } from "./contracts/lido/interfaces/ICurveEthStEthPool";
 export { ICurveEthStEthPool__factory } from "./factories/contracts/lido/interfaces/ICurveEthStEthPool__factory";
 export type { IStEth } from "./contracts/lido/interfaces/IStEth";
@@ -196,8 +198,6 @@ export type { ERC1155TokenReceiver } from "./tapioca-sdk/dist/contracts/YieldBox
 export { ERC1155TokenReceiver__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/ERC1155TokenReceiver__factory";
 export type { ERC721TokenReceiver } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/ERC721TokenReceiver";
 export { ERC721TokenReceiver__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/ERC721TokenReceiver__factory";
-export type { IStrategy } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IStrategy";
-export { IStrategy__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IStrategy__factory";
 export type { IWrappedNative } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IWrappedNative";
 export { IWrappedNative__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IWrappedNative__factory";
 export type { IYieldBox } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/interfaces/IYieldBox";

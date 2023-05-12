@@ -273,6 +273,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.INative__factory>;
     getContractFactory(
+      name: "IStrategy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IStrategy__factory>;
+    getContractFactory(
       name: "ICurveEthStEthPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICurveEthStEthPool__factory>;
@@ -746,6 +750,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.INative>;
+    getContractAt(
+      name: "IStrategy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IStrategy>;
     getContractAt(
       name: "ICurveEthStEthPool",
       address: string,

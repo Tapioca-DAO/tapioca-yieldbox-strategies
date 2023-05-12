@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { INative } from "./INative";
+export type { IStrategy } from "./IStrategy";

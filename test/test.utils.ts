@@ -1,7 +1,10 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { BigNumberish } from 'ethers';
 import hre, { ethers, network } from 'hardhat';
-import { ERC20Mock__factory } from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
+import {
+    ERC20Mock__factory,
+    UniswapV2RouterMock__factory,
+} from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR);
@@ -103,12 +106,12 @@ async function registerYieldBox(wethAddress: string, staging?: boolean) {
 }
 
 async function registerSwapperMock(staging?: boolean) {
-    const swapperMock = await (
-        await ethers.getContractFactory('SwapperMock')
-    ).deploy();
-    await swapperMock.deployed();
+    const deployer = (await ethers.getSigners())[0];
+    const UniswapV2RouterMock = new UniswapV2RouterMock__factory(deployer);
+
+    const swapperMock = await UniswapV2RouterMock.deploy();
     log(
-        `Deployed MultiSwapper ${swapperMock.address} with no arguments`,
+        `Deployed UniswapV2RouterMock ${swapperMock.address} with no arguments`,
         staging,
     );
 

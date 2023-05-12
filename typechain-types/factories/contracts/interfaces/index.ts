@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { INative__factory } from "./INative__factory";
+export { IStrategy__factory } from "./IStrategy__factory";
