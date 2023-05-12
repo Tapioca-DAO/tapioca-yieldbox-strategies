@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import './IStEth.sol';
-import './ICurveEthStEthPool.sol';
-import '../interfaces/INative.sol';
+import "./interfaces/IStEth.sol";
+import "./interfaces/ICurveEthStEthPool.sol";
+import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
 
@@ -67,7 +67,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Lido-ETH';
+        return "Lido-ETH";
     }
 
     /// @notice Returns the description of this strategy
@@ -77,7 +77,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'Lido-ETH strategy for wrapped native assets';
+        return "Lido-ETH strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -102,7 +102,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         uint256 toWithdraw = stEth.balanceOf(address(this));
         uint256 minAmount = (toWithdraw * 50) / 10_000; //0.5%
@@ -128,7 +128,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _deposited(uint256 amount) internal override nonReentrant {
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
-            require(!stEth.isStakingPaused(), 'LidoStrategy: staking paused');
+            require(!stEth.isStakingPaused(), "LidoStrategy: staking paused");
             INative(address(wrappedNative)).withdraw(queued);
             stEth.submit{value: queued}(address(0)); //1:1 between eth<>stEth
             emit AmountDeposited(queued);
@@ -138,13 +138,12 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev swaps StEth with Eth
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'LidoStrategy: amount not valid');
+        require(available >= amount, "LidoStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
@@ -160,7 +159,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             INative(address(wrappedNative)).deposit{value: obtainedEth}();
         }
         queued = wrappedNative.balanceOf(address(this));
-        require(queued >= amount, 'LidoStrategy: not enough');
+        require(queued >= amount, "LidoStrategy: not enough");
 
         wrappedNative.safeTransfer(to, amount);
 

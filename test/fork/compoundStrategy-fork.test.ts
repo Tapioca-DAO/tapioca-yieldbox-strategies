@@ -175,7 +175,7 @@ describe('CompoundStrategy fork test', () => {
         const strategyWethBalance = await weth.balanceOf(
             compoundStrategy.address,
         );
-        let poolBalance = await cTokenContract.balanceOf(
+        const poolBalance = await cTokenContract.balanceOf(
             compoundStrategy.address,
         );
         expect(strategyWethBalance.eq(0)).to.be.true;
@@ -298,7 +298,11 @@ describe('CompoundStrategy fork test', () => {
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,
@@ -308,7 +312,9 @@ describe('CompoundStrategy fork test', () => {
         );
 
         let invested = await cTokenContract.balanceOf(compoundStrategy.address);
-        let strategyWethBalance = await weth.balanceOf(compoundStrategy.address);
+        let strategyWethBalance = await weth.balanceOf(
+            compoundStrategy.address,
+        );
 
         expect(strategyWethBalance.eq(0)).true;
         expect(invested.gt(0)).to.be.true;

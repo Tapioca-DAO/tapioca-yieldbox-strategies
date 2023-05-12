@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
-import './IStkAave.sol';
-import './ILendingPool.sol';
-import './IIncentivesController.sol';
-import '../interfaces/IUniswapV2Router02.sol';
-
-import 'hardhat/console.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
+import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IStkAave.sol";
+import "./interfaces/ILendingPool.sol";
+import "./interfaces/IIncentivesController.sol";
 
 /*
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -83,7 +81,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'AAVE';
+        return "AAVE";
     }
 
     /// @notice Returns the description of this strategy
@@ -93,7 +91,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'AAVE strategy for wrapped native assets';
+        return "AAVE strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -205,7 +203,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
         (uint256 toWithdraw, , , , , ) = lendingPool.getUserAccountData(
             address(this)
         );
@@ -245,17 +243,16 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns aToken in exchange of Token and withdraws from AAVE LendingPool
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'AaveStrategy: amount not valid');
+        require(available >= amount, "AaveStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound('');
+            compound("");
 
             uint256 toWithdraw = amount - queued;
 

@@ -49,8 +49,14 @@ describe('YearnStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { yearnStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            yearnStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
 
         const wethYearnStrategyAssetId = await yieldBox.ids(
@@ -62,6 +68,7 @@ describe('YearnStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await yearnStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -102,8 +109,14 @@ describe('YearnStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { yearnStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            yearnStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
 
@@ -126,6 +139,7 @@ describe('YearnStrategy test', () => {
         expect(assetInfo.tokenId).to.eq(0);
 
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
+        await timeTravel(86400);
         await weth.freeMint(amount);
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
@@ -162,8 +176,14 @@ describe('YearnStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { yearnStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            yearnStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
 
         const wethStrategyAssetId = await yieldBox.ids(
@@ -175,6 +195,7 @@ describe('YearnStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await yearnStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 

@@ -82,7 +82,7 @@ describe('Strategies time dependent fork tests', () => {
         expect(currentBalance.gt(totalCalculatedInvestedAmount.sub(100))).to.be
             .true;
 
-        let aaveLendingPoolBalance = (
+        const aaveLendingPoolBalance = (
             await lendingPoolContract.getUserAccountData(aaveStrategy.address)
         )[0];
         expect(
@@ -277,7 +277,7 @@ describe('Strategies time dependent fork tests', () => {
 
         const governanceAddress = await yearnVaultContract.governance();
         await impersonateAccount(governanceAddress);
-        let governanceWallet = await ethers.getSigner(governanceAddress);
+        const governanceWallet = await ethers.getSigner(governanceAddress);
 
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
         const wethStrategyAssetId = await yieldBox.ids(
@@ -338,6 +338,7 @@ describe('Strategies time dependent fork tests', () => {
             ),
         ).to.be.true;
         timeTravel(10 * 86400);
+        await weth.connect(binanceWallet).transfer(eoa1.address, amount);
         await weth
             .connect(eoa1)
             .approve(yieldBox.address, ethers.constants.MaxUint256);
@@ -434,7 +435,7 @@ describe('Strategies time dependent fork tests', () => {
 
         const governanceAddress = await yearnVaultContract.governance();
         await impersonateAccount(governanceAddress);
-        let governanceWallet = await ethers.getSigner(governanceAddress);
+        const governanceWallet = await ethers.getSigner(governanceAddress);
 
         await yieldBox.registerAsset(1, weth.address, yearnStrategy.address, 0);
         const wethStrategyAssetId = await yieldBox.ids(
@@ -793,11 +794,11 @@ describe('Strategies time dependent fork tests', () => {
             false,
         );
 
-        let eoa2InvestedShares = await yieldBox.balanceOf(
+        const eoa2InvestedShares = await yieldBox.balanceOf(
             eoa2.address,
             wethStrategyAssetId,
         );
-        let eoa2InvestedAmount = await yieldBox.toAmount(
+        const eoa2InvestedAmount = await yieldBox.toAmount(
             wethStrategyAssetId,
             eoa2InvestedShares,
             false,
@@ -1128,7 +1129,7 @@ describe('Strategies time dependent fork tests', () => {
         );
 
         let currentBalance = await lidoEthStrategy.currentBalance();
-        let currentBalanceShares = await yieldBox.toShare(
+        const currentBalanceShares = await yieldBox.toShare(
             wethStrategyAssetId,
             lidoEthStrategy.currentBalance(),
             false,
@@ -1414,7 +1415,7 @@ describe('Strategies time dependent fork tests', () => {
         ).to.be.true;
 
         share = await yieldBox.balanceOf(deployer.address, wethStrategyAssetId);
-        let withdrawalAmount = await yieldBox.toAmount(
+        const withdrawalAmount = await yieldBox.toAmount(
             wethStrategyAssetId,
             share,
             false,
@@ -1811,7 +1812,7 @@ describe('Strategies time dependent fork tests', () => {
         ).to.be.true;
 
         share = await yieldBox.balanceOf(deployer.address, wethStrategyAssetId);
-        let withdrawalAmount = await yieldBox.toAmount(
+        const withdrawalAmount = await yieldBox.toAmount(
             wethStrategyAssetId,
             share,
             false,
@@ -1966,7 +1967,7 @@ describe('Strategies time dependent fork tests', () => {
         ).to.be.true;
 
         share = await yieldBox.balanceOf(deployer.address, wethStrategyAssetId);
-        let withdrawalAmount = await yieldBox.toAmount(
+        const withdrawalAmount = await yieldBox.toAmount(
             wethStrategyAssetId,
             share,
             false,
@@ -2334,7 +2335,7 @@ describe('Strategies time dependent fork tests', () => {
         ).to.be.true;
 
         share = await yieldBox.balanceOf(deployer.address, wethStrategyAssetId);
-        let withdrawalAmount = await yieldBox.toAmount(
+        const withdrawalAmount = await yieldBox.toAmount(
             wethStrategyAssetId,
             share,
             false,

@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import './IYearnVault.sol';
-
-import 'hardhat/console.sol';
+import "./interfaces/IYearnVault.sol";
 
 /*
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -66,7 +64,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Yearn';
+        return "Yearn";
     }
 
     /// @notice Returns the description of this strategy
@@ -76,7 +74,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'Yearn strategy for wrapped native assets';
+        return "Yearn strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -101,7 +99,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         uint256 toWithdraw = vault.balanceOf(address(this));
         result = vault.withdraw(toWithdraw, address(this), 0);
@@ -113,7 +111,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 shares = vault.balanceOf(address(this));
         uint256 pricePerShare = vault.pricePerShare();
-        uint256 invested = (shares * pricePerShare) / (10**vault.decimals());
+        uint256 invested = (shares * pricePerShare) / (10 ** vault.decimals());
         uint256 queued = wrappedNative.balanceOf(address(this));
         return queued + invested;
     }
@@ -131,23 +129,22 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns yToken in exchange of Token and withdraws from Yearn Vault
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'YearnStrategy: amount not valid');
+        require(available >= amount, "YearnStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
             uint256 pricePerShare = vault.pricePerShare();
-            uint256 toWithdraw = (((amount - queued) * (10**vault.decimals())) /
-                pricePerShare);
+            uint256 toWithdraw = (((amount - queued) *
+                (10 ** vault.decimals())) / pricePerShare);
 
             vault.withdraw(toWithdraw, address(this), 0);
         }
-        wrappedNative.safeTransfer(to, amount - 1);//rounding error
+        wrappedNative.safeTransfer(to, amount - 1); //rounding error
 
         emit AmountWithdrawn(to, amount);
     }

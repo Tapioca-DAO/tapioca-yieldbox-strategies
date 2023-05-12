@@ -191,10 +191,10 @@ describe('AaveStrategy fork test', () => {
             share,
         );
 
-        let aaveStrategyWethBalance = await weth.balanceOf(
+        const aaveStrategyWethBalance = await weth.balanceOf(
             aaveStrategy.address,
         );
-        let aaveLendingPoolBalance = (
+        const aaveLendingPoolBalance = (
             await lendingPoolContract.getUserAccountData(aaveStrategy.address)
         )[0];
         expect(aaveStrategyWethBalance.eq(0)).to.be.true;
@@ -314,7 +314,7 @@ describe('AaveStrategy fork test', () => {
         await weth.connect(binanceWallet).transfer(deployer.address, amount);
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(
+        const share = await yieldBox.toShare(
             wethAaveStrategyAssetId,
             amount,
             false,
@@ -428,7 +428,7 @@ describe('AaveStrategy fork test', () => {
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(
+        const share = await yieldBox.toShare(
             wethAaveStrategyAssetId,
             amount,
             false,

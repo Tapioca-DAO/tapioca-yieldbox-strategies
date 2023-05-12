@@ -52,8 +52,14 @@ describe('StargateStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { stargateStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            stargateStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const routerEth = await stargateStrategy.addLiquidityRouter();
         const lpStakingContract = await ethers.getContractAt(
@@ -64,7 +70,10 @@ describe('StargateStrategy test', () => {
         const poolInfo = await lpStakingContract.poolInfo(
             await stargateStrategy.lpStakingPid(),
         );
-        const lpToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', poolInfo[0]);
+        const lpToken = await ethers.getContractAt(
+            '@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20',
+            poolInfo[0],
+        );
 
         await yieldBox.registerAsset(
             1,
@@ -92,6 +101,7 @@ describe('StargateStrategy test', () => {
             value: amount.mul(5),
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(4));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -138,8 +148,14 @@ describe('StargateStrategy test', () => {
 
     //todo: no liquidity pool on univ2 or sushi
     it('should allow deposits and withdrawals', async () => {
-        const { stargateStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            stargateStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         const routerEth = await stargateStrategy.addLiquidityRouter();
         const router = await stargateStrategy.router();
         const lpStakingContract = await ethers.getContractAt(
@@ -150,7 +166,10 @@ describe('StargateStrategy test', () => {
         const poolInfo = await lpStakingContract.poolInfo(
             await stargateStrategy.lpStakingPid(),
         );
-        const lpToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', poolInfo[0]);
+        const lpToken = await ethers.getContractAt(
+            '@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20',
+            poolInfo[0],
+        );
 
         await yieldBox.registerAsset(
             1,
@@ -188,7 +207,9 @@ describe('StargateStrategy test', () => {
             value: amount,
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount);
+        await timeTravel(86400);
         await weth.freeMint(amount);
         await weth.transfer(routerEth, amount);
 
@@ -207,7 +228,7 @@ describe('StargateStrategy test', () => {
             stargateStrategy.address,
         );
 
-        let lpStakingBalance = await lpToken.balanceOf(
+        const lpStakingBalance = await lpToken.balanceOf(
             await stargateStrategy.lpStaking(),
         );
         expect(strategyWethBalance.eq(0)).to.be.true;
@@ -231,8 +252,14 @@ describe('StargateStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { stargateStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            stargateStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const routerEth = await stargateStrategy.addLiquidityRouter();
         const router = await stargateStrategy.router();
@@ -244,7 +271,10 @@ describe('StargateStrategy test', () => {
         const poolInfo = await lpStakingContract.poolInfo(
             await stargateStrategy.lpStakingPid(),
         );
-        const lpToken = await ethers.getContractAt('@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20', poolInfo[0]);
+        const lpToken = await ethers.getContractAt(
+            '@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20',
+            poolInfo[0],
+        );
 
         await yieldBox.registerAsset(
             1,
@@ -271,7 +301,9 @@ describe('StargateStrategy test', () => {
 
         await stargateStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.transfer(routerEth, amount.mul(10));
 
@@ -286,7 +318,7 @@ describe('StargateStrategy test', () => {
             share,
         );
 
-        let strategyWethBalance = await weth.balanceOf(
+        const strategyWethBalance = await weth.balanceOf(
             stargateStrategy.address,
         );
 

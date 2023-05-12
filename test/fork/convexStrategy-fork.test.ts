@@ -115,7 +115,7 @@ describe('ConvexStrategy fork test', () => {
             .transfer(deployer.address, amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(
+        const share = await yieldBox.toShare(
             wethStrategyAssetId,
             amount.mul(4),
             false,
@@ -129,10 +129,10 @@ describe('ConvexStrategy fork test', () => {
             share,
         );
 
-        let strategyWethBalance = await weth.balanceOf(
+        const strategyWethBalance = await weth.balanceOf(
             convexTricryptoStrategy.address,
         );
-        let poolBalance = await rewardPoolContract.balanceOf(
+        const poolBalance = await rewardPoolContract.balanceOf(
             convexTricryptoStrategy.address,
         );
         expect(strategyWethBalance.eq(0)).to.be.true;
@@ -284,7 +284,7 @@ describe('ConvexStrategy fork test', () => {
         expect(witdrawOneCoinAfter.gt(witdrawOneCoinBefore)).to.be.true;
 
         share = await yieldBox.balanceOf(deployer.address, strategyAssetId);
-        let withdrawalAmount = await yieldBox.toAmount(
+        const withdrawalAmount = await yieldBox.toAmount(
             strategyAssetId,
             share,
             false,
@@ -444,7 +444,11 @@ describe('ConvexStrategy fork test', () => {
             .transfer(deployer.address, amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,
@@ -571,7 +575,7 @@ describe('ConvexStrategy fork test', () => {
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(strategyAssetId, amount, false);
+        const share = await yieldBox.toShare(strategyAssetId, amount, false);
         await yieldBox.depositAsset(
             strategyAssetId,
             deployer.address,

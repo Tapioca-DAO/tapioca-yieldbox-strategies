@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
-import './IRouter.sol';
-import './IRouterETH.sol';
-import './ILPStaking.sol';
-import './IStargateSwapper.sol';
-import '../interfaces/INative.sol';
-
-import 'hardhat/console.sol';
+import "./interfaces/IRouter.sol";
+import "./interfaces/IRouterETH.sol";
+import "./interfaces/ILPStaking.sol";
+import "./interfaces/IStargateSwapper.sol";
+import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
 
@@ -101,7 +99,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Stargate';
+        return "Stargate";
     }
 
     /// @notice Returns the description of this strategy
@@ -111,7 +109,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'Stargate strategy for wrapped native assets';
+        return "Stargate strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -127,7 +125,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 address(stgTokenReward),
                 address(wrappedNative),
                 stgEthPool,
-                ''
+                ""
             );
             result = result - (result * 50) / 10_000; //0.5%
         }
@@ -174,7 +172,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                     address(stgTokenReward),
                     address(wrappedNative),
                     stgEthPool,
-                    ''
+                    ""
                 );
                 uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
 
@@ -184,7 +182,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                     address(wrappedNative),
                     block.timestamp + 1 hours,
                     minAmount,
-                    ''
+                    ""
                 );
 
                 uint256 queued = wrappedNative.balanceOf(address(this));
@@ -195,7 +193,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         (uint256 toWithdraw, ) = lpStaking.userInfo(
             lpStakingPid,
@@ -242,17 +240,16 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @dev burns stgToken in exchange of Native and withdraws from Stargate Staking & Router
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'StargateStrategy: amount not valid');
+        require(available >= amount, "StargateStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound('');
+            compound("");
             uint256 toWithdraw = amount - queued;
             lpStaking.withdraw(lpStakingPid, toWithdraw);
             router.instantRedeemLocal(
@@ -266,7 +263,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         require(
             amount <= wrappedNative.balanceOf(address(this)),
-            'Stargate: not enough'
+            "Stargate: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
 

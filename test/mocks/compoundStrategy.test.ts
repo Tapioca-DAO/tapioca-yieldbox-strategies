@@ -47,15 +47,20 @@ describe('CompoundStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { compoundStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            compoundStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(
             1,
             weth.address,
             compoundStrategy.address,
             0,
         );
-
         const wethStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
@@ -65,11 +70,14 @@ describe('CompoundStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await compoundStrategy.setDepositThreshold(amount.mul(3));
 
+        // await timeTravel(86401);
+        // await weth.freeMint(amount.mul(10))
         await deployer.sendTransaction({
             to: weth.address,
             value: amount.mul(10),
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -89,6 +97,8 @@ describe('CompoundStrategy test', () => {
         expect(strategyWethBalance.gt(0)).to.be.true;
         expect(poolBalance.eq(0)).to.be.true;
 
+        const wethDeployerBalance = await weth.balanceOf(deployer.address);
+
         share = await yieldBox.toShare(
             wethStrategyAssetId,
             amount.mul(3),
@@ -99,7 +109,7 @@ describe('CompoundStrategy test', () => {
             deployer.address,
             deployer.address,
             0,
-            share.mul(3),
+            share,
         );
         strategyWethBalance = await weth.balanceOf(compoundStrategy.address);
         poolBalance = await weth.balanceOf(await compoundStrategy.cToken());
@@ -107,8 +117,14 @@ describe('CompoundStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { compoundStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            compoundStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         await yieldBox.registerAsset(
             1,
@@ -136,6 +152,7 @@ describe('CompoundStrategy test', () => {
         expect(assetInfo.tokenId).to.eq(0);
 
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
+        await timeTravel(86400);
         await weth.freeMint(amount);
         await deployer.sendTransaction({
             to: weth.address,
@@ -179,8 +196,14 @@ describe('CompoundStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { compoundStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            compoundStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(
             1,
             weth.address,
@@ -197,6 +220,7 @@ describe('CompoundStrategy test', () => {
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await compoundStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 

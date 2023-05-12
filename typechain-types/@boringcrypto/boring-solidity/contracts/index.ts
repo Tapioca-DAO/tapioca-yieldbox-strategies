@@ -5,8 +5,6 @@ import type * as boringBatchableSol from "./BoringBatchable.sol";
 export type { boringBatchableSol };
 import type * as boringOwnableSol from "./BoringOwnable.sol";
 export type { boringOwnableSol };
-import type * as erc20Sol from "./ERC20.sol";
-export type { erc20Sol };
 import type * as interfaces from "./interfaces";
 export type { interfaces };
 export type { BoringFactory } from "./BoringFactory";

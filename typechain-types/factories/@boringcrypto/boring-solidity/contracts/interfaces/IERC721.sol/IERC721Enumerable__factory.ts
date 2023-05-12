@@ -66,7 +66,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const;
 
 export class IERC721Enumerable__factory {
   static readonly abi = _abi;

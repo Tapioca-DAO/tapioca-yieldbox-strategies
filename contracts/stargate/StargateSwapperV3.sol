@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.7.0;
-pragma abicoder v2;
+pragma solidity ^0.8.18;
 
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
-import '@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol';
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
+import "tapioca-periph/contracts/Swapper/libraries/OracleLibrary.sol";
 
 /*
 
@@ -42,7 +41,7 @@ contract StargateSwapperV3 {
     /// @notice sets a new pool fee
     /// @param _newFee the new value
     function setPoolFee(uint24 _newFee) external {
-        require(msg.sender == owner, 'StargateSwapperV3: unauthorized');
+        require(msg.sender == owner, "StargateSwapperV3: unauthorized");
         emit PoolFee(poolFee, _newFee);
         poolFee = _newFee;
     }

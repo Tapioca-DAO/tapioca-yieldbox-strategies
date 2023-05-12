@@ -5,7 +5,9 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
 describe('LidoStrategy test', () => {
     it('should test initial strategy values', async () => {
-        const { lidoEthStrategy, weth, yieldBox } = await loadFixture(registerMocks);
+        const { lidoEthStrategy, weth, yieldBox } = await loadFixture(
+            registerMocks,
+        );
 
         const name = await lidoEthStrategy.name();
         const description = await lidoEthStrategy.description();
@@ -35,7 +37,9 @@ describe('LidoStrategy test', () => {
     });
 
     it('should allow setting the deposit threshold', async () => {
-        const { lidoEthStrategy, weth, yieldBox } = await loadFixture(registerMocks);
+        const { lidoEthStrategy, weth, yieldBox } = await loadFixture(
+            registerMocks,
+        );
 
         const currentThreshold = await lidoEthStrategy.depositThreshold();
 
@@ -48,8 +52,14 @@ describe('LidoStrategy test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            lidoEthStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const stEthAddress = await lidoEthStrategy.stEth();
         const stEthContract = await ethers.getContractAt(
@@ -85,6 +95,7 @@ describe('LidoStrategy test', () => {
             value: amount.mul(5),
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -122,8 +133,14 @@ describe('LidoStrategy test', () => {
     });
 
     it('should allow deposits and withdrawals', async () => {
-        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            lidoEthStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const stEthAddress = await lidoEthStrategy.stEth();
         const stEthContract = await ethers.getContractAt(
@@ -170,6 +187,7 @@ describe('LidoStrategy test', () => {
             value: amount.mul(20),
         });
 
+        await timeTravel(86400);
         await weth.freeMint(amount);
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
@@ -204,8 +222,14 @@ describe('LidoStrategy test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const { lidoEthStrategy, weth, wethAssetId, yieldBox, deployer } =
-            await loadFixture(registerMocks);
+        const {
+            lidoEthStrategy,
+            weth,
+            wethAssetId,
+            yieldBox,
+            deployer,
+            timeTravel,
+        } = await loadFixture(registerMocks);
 
         const stEthAddress = await lidoEthStrategy.stEth();
         const stEthContract = await ethers.getContractAt(
@@ -232,11 +256,16 @@ describe('LidoStrategy test', () => {
 
         await lidoEthStrategy.setDepositThreshold(amount.mul(3));
 
+        await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
 
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
-        let share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+        const share = await yieldBox.toShare(
+            wethStrategyAssetId,
+            amount,
+            false,
+        );
         await yieldBox.depositAsset(
             wethStrategyAssetId,
             deployer.address,

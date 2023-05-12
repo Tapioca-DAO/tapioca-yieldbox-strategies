@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
+import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IBalancerVault.sol";
+import "./interfaces/IBalancerPool.sol";
+import "./interfaces/IBalancerHelpers.sol";
 
-import './IBalancerVault.sol';
-import './IBalancerPool.sol';
-import './IBalancerHelpers.sol';
-import '../interfaces/IUniswapV2Router02.sol';
 /*
 
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
@@ -77,7 +77,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         helpers = IBalancerHelpers(_helpers);
 
         wrappedNative.approve(_vault, type(uint256).max);
-        pool.approve(_vault, type(uint256).max);
+        IERC20(address(pool)).approve(_vault, type(uint256).max);
     }
 
     // ********************** //
@@ -85,7 +85,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Balancer';
+        return "Balancer";
     }
 
     /// @notice Returns the description of this strategy
@@ -95,7 +95,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return 'Balancer strategy for wrapped native assets';
+        return "Balancer strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -185,24 +185,23 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         require(
             lpBalanceAfter > lpBalanceBefore,
-            'BalancerStrategy: vault deposit failed'
+            "BalancerStrategy: vault deposit failed"
         );
     }
 
     /// @dev burns yToken in exchange of Token and withdraws from Yearn Vault
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, 'BalancerStrategy: amount not valid');
+        require(available >= amount, "BalancerStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
             uint256 pricePerShare = pool.getRate();
             uint256 decimals = IStrictERC20(address(pool)).decimals();
-            uint256 toWithdraw = (((amount - queued) * (10**decimals)) /
+            uint256 toWithdraw = (((amount - queued) * (10 ** decimals)) /
                 pricePerShare);
 
             _vaultWithdraw(toWithdraw);
@@ -210,7 +209,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         require(
             amount <= wrappedNative.balanceOf(address(this)),
-            'BalancerStrategy: not enough'
+            "BalancerStrategy: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
         updateCache();
@@ -265,7 +264,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         require(
             wrappedNativeBalanceAfter > wrappedNativeBalanceBefore,
-            'BalancerStrategy: vault withdrawal failed'
+            "BalancerStrategy: vault withdrawal failed"
         );
 
         return wrappedNativeBalanceAfter - wrappedNativeBalanceBefore;

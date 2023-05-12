@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import '@boringcrypto/boring-solidity/contracts/BoringOwnable.sol';
-import '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol';
-import '@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol';
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
-import '../../YieldBox/contracts/strategies/BaseStrategy.sol';
-import '../curve/ITricryptoLPGetter.sol';
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
+import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "../curve/interfaces/ITricryptoLPGetter.sol";
 
-import './IConvexBooster.sol';
-import './IConvexRewardPool.sol';
-import './IConvexZap.sol';
-import '../interfaces/IUniswapV2Router02.sol';
-
+import "./interfaces/IConvexBooster.sol";
+import "./interfaces/IConvexRewardPool.sol";
+import "./interfaces/IConvexZap.sol";
 
 /*
 
@@ -114,7 +113,7 @@ contract ConvexTricryptoStrategy is
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return 'Convex-Tricrypto';
+        return "Convex-Tricrypto";
     }
 
     /// @notice Returns the description of this strategy
@@ -124,7 +123,7 @@ contract ConvexTricryptoStrategy is
         override
         returns (string memory description_)
     {
-        return 'Convex-Tricrypto strategy for wrapped native assets';
+        return "Convex-Tricrypto strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
@@ -142,7 +141,7 @@ contract ConvexTricryptoStrategy is
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound('');
+        compound("");
 
         uint256 lpBalance = rewardPool.balanceOf(address(this));
         rewardPool.withdrawAndUnwrap(lpBalance, false);
@@ -213,10 +212,9 @@ contract ConvexTricryptoStrategy is
         emit AmountDeposited(queued);
     }
 
-    function _executeClaim(bytes memory data)
-        private
-        returns (uint256[] memory, address[] memory)
-    {
+    function _executeClaim(
+        bytes memory data
+    ) private returns (uint256[] memory, address[] memory) {
         ClaimTempData memory tempData;
 
         (
@@ -244,11 +242,11 @@ contract ConvexTricryptoStrategy is
 
         require(
             tempData.rewardContracts.length == tempData.tokens.length,
-            'ConvexTricryptoStrategy: claim data not valid'
+            "ConvexTricryptoStrategy: claim data not valid"
         );
         require(
             tempData.rewardContracts.length > 0,
-            'ConvexTricryptoStrategy: nothing to claim for'
+            "ConvexTricryptoStrategy: nothing to claim for"
         );
 
         uint256[] memory balancesBefore = new uint256[](tempData.tokens.length);
@@ -317,20 +315,19 @@ contract ConvexTricryptoStrategy is
     }
 
     /// @dev unstakes from Convex and withdraws from Curve
-    function _withdraw(address to, uint256 amount)
-        internal
-        override
-        nonReentrant
-    {
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
         uint256 available = _currentBalance();
         require(
             available >= amount,
-            'ConvexTricryptoStrategy: amount not valid'
+            "ConvexTricryptoStrategy: amount not valid"
         );
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound(bytes(''));
+            compound(bytes(""));
             uint256 lpBalance = rewardPool.balanceOf(address(this));
             rewardPool.withdrawAndUnwrap(lpBalance, false);
             uint256 calcWithdraw = lpGetter.calcLpToWeth(lpBalance);
@@ -340,7 +337,7 @@ contract ConvexTricryptoStrategy is
 
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
-            'ConvexTricryptoStrategy: not enough'
+            "ConvexTricryptoStrategy: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
 
@@ -352,35 +349,31 @@ contract ConvexTricryptoStrategy is
         emit AmountWithdrawn(to, amount);
     }
 
-    function _safeApprove(
-        address token,
-        address to,
-        uint256 value
-    ) private {
+    function _safeApprove(address token, address to, uint256 value) private {
         // solhint-disable-next-line avoid-low-level-calls
         (bool successEmtptyApproval, ) = token.call(
             abi.encodeWithSelector(
-                bytes4(keccak256('approve(address,uint256)')),
+                bytes4(keccak256("approve(address,uint256)")),
                 to,
                 0
             )
         );
         require(
             successEmtptyApproval,
-            'OperationsLib::safeApprove: approval reset failed'
+            "OperationsLib::safeApprove: approval reset failed"
         );
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = token.call(
             abi.encodeWithSelector(
-                bytes4(keccak256('approve(address,uint256)')),
+                bytes4(keccak256("approve(address,uint256)")),
                 to,
                 value
             )
         );
         require(
             success && (data.length == 0 || abi.decode(data, (bool))),
-            'OperationsLib::safeApprove: approve failed'
+            "OperationsLib::safeApprove: approve failed"
         );
     }
 }
