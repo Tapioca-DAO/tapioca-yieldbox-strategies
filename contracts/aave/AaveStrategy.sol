@@ -8,7 +8,7 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 import "./interfaces/IStkAave.sol";
 import "./interfaces/ILendingPool.sol";
 import "./interfaces/IIncentivesController.sol";
@@ -33,7 +33,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *** VARS *** //
     // ************ //
     IERC20 public immutable wrappedNative;
-    IUniswapV2Router02 public swapper;
+    ISwapper public swapper;
 
     //AAVE
     IStkAave public immutable stakedRewardToken;
@@ -64,7 +64,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         address _multiSwapper
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
-        swapper = IUniswapV2Router02(_multiSwapper);
+        swapper = ISwapper(_multiSwapper);
 
         lendingPool = ILendingPool(_lendingPool);
         incentivesController = IIncentivesController(_incentivesController);
@@ -101,10 +101,15 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         );
         result = 0;
         if (claimable > 0) {
-            address[] memory path = new address[](2);
-            path[0] = address(rewardToken);
-            path[1] = address(wrappedNative);
-            result = (swapper.getAmountsOut(claimable, path))[1];
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                address(rewardToken),
+                address(wrappedNative),
+                claimable,
+                0,
+                false,
+                false
+            );
+            result = swapper.getOutputAmount(swapData, "");
             result = result - (result * 50) / 10_000; //0.5%
         }
     }
@@ -123,7 +128,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @param _swapper The new swapper address
     function setMultiSwapper(address _swapper) external onlyOwner {
         emit MultiSwapper(address(swapper), _swapper);
-        swapper = IUniswapV2Router02(_swapper);
+        swapper = ISwapper(_swapper);
     }
 
     // ************************ //
@@ -179,15 +184,17 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             address[] memory path = new address[](2); //todo: check if path is right
             path[0] = address(rewardToken);
             path[1] = address(wrappedNative);
-            uint256 calcAmount = (swapper.getAmountsOut(aaveAmount, path))[1];
-            uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
-            swapper.swapExactTokensForTokens(
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                address(rewardToken),
+                address(wrappedNative),
                 aaveAmount,
-                minAmount,
-                path,
-                address(this),
-                100 * 1e18
+                0,
+                false,
+                false
             );
+            uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+            uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
+            swapper.swap(swapData, minAmount, address(this), "");
 
             //stake if > depositThreshold
             uint256 queued = wrappedNative.balanceOf(address(this));
