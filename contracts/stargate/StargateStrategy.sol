@@ -8,11 +8,11 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
+import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 
 import "./interfaces/IRouter.sol";
 import "./interfaces/IRouterETH.sol";
 import "./interfaces/ILPStaking.sol";
-import "./interfaces/IStargateSwapper.sol";
 import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
@@ -39,7 +39,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *** VARS *** //
     // ************ //
     IERC20 public immutable wrappedNative;
-    IStargateSwapper public swapper;
+    ISwapper public swapper;
     address public stgEthPool;
 
     IRouterETH public immutable addLiquidityRouter;
@@ -75,7 +75,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         address _stgEthPool
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
-        swapper = IStargateSwapper(_swapper);
+        swapper = ISwapper(_swapper);
         stgEthPool = _stgEthPool;
 
         addLiquidityRouter = IRouterETH(_ethRouter);
@@ -120,13 +120,16 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         );
         result = 0;
         if (claimable > 0) {
-            result = swapper.queryAmountOut(
-                claimable,
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
                 address(stgTokenReward),
                 address(wrappedNative),
-                stgEthPool,
-                ""
+                claimable,
+                0,
+                false,
+                false
             );
+            result = swapper.getOutputAmount(swapData, "");
+
             result = result - (result * 50) / 10_000; //0.5%
         }
     }
@@ -146,7 +149,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function setMultiSwapper(address _swapper) external onlyOwner {
         emit MultiSwapper(address(swapper), _swapper);
         stgTokenReward.approve(address(swapper), 0);
-        swapper = IStargateSwapper(_swapper);
+        swapper = ISwapper(_swapper);
         stgTokenReward.approve(_swapper, type(uint256).max);
     }
 
@@ -167,23 +170,18 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             if (stgBalanceAfter > stgBalanceBefore) {
                 uint256 stgAmount = stgBalanceAfter - stgBalanceBefore;
 
-                uint256 calcAmount = swapper.queryAmountOut(
-                    stgAmount,
+                ISwapper.SwapData memory swapData = swapper.buildSwapData(
                     address(stgTokenReward),
                     address(wrappedNative),
-                    stgEthPool,
-                    ""
+                    stgAmount,
+                    0,
+                    false,
+                    false
                 );
+                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
                 uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
 
-                swapper.swap(
-                    stgAmount,
-                    address(stgTokenReward),
-                    address(wrappedNative),
-                    block.timestamp + 1 hours,
-                    minAmount,
-                    ""
-                );
+                swapper.swap(swapData, minAmount, address(this), "");
 
                 uint256 queued = wrappedNative.balanceOf(address(this));
                 _stake(queued);

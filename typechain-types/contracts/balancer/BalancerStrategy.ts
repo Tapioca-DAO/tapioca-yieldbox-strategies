@@ -257,7 +257,6 @@ export interface BalancerStrategyInterface extends utils.Interface {
     "AmountQueued(uint256)": EventFragment;
     "AmountWithdrawn(address,uint256)": EventFragment;
     "DepositThreshold(uint256,uint256)": EventFragment;
-    "MultiSwapper(address,address)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "RewardTokens(uint256)": EventFragment;
   };
@@ -266,7 +265,6 @@ export interface BalancerStrategyInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "AmountQueued"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AmountWithdrawn"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "DepositThreshold"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "MultiSwapper"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RewardTokens"): EventFragment;
 }
@@ -313,17 +311,6 @@ export type DepositThresholdEvent = TypedEvent<
 
 export type DepositThresholdEventFilter =
   TypedEventFilter<DepositThresholdEvent>;
-
-export interface MultiSwapperEventObject {
-  _old: string;
-  _new: string;
-}
-export type MultiSwapperEvent = TypedEvent<
-  [string, string],
-  MultiSwapperEventObject
->;
-
-export type MultiSwapperEventFilter = TypedEventFilter<MultiSwapperEvent>;
 
 export interface OwnershipTransferredEventObject {
   previousOwner: string;
@@ -651,15 +638,6 @@ export interface BalancerStrategy extends BaseContract {
       _new?: null
     ): DepositThresholdEventFilter;
     DepositThreshold(_old?: null, _new?: null): DepositThresholdEventFilter;
-
-    "MultiSwapper(address,address)"(
-      _old?: PromiseOrValue<string> | null,
-      _new?: PromiseOrValue<string> | null
-    ): MultiSwapperEventFilter;
-    MultiSwapper(
-      _old?: PromiseOrValue<string> | null,
-      _new?: PromiseOrValue<string> | null
-    ): MultiSwapperEventFilter;
 
     "OwnershipTransferred(address,address)"(
       previousOwner?: PromiseOrValue<string> | null,

@@ -181,9 +181,6 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             uint256 aaveAmount = aaveBalanceAfter - aaveBalanceBefore;
 
             //swap AAVE to wrappedNative
-            address[] memory path = new address[](2); //todo: check if path is right
-            path[0] = address(rewardToken);
-            path[1] = address(wrappedNative);
             ISwapper.SwapData memory swapData = swapper.buildSwapData(
                 address(rewardToken),
                 address(wrappedNative),

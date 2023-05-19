@@ -576,7 +576,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as const;
+];
 
 export class ICurveSwapper__factory {
   static readonly abi = _abi;

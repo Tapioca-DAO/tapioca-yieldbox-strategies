@@ -3,6 +3,7 @@ import { ethers } from 'hardhat';
 import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import _ from 'lodash';
+import { ERC20Mock } from '../../gitsub_tapioca-sdk/src/typechain/tapioca-mocks/ERC20Mock';
 
 describe('AaveStrategy test', () => {
     it('should test initial strategy values', async () => {
@@ -121,6 +122,9 @@ describe('AaveStrategy test', () => {
             yieldBox,
             deployer,
             timeTravel,
+            __uniFactory,
+            __uniRouter,
+            uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
 
         const lendingPoolAddress = await aaveStrategy.lendingPool();
@@ -175,6 +179,31 @@ describe('AaveStrategy test', () => {
 
         await aaveStrategy.compound(ethers.utils.toUtf8Bytes('')); //to simulate rewards produced by mocks
         await timeTravel(86400 * 10); //10 days
+
+        const rewardToken = await ethers.getContractAt(
+            'ERC20Mock',
+            await aaveStrategy.rewardToken(),
+        );
+
+        if (await rewardToken.hasMintRestrictions()) {
+            await rewardToken.toggleRestrictions();
+        }
+
+        const wethPairAmount = ethers.BigNumber.from(1e6).mul(
+            (1e18).toString(),
+        );
+        const rewardTokenPairAmount = ethers.BigNumber.from(1e6).mul(
+            (1e18).toString(),
+        );
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            rewardToken,
+            weth,
+            rewardTokenPairAmount,
+            wethPairAmount,
+        );
 
         share = await yieldBox.toShare(wethAaveStrategyAssetId, amount, false);
         await yieldBox.withdraw(
@@ -259,6 +288,9 @@ describe('AaveStrategy test', () => {
             yieldBox,
             deployer,
             timeTravel,
+            __uniFactory,
+            __uniRouter,
+            uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
         await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
 
@@ -268,6 +300,51 @@ describe('AaveStrategy test', () => {
             aaveStrategy.address,
             0,
         );
+
+
+        const rewardToken = await ethers.getContractAt(
+            'ERC20Mock',
+            await aaveStrategy.rewardToken(),
+        );
+
+        if (await rewardToken.hasMintRestrictions()) {
+            await rewardToken.toggleRestrictions();
+        }
+
+        const wethPairAmount = ethers.BigNumber.from(1e6).mul(
+            (1e18).toString(),
+        );
+        const rewardTokenPairAmount = ethers.BigNumber.from(1e6).mul(
+            (1e18).toString(),
+        );
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            rewardToken,
+            weth,
+            rewardTokenPairAmount,
+            wethPairAmount,
+        );
+
+        // console.log('Testing output amount----------------');
+        // const swapDataTest = await swapperMock[
+        //     'buildSwapData(address,address,uint256,uint256,bool,bool)'
+        // ](
+        //     weth.address,
+        //     rewardToken.address,
+        //     ethers.utils.parseEther('1'),
+        //     0,
+        //     false,
+        //     false,
+        // );
+        // const outputTest = await swapperMock.getOutputAmount(
+        //     swapDataTest,
+        //     ethers.utils.toUtf8Bytes(''),
+        // );
+        // console.log(`----------- outputTest ${outputTest}`);
+
+
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await aaveStrategy.setDepositThreshold(amount.div(10000));
 

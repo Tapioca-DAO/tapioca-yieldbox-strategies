@@ -10,6 +10,7 @@ import 'hardhat-gas-reporter';
 import SDK from 'tapioca-sdk';
 import { HttpNetworkConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
+import 'hardhat-tracer';
 
 dotenv.config({ path: './env/.env' });
 const NODE_ENV = 'mainnet';

@@ -203,7 +203,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as const;
+];
 
 export class IWrappedNative__factory {
   static readonly abi = _abi;

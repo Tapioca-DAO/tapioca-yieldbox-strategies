@@ -166,6 +166,9 @@ describe('TricryptoStrategy test', () => {
             yieldBox,
             deployer,
             timeTravel,
+            __uniFactory,
+            __uniRouter,
+            uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoStrategy.lpGauge();
@@ -225,6 +228,32 @@ describe('TricryptoStrategy test', () => {
         expect(lpStakingBalance.gt(0)).to.be.true;
 
         share = await yieldBox.toShare(wethStrategyAssetId, amount, false);
+
+        const rewardToken = await ethers.getContractAt(
+            'ERC20Mock',
+            await tricryptoStrategy.rewardToken(),
+        );
+
+        if (await rewardToken.hasMintRestrictions()) {
+            await rewardToken.toggleRestrictions();
+        }
+
+        const wethPairAmount = ethers.BigNumber.from(1e6).mul(
+            (1e18).toString(),
+        );
+        const rewardTokenPairAmount = ethers.BigNumber.from(1e6).mul(
+            (1e18).toString(),
+        );
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            rewardToken,
+            weth,
+            rewardTokenPairAmount,
+            wethPairAmount,
+        );
+
         await yieldBox.withdraw(
             wethStrategyAssetId,
             deployer.address,

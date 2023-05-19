@@ -8,7 +8,6 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IBalancerVault.sol";
 import "./interfaces/IBalancerPool.sol";
 import "./interfaces/IBalancerHelpers.sol";
@@ -50,7 +49,6 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************** //
     // *** EVENTS *** //
     // ************** //
-    event MultiSwapper(address indexed _old, address indexed _new);
     event RewardTokens(uint256 _count);
     event DepositThreshold(uint256 _old, uint256 _new);
     event AmountQueued(uint256 amount);
