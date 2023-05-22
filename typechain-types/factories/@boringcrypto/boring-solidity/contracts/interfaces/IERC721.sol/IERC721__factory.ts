@@ -276,7 +276,7 @@ const _abi = [
     stateMutability: "payable",
     type: "function",
   },
-] as const;
+];
 
 export class IERC721__factory {
   static readonly abi = _abi;

@@ -55,7 +55,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-] as const;
+];
 
 export class IERC721Metadata__factory {
   static readonly abi = _abi;

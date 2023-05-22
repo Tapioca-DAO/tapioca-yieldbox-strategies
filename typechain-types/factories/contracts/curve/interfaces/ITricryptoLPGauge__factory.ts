@@ -168,7 +168,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as const;
+];
 
 export class ITricryptoLPGauge__factory {
   static readonly abi = _abi;
