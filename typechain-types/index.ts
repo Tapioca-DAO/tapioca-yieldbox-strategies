@@ -186,6 +186,10 @@ export type { IUniswapV2Router02 } from "./tapioca-mocks/contracts/uniswapv2/int
 export { IUniswapV2Router02__factory } from "./factories/tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02__factory";
 export type { INative } from "./tapioca-periph/contracts/interfaces/INative";
 export { INative__factory } from "./factories/tapioca-periph/contracts/interfaces/INative__factory";
+export type { ICurveSwapper } from "./tapioca-periph/contracts/interfaces/ISwapper.sol/ICurveSwapper";
+export { ICurveSwapper__factory } from "./factories/tapioca-periph/contracts/interfaces/ISwapper.sol/ICurveSwapper__factory";
+export type { ISwapper } from "./tapioca-periph/contracts/interfaces/ISwapper.sol/ISwapper";
+export { ISwapper__factory } from "./factories/tapioca-periph/contracts/interfaces/ISwapper.sol/ISwapper__factory";
 export type { AssetRegister } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/AssetRegister";
 export { AssetRegister__factory } from "./factories/tapioca-sdk/dist/contracts/YieldBox/contracts/AssetRegister__factory";
 export type { ERC1155 } from "./tapioca-sdk/dist/contracts/YieldBox/contracts/ERC1155";

@@ -1,10 +1,15 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
-import { BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from 'ethers';
 import hre, { ethers, network } from 'hardhat';
+import { UniswapV2Swapper__factory, UniswapV3Swapper__factory } from '../gitsub_tapioca-sdk/src/typechain/tapioca-periphery';
 import {
     ERC20Mock__factory,
     UniswapV2RouterMock__factory,
     MockSwapper__factory,
+    UniswapV2Factory__factory,
+    UniswapV2Router02__factory,
+    ERC20Mock,
+    UniswapV3SwapperMock__factory,
 } from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
 
@@ -56,6 +61,10 @@ async function registerERC20Tokens(deployer: any, staging?: boolean) {
         18,
         deployer.address,
     );
+    const hasMintRetrictionsUsdc = await usdc.hasMintRestrictions();
+    if (hasMintRetrictionsUsdc) {
+        await usdc.toggleRestrictions();
+    }
     await usdc.updateMintLimit(supplyStart.mul(10));
     log(`Deployed USDC ${usdc.address} with args [${supplyStart}]`, staging);
 
@@ -66,6 +75,10 @@ async function registerERC20Tokens(deployer: any, staging?: boolean) {
         18,
         deployer.address,
     );
+    const hasMintRetrictionsWeth = await weth.hasMintRestrictions();
+    if (hasMintRetrictionsWeth) {
+        await weth.toggleRestrictions();
+    }
     await weth.updateMintLimit(supplyStart.mul(10));
     log(`Deployed WETH ${weth.address} with no arguments`, staging);
 
@@ -106,19 +119,149 @@ async function registerYieldBox(wethAddress: string, staging?: boolean) {
     return { uriBuilder, yieldBox };
 }
 
-async function registerSwapperMock(staging?: boolean) {
+async function registerUniswapV3Swapper(
+    yieldBoxAddress: string,
+    swapRouterAddress: string,
+    swapFactoryAddress: string,
+    staging?: boolean,
+) {
     const deployer = (await ethers.getSigners())[0];
-    const UniswapV2RouterMock = new UniswapV2RouterMock__factory(deployer);
+    const UniswapV3Swapper = new UniswapV3Swapper__factory(deployer);
+    const uniswapV3Swapper = await UniswapV3Swapper.deploy(
+        yieldBoxAddress,
+        swapRouterAddress,
+        swapFactoryAddress,
+    );
 
-    const swapperMock = await UniswapV2RouterMock.deploy();
     log(
-        `Deployed UniswapV2RouterMock ${swapperMock.address} with no arguments`,
+        `Deployed UniswapV3SwapperMock ${uniswapV3Swapper.address} with args [${yieldBoxAddress}, ${swapRouterAddress}, ${swapFactoryAddress}]`,
         staging,
     );
 
-    await verifyEtherscan(swapperMock.address, [], staging);
+    await verifyEtherscan(
+        uniswapV3Swapper.address,
+        [yieldBoxAddress, swapRouterAddress, swapFactoryAddress],
+        staging,
+    );
+
+    return { uniswapV3Swapper };
+};
+
+
+async function registerUniswapV3Mock(staging?: boolean) {
+    const deployer = (await ethers.getSigners())[0];
+    const UniswapV3SwapperMock = new UniswapV3SwapperMock__factory(deployer);
+    const uniswapV3SwapperMock = await UniswapV3SwapperMock.deploy(
+        deployer.address,
+    );
+
+    log(
+        `Deployed UniswapV3SwapperMock ${uniswapV3SwapperMock.address} with args [${deployer.address}]`,
+        staging,
+    );
+
+    await verifyEtherscan(
+        uniswapV3SwapperMock.address,
+        [deployer.address],
+        staging,
+    );
+
+    return { uniswapV3SwapperMock };
+}
+
+async function registerSwapperMockNew(
+    __uniRouterAddress: string,
+    __uniFactoryAddress: string,
+    yieldBox: any,
+    staging?: boolean,
+) {
+    const deployer = (await ethers.getSigners())[0];
+    const MultiSwapper = new UniswapV2Swapper__factory(deployer);
+    const swapperMock = await MultiSwapper.deploy(
+        __uniRouterAddress,
+        __uniFactoryAddress,
+        yieldBox.address,
+    );
+
+    log(
+        `Deployed MultiSwapper ${swapperMock.address} with args [${__uniRouterAddress}, ${__uniFactoryAddress}, ${yieldBox.address}]`,
+        staging,
+    );
+
+    await verifyEtherscan(
+        swapperMock.address,
+        [__uniRouterAddress, __uniFactoryAddress, yieldBox.address],
+        staging,
+    );
 
     return { swapperMock };
+}
+
+async function registerUniswapV2(staging?: boolean) {
+    const deployer = (await ethers.getSigners())[0];
+    const UniswapV2Factory = new UniswapV2Factory__factory(deployer);
+
+    const __uniFactoryFee = ethers.Wallet.createRandom();
+    const __uniFactory = await UniswapV2Factory.deploy(__uniFactoryFee.address);
+    log(
+        `Deployed UniswapV2Factory ${__uniFactory.address} with args [${__uniFactoryFee.address}]`,
+        staging,
+    );
+
+    const UniswapV2Router02 = new UniswapV2Router02__factory(deployer);
+    const __uniRouter = await UniswapV2Router02.deploy(
+        __uniFactory.address,
+        ethers.constants.AddressZero,
+    );
+    log(
+        `Deployed UniswapV2Router02 ${__uniRouter.address} with args [${__uniFactory.address}, ${ethers.constants.AddressZero}]`,
+        staging,
+    );
+
+    return { __uniFactory, __uniFactoryFee, __uniRouter };
+}
+
+const __wethUsdcPrice = BN(1000).mul((1e18).toString());
+
+export async function uniV2EnvironnementSetup(
+    deployerAddress: string,
+    __uniFactory: any,
+    __uniRouter: any,
+    token1: ERC20Mock,
+    token2: ERC20Mock,
+    token1PairAmount: BigNumber,
+    token2PairAmount: BigNumber,
+) {
+    // Deploy Uni factory, create pair and add liquidity
+    await (
+        await __uniFactory.createPair(token1.address, token2.address)
+    ).wait();
+
+    // Create WETH/USDC LP
+    await (await token1.freeMint(token1PairAmount)).wait();
+    await (await token2.freeMint(token2PairAmount)).wait();
+
+    await (await token1.approve(__uniRouter.address, token1PairAmount)).wait();
+    await (await token2.approve(__uniRouter.address, token2PairAmount)).wait();
+    await (
+        await __uniRouter.addLiquidity(
+            token1.address,
+            token2.address,
+            token1PairAmount,
+            token2PairAmount,
+            token1PairAmount,
+            token2PairAmount,
+            deployerAddress,
+            ethers.utils.parseEther('10'),
+        )
+    ).wait();
+    const __wethUsdcMockPair = await __uniFactory.getPair(
+        token1.address,
+        token2.address,
+    );
+    await time.increase(86500);
+    await time.increase(86500);
+    return { __wethUsdcMockPair };
 }
 
 /*
@@ -611,6 +754,10 @@ async function registerTricryptoStrategy(
             18,
             deployer.address,
         );
+        const hasMintRetrictionsCrvToken = await crvTokenMock.hasMintRestrictions();
+        if (hasMintRetrictionsCrvToken) {
+            await crvTokenMock.toggleRestrictions();
+        }
         await crvTokenMock.updateMintLimit(ethers.utils.parseEther('1000000'));
 
         rewardTokenAddress = crvTokenMock.address;
@@ -1291,6 +1438,26 @@ export async function registerMocks(staging?: boolean) {
         staging,
     );
 
+    log('Deploying UNIV2 Environment', staging);
+    const { __uniFactory, __uniFactoryFee, __uniRouter } = await registerUniswapV2(staging);
+    const wethPairAmount = ethers.BigNumber.from(1e6).mul((1e18).toString());
+    const usdcPairAmount = wethPairAmount.mul(
+        __wethUsdcPrice.div((1e18).toString()),
+    );
+    const { __wethUsdcMockPair } = await uniV2EnvironnementSetup(
+        deployer.address,
+        __uniFactory,
+        __uniRouter,
+        weth,
+        usdc,
+        wethPairAmount,
+        usdcPairAmount,
+    );
+    log(
+        `Deployed UNIV2 Environment WethUsdcMockPair: ${__wethUsdcMockPair}, UniswapV2Factory: ${__uniFactory.address}, UniswapV2Router02: ${__uniRouter.address}`,
+        staging,
+    );
+
     log('Deploying YieldBox', staging);
     const { yieldBox, uriBuilder } = await registerYieldBox(
         weth.address,
@@ -1298,9 +1465,21 @@ export async function registerMocks(staging?: boolean) {
     );
     log(`Deployed YieldBox ${yieldBox.address}`, staging);
 
-    log('Deploying SwapperMock', staging);
-    const { swapperMock } = await registerSwapperMock(staging);
-    log(`Deployed SwapperMock ${swapperMock.address}`, staging);
+    log('Registering MultiSwapper', staging);
+    const { swapperMock } = await registerSwapperMockNew(
+        __uniRouter.address,
+        __uniFactory.address,
+        yieldBox,
+        staging,
+    );
+    log(`Deployed MultiSwapper ${swapperMock.address}`, staging);
+
+    log('Registering UniswapV3SwapperMock', staging);
+    const { uniswapV3SwapperMock } = await registerUniswapV3Mock(staging);
+    log(
+        `Deployed UniswapV3SwapperMock ${uniswapV3SwapperMock.address}`,
+        staging,
+    );
 
     log('Deploying AaveStrategy', staging);
     const { aaveStrategy } = await registerAaveStrategy(
@@ -1332,7 +1511,7 @@ export async function registerMocks(staging?: boolean) {
         ethers.constants.AddressZero,
         '0',
         ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
+        uniswapV3SwapperMock.address,
         weth.address,
         staging,
     );
@@ -1455,8 +1634,13 @@ export async function registerMocks(staging?: boolean) {
         cvxReward2Token,
         deployTricryptoLPGetter,
         swapperMock,
+        uniswapV3SwapperMock,
         wethStrategy,
         usdcStrategy,
+        __uniFactory,
+        __uniRouter,
+        __wethUsdcMockPair,
+        uniV2EnvironnementSetup,
     };
 
     const utilFuncs = {
@@ -1541,9 +1725,22 @@ export async function registerFork() {
         0,
     );
 
-    log('Deploying SwapperMock', false);
-    const { swapperMock } = await registerSwapperMock(false);
-    log(`Deployed SwapperMock ${swapperMock.address}`, false);
+    log('Registering MultiSwapper', false);
+    const { swapperMock } = await registerSwapperMockNew(
+        process.env.UNISWAP_V2_ROUTER!,
+        process.env.UNISWAP_V2_FACTORY!,
+        yieldBox,
+        false
+    );
+    log(`Deployed MultiSwapper ${swapperMock.address}`, false);
+
+
+    log('Registering UniswapV3Swapper', false);
+    const { uniswapV3Swapper } = await registerUniswapV3Swapper(
+        yieldBox.address,
+        process.env.UNISWAP_V3_ROUTER!,
+        process.env.UNISWAP_V3_FACTORY!,
+    );
 
     log('Deploying AaveStrategy', false);
     const { aaveStrategy } = await registerAaveStrategy(
@@ -1553,7 +1750,7 @@ export async function registerFork() {
         process.env.AAVE_STK!, //stkAave
         process.env.AAVE_RECEIPT_TOKEN!, //receipt
         process.env.AAVE_INCENTIVES_CONTROLLER!, //incentives controller
-        process.env.UNISWAP_V2_ROUTER!, //swapper
+        swapperMock.address, //swapper
         false,
     );
     log(`Deployed AaveStrategy ${aaveStrategy.address}`, false);
@@ -1568,23 +1765,7 @@ export async function registerFork() {
     log(`Deployed YearnStrategy ${yearnStrategy.address}`, false);
 
     log('Deploying StargateStrategy', false);
-    const stargateUniV3Swapper = await (
-        await ethers.getContractFactory('StargateSwapperV3')
-    ).deploy(process.env.UNISWAP_V3_ROUTER!);
-    await stargateUniV3Swapper.deployed();
 
-    log(
-        `Deployed StargateSwapperV3 ${
-            stargateUniV3Swapper.address
-        } with args [${process.env.UNISWAP_V3_ROUTER!}]`,
-        false,
-    );
-
-    await verifyEtherscan(
-        stargateUniV3Swapper.address,
-        [process.env.UNISWAP_V3_ROUTER!],
-        false,
-    );
 
     const { stargateStrategy } = await registerStargateStrategy(
         yieldBox.address,
@@ -1593,7 +1774,7 @@ export async function registerFork() {
         process.env.STARGATE_LP_STAKING!,
         process.env.STARGATE_LP_STAKING_PID!,
         process.env.STARGATE_LP_TOKEN!,
-        stargateUniV3Swapper.address,
+        uniswapV3Swapper.address,
         process.env.STARGATE_UNISWAPV3_POOL!,
         false,
     );
@@ -1611,7 +1792,7 @@ export async function registerFork() {
             ethers.constants.AddressZero, //lp getter
             process.env.CRV_ADDRESS!,
             process.env.TRICRYPTO_MINTER!,
-            process.env.UNISWAP_V2_ROUTER!,
+            swapperMock.address,
             false,
         );
     log(`Deployed TricryptoStrategy ${tricryptoStrategy.address}`, false);
@@ -1661,7 +1842,7 @@ export async function registerFork() {
             process.env.CONVEX_BOOSTER!, //booster
             process.env.CONVEX_TRICRYPTO_REWARD_POOL!, //reward pool
             process.env.CONVEX_ZAP!, //zap
-            process.env.UNISWAP_V2_ROUTER!,
+            swapperMock.address,
             false,
         );
     log(

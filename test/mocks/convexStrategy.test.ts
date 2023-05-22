@@ -175,7 +175,63 @@ describe('ConvexStrategy test', () => {
             yieldBox,
             deployer,
             timeTravel,
+            cvxReward1Token,
+            cvxReward2Token,
+            __uniFactory,
+            __uniRouter,
+            uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
+
+
+        if (await cvxReward1Token?.hasMintRestrictions()) {
+            await cvxReward1Token?.toggleRestrictions();
+        }
+
+        if (await cvxReward2Token?.hasMintRestrictions()) {
+            await cvxReward2Token?.toggleRestrictions();
+        }
+
+        const rewardToken = await ethers.getContractAt(
+            'ERC20Mock',
+            await convexTricryptoStrategy.rewardToken(),
+        );
+
+        if (await rewardToken.hasMintRestrictions()) {
+            await rewardToken.toggleRestrictions();
+        }
+
+        const pairAmount = ethers.BigNumber.from(1e6).mul((1e18).toString());
+
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            cvxReward1Token,
+            weth,
+            pairAmount,
+            pairAmount,
+        );
+
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            cvxReward2Token,
+            weth,
+            pairAmount,
+            pairAmount,
+        );
+
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            rewardToken,
+            weth,
+            pairAmount,
+            pairAmount,
+        );
+
 
         const lpToken = await convexTricryptoStrategy.lpToken();
         const lpTokenContract = await ethers.getContractAt(
@@ -331,7 +387,40 @@ describe('ConvexStrategy test', () => {
             timeTravel,
             cvxReward1Token,
             cvxReward2Token,
+            __uniFactory,
+            __uniRouter,
+            uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
+
+        if (await cvxReward1Token?.hasMintRestrictions()) {
+            await cvxReward1Token?.toggleRestrictions();
+        }
+
+        if (await cvxReward2Token?.hasMintRestrictions()) {
+            await cvxReward2Token?.toggleRestrictions();
+        }
+
+        const pairAmount = ethers.BigNumber.from(1e6).mul((1e18).toString());
+
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            cvxReward1Token,
+            weth,
+            pairAmount,
+            pairAmount,
+        );
+
+        await uniV2EnvironnementSetup(
+            deployer.address,
+            __uniFactory,
+            __uniRouter,
+            cvxReward2Token,
+            weth,
+            pairAmount,
+            pairAmount,
+        );
 
         let hasMintRestriction = await weth.hasMintRestrictions();
         if (hasMintRestriction) {

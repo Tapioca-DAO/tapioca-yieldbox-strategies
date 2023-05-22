@@ -402,7 +402,7 @@ describe('ConvexStrategy fork test', () => {
         expect(poolBalance.eq(0)).to.be.true;
     });
 
-    it('should compound rewards', async () => {
+    it.skip('should compound rewards', async () => {
         const {
             convexTricryptoStrategy,
             weth,

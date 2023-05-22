@@ -141,7 +141,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-] as const;
+];
 
 export class IStkAave__factory {
   static readonly abi = _abi;

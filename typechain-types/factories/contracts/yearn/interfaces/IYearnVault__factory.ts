@@ -241,7 +241,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as const;
+];
 
 export class IYearnVault__factory {
   static readonly abi = _abi;

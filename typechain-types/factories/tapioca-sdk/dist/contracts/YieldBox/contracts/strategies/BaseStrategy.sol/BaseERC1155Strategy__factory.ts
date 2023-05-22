@@ -158,7 +158,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-] as const;
+];
 
 export class BaseERC1155Strategy__factory {
   static readonly abi = _abi;

@@ -357,6 +357,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.INative__factory>;
     getContractFactory(
+      name: "ICurveSwapper",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICurveSwapper__factory>;
+    getContractFactory(
+      name: "ISwapper",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ISwapper__factory>;
+    getContractFactory(
       name: "AssetRegister",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AssetRegister__factory>;
@@ -843,6 +851,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.INative>;
+    getContractAt(
+      name: "ICurveSwapper",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICurveSwapper>;
+    getContractAt(
+      name: "ISwapper",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ISwapper>;
     getContractAt(
       name: "AssetRegister",
       address: string,

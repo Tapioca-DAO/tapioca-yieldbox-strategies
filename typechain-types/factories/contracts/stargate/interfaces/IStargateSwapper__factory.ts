@@ -93,7 +93,7 @@ const _abi = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as const;
+];
 
 export class IStargateSwapper__factory {
   static readonly abi = _abi;

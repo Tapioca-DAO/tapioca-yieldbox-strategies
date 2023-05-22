@@ -377,7 +377,7 @@ const _abi = [
     stateMutability: "view",
     type: "function",
   },
-] as const;
+];
 
 export class IYieldBox__factory {
   static readonly abi = _abi;
