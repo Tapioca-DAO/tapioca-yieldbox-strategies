@@ -321,7 +321,6 @@ contract ConvexTricryptoStrategy is
         address to,
         uint256 amount
     ) internal override nonReentrant {
-
         uint256 available = _currentBalance();
         require(
             available >= amount,

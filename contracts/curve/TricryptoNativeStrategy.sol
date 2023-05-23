@@ -27,7 +27,7 @@ __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\
         _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
 */
 
-contract TricryptoStrategy is
+contract TricryptoNativeStrategy is
     BaseERC20Strategy,
     BoringOwnable,
     ReentrancyGuard
@@ -86,7 +86,7 @@ contract TricryptoStrategy is
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return "Curve-Tricrypto";
+        return "Curve-Tricrypto-Native";
     }
 
     /// @notice Returns the description of this strategy
@@ -218,7 +218,10 @@ contract TricryptoStrategy is
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, "TricryptoStrategy: amount not valid");
+        require(
+            available >= amount,
+            "TricryptoNativeStrategy: amount not valid"
+        );
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
@@ -231,7 +234,7 @@ contract TricryptoStrategy is
         }
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
-            "TricryptoStrategy: not enough"
+            "TricryptoNativeStrategy: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
         queued = wrappedNative.balanceOf(address(this));
