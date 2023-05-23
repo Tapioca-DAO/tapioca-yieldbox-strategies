@@ -4,4 +4,5 @@
 export * as interfaces from "./interfaces";
 export * as mocks from "./mocks";
 export { TricryptoLPGetter__factory } from "./TricryptoLPGetter__factory";
-export { TricryptoStrategy__factory } from "./TricryptoStrategy__factory";
+export { TricryptoLPStrategy__factory } from "./TricryptoLPStrategy__factory";
+export { TricryptoNativeStrategy__factory } from "./TricryptoNativeStrategy__factory";

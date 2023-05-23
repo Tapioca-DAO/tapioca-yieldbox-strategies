@@ -6,4 +6,5 @@ export type { interfaces };
 import type * as mocks from "./mocks";
 export type { mocks };
 export type { TricryptoLPGetter } from "./TricryptoLPGetter";
-export type { TricryptoStrategy } from "./TricryptoStrategy";
+export type { TricryptoLPStrategy } from "./TricryptoLPStrategy";
+export type { TricryptoNativeStrategy } from "./TricryptoNativeStrategy";

@@ -265,9 +265,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TricryptoLPGetter__factory>;
     getContractFactory(
-      name: "TricryptoStrategy",
+      name: "TricryptoLPStrategy",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TricryptoStrategy__factory>;
+    ): Promise<Contracts.TricryptoLPStrategy__factory>;
+    getContractFactory(
+      name: "TricryptoNativeStrategy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TricryptoNativeStrategy__factory>;
     getContractFactory(
       name: "ICurveEthStEthPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -737,10 +741,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TricryptoLPGetter>;
     getContractAt(
-      name: "TricryptoStrategy",
+      name: "TricryptoLPStrategy",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.TricryptoStrategy>;
+    ): Promise<Contracts.TricryptoLPStrategy>;
+    getContractAt(
+      name: "TricryptoNativeStrategy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TricryptoNativeStrategy>;
     getContractAt(
       name: "ICurveEthStEthPool",
       address: string,

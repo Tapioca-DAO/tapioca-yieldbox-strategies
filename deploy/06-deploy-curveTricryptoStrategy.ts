@@ -33,15 +33,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         constants[chainId].tricryptoMinter,
         constants[chainId].uniswapV2Router02,
     ];
-    await deploy('TricryptoStrategy', {
+    await deploy('TricryptoNativeStrategy', {
         from: deployer,
         log: true,
         args,
     });
-    await verify(hre, 'TricryptoStrategy', args);
-    const deployedStrategy = await deployments.get('TricryptoStrategy');
+    await verify(hre, 'TricryptoNativeStrategy', args);
+    const deployedStrategy = await deployments.get('TricryptoNativeStrategy');
     contracts.push({
-        name: 'TricryptoStrategy',
+        name: 'TricryptoNativeStrategy',
         address: deployedStrategy.address,
         meta: { constructorArguments: args },
     });
@@ -55,4 +55,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ['TricryptoStrategy'];
+func.tags = ['TricryptoNativeStrategy'];

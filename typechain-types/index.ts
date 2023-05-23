@@ -140,8 +140,10 @@ export type { TricryptoLPGaugeMock } from "./contracts/curve/mocks/TricryptoLPGa
 export { TricryptoLPGaugeMock__factory } from "./factories/contracts/curve/mocks/TricryptoLPGaugeMock__factory";
 export type { TricryptoLPGetter } from "./contracts/curve/TricryptoLPGetter";
 export { TricryptoLPGetter__factory } from "./factories/contracts/curve/TricryptoLPGetter__factory";
-export type { TricryptoStrategy } from "./contracts/curve/TricryptoStrategy";
-export { TricryptoStrategy__factory } from "./factories/contracts/curve/TricryptoStrategy__factory";
+export type { TricryptoLPStrategy } from "./contracts/curve/TricryptoLPStrategy";
+export { TricryptoLPStrategy__factory } from "./factories/contracts/curve/TricryptoLPStrategy__factory";
+export type { TricryptoNativeStrategy } from "./contracts/curve/TricryptoNativeStrategy";
+export { TricryptoNativeStrategy__factory } from "./factories/contracts/curve/TricryptoNativeStrategy__factory";
 export type { ICurveEthStEthPool } from "./contracts/lido/interfaces/ICurveEthStEthPool";
 export { ICurveEthStEthPool__factory } from "./factories/contracts/lido/interfaces/ICurveEthStEthPool__factory";
 export type { IStEth } from "./contracts/lido/interfaces/IStEth";

@@ -724,7 +724,7 @@ async function deployTricryptoLPGetter(
     return { tricryptoLPGtter };
 }
 
-async function registerTricryptoStrategy(
+async function registerTricryptoNativeStrategy(
     wethAddress: string,
     usdtAddress: string,
     wbtcAddress: string,
@@ -792,8 +792,8 @@ async function registerTricryptoStrategy(
         tricryptoMinterAddress = curveMinterMock.address;
     }
 
-    const tricryptoStrategy = await (
-        await ethers.getContractFactory('TricryptoStrategy')
+    const tricryptoNativeStrategy = await (
+        await ethers.getContractFactory('TricryptoNativeStrategy')
     ).deploy(
         yieldBoxAddres,
         wethAddress,
@@ -802,14 +802,14 @@ async function registerTricryptoStrategy(
         tricryptoMinterAddress,
         swapper,
     );
-    await tricryptoStrategy.deployed();
+    await tricryptoNativeStrategy.deployed();
 
     log(
-        `Deployed TricryptoStrategy ${tricryptoStrategy.address} with args [${yieldBoxAddres},${wethAddress},${lpGaugeAddress},${lpGetterAddress},${tricryptoMinterAddress},${swapper}]`,
+        `Deployed TricryptoNativeStrategy ${tricryptoNativeStrategy.address} with args [${yieldBoxAddres},${wethAddress},${lpGaugeAddress},${lpGetterAddress},${tricryptoMinterAddress},${swapper}]`,
         staging,
     );
     await verifyEtherscan(
-        tricryptoStrategy.address,
+        tricryptoNativeStrategy.address,
         [
             yieldBoxAddres,
             wethAddress,
@@ -821,8 +821,109 @@ async function registerTricryptoStrategy(
         staging,
     );
 
-    return { tricryptoStrategy, tricryptoLPGtter };
+    return { tricryptoNativeStrategy, tricryptoLPGtter };
 }
+
+async function registerTricryptoLPStrategy(
+    wethAddress: string,
+    usdtAddress: string,
+    wbtcAddress: string,
+    yieldBoxAddres: string,
+    liquidityPoolAddress: string,
+    lpGaugeAddress: string,
+    lpGetterAddress: string,
+    rewardTokenAddress: string,
+    tricryptoMinterAddress: string,
+    swapper: string,
+    staging?: boolean,
+) {
+    if (liquidityPoolAddress == ethers.constants.AddressZero) {
+        const { liquidityPoolMock } = await deployTricryptoLiquidityPoolMock(
+            wethAddress,
+            staging,
+        );
+        liquidityPoolAddress = liquidityPoolMock.address;
+    }
+    if (rewardTokenAddress == ethers.constants.AddressZero) {
+        const deployer = (await ethers.getSigners())[0];
+        const ERC20Mock = new ERC20Mock__factory(deployer);
+        const crvTokenMock = await ERC20Mock.deploy(
+            'STGTokenMock',
+            'STGM',
+            ethers.utils.parseEther('100000'),
+            18,
+            deployer.address,
+        );
+        const hasMintRetrictionsCrvToken = await crvTokenMock.hasMintRestrictions();
+        if (hasMintRetrictionsCrvToken) {
+            await crvTokenMock.toggleRestrictions();
+        }
+        await crvTokenMock.updateMintLimit(ethers.utils.parseEther('1000000'));
+
+        rewardTokenAddress = crvTokenMock.address;
+    }
+
+    if (lpGaugeAddress == ethers.constants.AddressZero) {
+        const { lpGaugeMock } = await deployTricryptoLpGaugeMock(
+            liquidityPoolAddress,
+            wethAddress,
+            rewardTokenAddress,
+            staging,
+        );
+        lpGaugeAddress = lpGaugeMock.address;
+    }
+    let tricryptoLPGtter: any;
+    if (lpGetterAddress == ethers.constants.AddressZero) {
+        const tricryptoLPGetterDeployment = await deployTricryptoLPGetter(
+            liquidityPoolAddress,
+            wethAddress,
+            wbtcAddress,
+            usdtAddress,
+        );
+        lpGetterAddress = tricryptoLPGetterDeployment.tricryptoLPGtter.address;
+        tricryptoLPGtter = tricryptoLPGetterDeployment.tricryptoLPGtter;
+    }
+
+    if (tricryptoMinterAddress == ethers.constants.AddressZero) {
+        const { curveMinterMock } = await deployTricryptoMinter(
+            rewardTokenAddress,
+            staging,
+        );
+        tricryptoMinterAddress = curveMinterMock.address;
+    }
+
+    const tricryptoLPStrategy = await (
+        await ethers.getContractFactory('TricryptoLPStrategy')
+    ).deploy(
+        yieldBoxAddres,
+        wethAddress,
+        lpGaugeAddress,
+        lpGetterAddress,
+        tricryptoMinterAddress,
+        swapper,
+    );
+    await tricryptoLPStrategy.deployed();
+
+    log(
+        `Deployed TricryptoLPStrategy ${tricryptoLPStrategy.address} with args [${yieldBoxAddres},${wethAddress},${lpGaugeAddress},${lpGetterAddress},${tricryptoMinterAddress},${swapper}]`,
+        staging,
+    );
+    await verifyEtherscan(
+        tricryptoLPStrategy.address,
+        [
+            yieldBoxAddres,
+            wethAddress,
+            lpGaugeAddress,
+            lpGetterAddress,
+            tricryptoMinterAddress,
+            swapper,
+        ],
+        staging,
+    );
+
+    return { tricryptoLPStrategy, tricryptoLPGtter };
+}
+
 
 /*
 Lido stEth
@@ -1517,9 +1618,9 @@ export async function registerMocks(staging?: boolean) {
     );
     log(`Deployed StargateStrategy ${stargateStrategy.address}`, staging);
 
-    log('Deploying TricryptoStrategy', staging);
-    const { tricryptoStrategy, tricryptoLPGtter } =
-        await registerTricryptoStrategy(
+    log('Deploying TricryptoNativeStrategy', staging);
+    const { tricryptoNativeStrategy, tricryptoLPGtter } =
+        await registerTricryptoNativeStrategy(
             weth.address,
             usdc.address,
             usdc.address,
@@ -1529,10 +1630,37 @@ export async function registerMocks(staging?: boolean) {
             ethers.constants.AddressZero,
             ethers.constants.AddressZero,
             ethers.constants.AddressZero,
-            swapperMock.address,
+            uniswapV3SwapperMock.address,
             staging,
         );
-    log(`Deployed TricryptoStrategy ${tricryptoStrategy.address}`, staging);
+    log(
+        `Deployed TricryptoNativeStrategy ${tricryptoNativeStrategy.address}`,
+        staging,
+    );
+
+    log('Deploying TricryptoLPStrategy', staging);
+    const tricryptoLpStrategyData = await registerTricryptoLPStrategy(
+        weth.address,
+        usdc.address,
+        usdc.address,
+        yieldBox.address,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        uniswapV3SwapperMock.address,
+        staging,
+    );
+
+    const tricryptoLPStrategy = tricryptoLpStrategyData.tricryptoLPStrategy;
+    const tricryptoLPStrategyLpGetter =
+        tricryptoLpStrategyData.tricryptoLPGtter;
+
+    log(
+        `Deployed TricryptoNativeStrTricryptoLPStrategyategy ${tricryptoLPStrategy.address}`,
+        staging,
+    );
 
     log('Deploying Lido ETH Strategy', staging);
     const { lidoEthStrategy } = await registerLidoStEthStrategy(
@@ -1624,7 +1752,8 @@ export async function registerMocks(staging?: boolean) {
         aaveStrategy,
         yearnStrategy,
         stargateStrategy,
-        tricryptoStrategy,
+        tricryptoNativeStrategy,
+        tricryptoLPStrategy,
         tricryptoLPGtter,
         lidoEthStrategy,
         compoundStrategy,
@@ -1641,6 +1770,7 @@ export async function registerMocks(staging?: boolean) {
         __uniRouter,
         __wethUsdcMockPair,
         uniV2EnvironnementSetup,
+        tricryptoLPStrategyLpGetter,
     };
 
     const utilFuncs = {
@@ -1780,9 +1910,9 @@ export async function registerFork() {
     );
     log(`Deployed StargateStrategy ${stargateStrategy.address}`, false);
 
-    log('Deploying TricryptoStrategy', false);
-    const { tricryptoStrategy, tricryptoLPGtter } =
-        await registerTricryptoStrategy(
+    log('Deploying TricryptoNativeStrategy', false);
+    const { tricryptoNativeStrategy, tricryptoLPGtter } =
+        await registerTricryptoNativeStrategy(
             weth.address,
             process.env.USDT_ADDRESS!,
             process.env.WBTC_ADDRESS!,
@@ -1795,7 +1925,26 @@ export async function registerFork() {
             swapperMock.address,
             false,
         );
-    log(`Deployed TricryptoStrategy ${tricryptoStrategy.address}`, false);
+    log(
+        `Deployed TricryptoNativeStrategy ${tricryptoNativeStrategy.address}`,
+        false,
+    );
+
+    log('Deploying TricryptoLPStrategy', false);
+    const { tricryptoLPStrategy } = await registerTricryptoLPStrategy(
+        weth.address,
+        process.env.USDT_ADDRESS!,
+        process.env.WBTC_ADDRESS!,
+        yieldBox.address,
+        process.env.TRICRYPTO_LIQUIDITY_POOL!,
+        process.env.TRICRYPTO_LP_GAUGE!,
+        tricryptoLPGtter.address, 
+        process.env.CRV_ADDRESS!,
+        process.env.TRICRYPTO_MINTER!,
+        swapperMock.address,
+        false,
+    );
+    log(`Deployed TricryptoLPStrategy ${tricryptoLPStrategy.address}`, false);
 
     log('Deploying Lido ETH Strategy', false);
     const { lidoEthStrategy } = await registerLidoStEthStrategy(
@@ -1863,7 +2012,8 @@ export async function registerFork() {
         yearnStrategy,
         stargateStrategy,
         tricryptoLPGtter,
-        tricryptoStrategy,
+        tricryptoNativeStrategy,
+        tricryptoLPStrategy,
         lidoEthStrategy,
         compoundStrategy,
         balancerStrategy,
