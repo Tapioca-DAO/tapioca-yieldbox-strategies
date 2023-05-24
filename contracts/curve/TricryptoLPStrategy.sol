@@ -14,7 +14,6 @@ import "./interfaces/ITricryptoLPGetter.sol";
 import "./interfaces/ITricryptoLPGauge.sol";
 import "./interfaces/ICurveMinter.sol";
 
-
 /*
 
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        

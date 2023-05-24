@@ -99,16 +99,22 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     },
 
     networks: {
+        ...supportedChains,
         hardhat: {
-            saveDeployments: false,
             forking: {
+                blockNumber: 16963096,
                 url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
             },
             hardfork: 'merge',
+            allowUnlimitedContractSize: true,
+            accounts: {
+                mnemonic:
+                    'test test test test test test test test test test test junk',
+                count: 10,
+                accountsBalance: '1000000000000000000000',
+            },
+            tags: ['testnet'],
         },
-
-        //mainnets
-        mainnet: supportedChains['ethereum'],
     },
     dodoc: {
         runOnCompile: false,
