@@ -30,18 +30,13 @@ async function become(address: string): SignerWithAddress {
   return ethers.getSigner(address);
 }
 
-// All contracts are on Arbitrum
-// I am the Binance hot wallet:
-const ME = "0xb38e8c17e38363af6ebdcb3dae12e0243582891d";
-
-// Yes, there are two copies of the same contract; this is the one we want if
-// we want to stake GLP.
-const GLP_REWARD_ROUTER = "0xB95DB5B167D75e6d04227CfFFA61069348d271F5";
-const GMX_REWARD_ROUTER = "0xA906F338CB21815cBc4Bc87ace9e68c87eF8d8F1";
-
-const STAKED_GLP_TOKEN = "0x5402B5F40310bDED796c7D0F3FF6683f5C0cFfdf";
-const WETH_TOKEN = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1";
-const VAULT = "0x489ee077994B6658eAfA855C308275EAd8097C4A";
+const {
+    BINANCE_WALLET_ADDRESS,
+    GLP_REWARD_ROUTER,
+    GMX_REWARD_ROUTER,
+    STAKED_GLP,
+    GMX_VAULT
+} = process.env;
 
 const BORING_IERC20 =
   "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol:IERC20";
@@ -54,7 +49,7 @@ describe("GlpStrategy fork test", () => {
   });
 
   async function setUp() {
-    const me = await become(ME);
+    const me = await become(BINANCE_WALLET_ADDRESS);
 
     const glpRewardRouter = (
       await ethers.getContractAt<IGmxRewardRouterV2>(
@@ -82,7 +77,7 @@ describe("GlpStrategy fork test", () => {
       )
     ).connect(me);
     const sglp = (
-      await ethers.getContractAt<IERC20>(BORING_IERC20, STAKED_GLP_TOKEN)
+      await ethers.getContractAt<IERC20>(BORING_IERC20, STAKED_GLP)
     ).connect(me);
     const glpManager = (
       await ethers.getContractAt<IGlpManager>(
@@ -104,7 +99,7 @@ describe("GlpStrategy fork test", () => {
       )
     ).connect(me);
     const vault = (
-      await ethers.getContractAt<IGmxVault>("IGmxVault", VAULT)
+      await ethers.getContractAt<IGmxVault>("IGmxVault", GMX_VAULT)
     ).connect(me);
     const weth = (
       await ethers.getContractAt<IWETHToken>(
