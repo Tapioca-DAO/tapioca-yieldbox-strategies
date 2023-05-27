@@ -32,7 +32,7 @@ const timeTravel = async (seconds: number) => {
     await time.increase(seconds);
 };
 
-function BN(n: BigNumberish) {
+export function BN(n: BigNumberish) {
     return ethers.BigNumber.from(n.toString());
 }
 

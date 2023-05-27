@@ -6,6 +6,8 @@ export * as balancer from "./balancer";
 export * as compound from "./compound";
 export * as convex from "./convex";
 export * as curve from "./curve";
+export * as glp from "./glp";
+export * as interfaces from "./interfaces";
 export * as lido from "./lido";
 export * as stargate from "./stargate";
 export * as yearn from "./yearn";

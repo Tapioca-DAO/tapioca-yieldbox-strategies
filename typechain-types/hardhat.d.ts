@@ -269,6 +269,42 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TricryptoStrategy__factory>;
     getContractFactory(
+      name: "GlpStrategy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.GlpStrategy__factory>;
+    getContractFactory(
+      name: "IGlpManager",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IGlpManager__factory>;
+    getContractFactory(
+      name: "IGmxRewardDistributor",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IGmxRewardDistributor__factory>;
+    getContractFactory(
+      name: "IGmxRewardRouterV2",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IGmxRewardRouterV2__factory>;
+    getContractFactory(
+      name: "IGmxRewardTracker",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IGmxRewardTracker__factory>;
+    getContractFactory(
+      name: "IGmxVault",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IGmxVault__factory>;
+    getContractFactory(
+      name: "IGmxVester",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IGmxVester__factory>;
+    getContractFactory(
+      name: "IFeeCollector",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IFeeCollector__factory>;
+    getContractFactory(
+      name: "IWETHToken",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IWETHToken__factory>;
+    getContractFactory(
       name: "ICurveEthStEthPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ICurveEthStEthPool__factory>;
@@ -733,6 +769,51 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.TricryptoStrategy>;
+    getContractAt(
+      name: "GlpStrategy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.GlpStrategy>;
+    getContractAt(
+      name: "IGlpManager",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IGlpManager>;
+    getContractAt(
+      name: "IGmxRewardDistributor",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IGmxRewardDistributor>;
+    getContractAt(
+      name: "IGmxRewardRouterV2",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IGmxRewardRouterV2>;
+    getContractAt(
+      name: "IGmxRewardTracker",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IGmxRewardTracker>;
+    getContractAt(
+      name: "IGmxVault",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IGmxVault>;
+    getContractAt(
+      name: "IGmxVester",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IGmxVester>;
+    getContractAt(
+      name: "IFeeCollector",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IFeeCollector>;
+    getContractAt(
+      name: "IWETHToken",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IWETHToken>;
     getContractAt(
       name: "ICurveEthStEthPool",
       address: string,
