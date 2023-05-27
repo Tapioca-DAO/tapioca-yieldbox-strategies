@@ -5,6 +5,12 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import _ from 'lodash';
 
 describe('CompoundStrategy fork test', () => {
+    before(function () {
+        if (process.env.NODE_ENV != 'mainnet') {
+            this.skip();
+        }
+    });
+
     it('should test initial strategy values', async () => {
         const { compoundStrategy, weth, yieldBox } = await loadFixture(
             registerFork,

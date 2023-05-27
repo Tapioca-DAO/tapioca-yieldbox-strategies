@@ -12,7 +12,8 @@ import { HttpNetworkConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
 
 dotenv.config({ path: './env/.env' });
-const NODE_ENV = 'mainnet';
+const { NODE_ENV } = process.env;
+
 if (!NODE_ENV || NODE_ENV === '') {
     throw `Please specify witch environment file you want to use\n \
     E.g: NODE_ENV={environmentFileHere} yarn hardhat ${process.argv
@@ -101,7 +102,12 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
         hardhat: {
             saveDeployments: false,
             forking: {
-                url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+                ...(process.env.FORKING_BLOCK_NUMBER ? {
+                    blockNumber: parseInt(process.env.FORKING_BLOCK_NUMBER)
+                } : null),
+                url: NODE_ENV == 'mainnet' ?
+                    supportedChains['ethereum'].url :
+                    supportedChains[NODE_ENV].url,
             },
             hardfork: 'merge',
         },

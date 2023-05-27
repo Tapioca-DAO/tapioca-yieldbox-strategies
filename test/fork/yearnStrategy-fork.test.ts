@@ -4,6 +4,12 @@ import { registerFork } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
 describe('YearnStrategy fork test', () => {
+    before(function () {
+        if (process.env.NODE_ENV != 'mainnet') {
+            this.skip();
+        }
+    });
+
     it('should test initial strategy values', async () => {
         const { yearnStrategy, weth, yieldBox } = await loadFixture(
             registerFork,
