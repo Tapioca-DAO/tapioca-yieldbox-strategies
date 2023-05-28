@@ -12,7 +12,7 @@ import { HttpNetworkConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
 
 dotenv.config({ path: './env/.env' });
-const { NODE_ENV } = process.env;
+const { NODE_ENV = 'mainnet' } = process.env;
 
 if (!NODE_ENV || NODE_ENV === '') {
     throw `Please specify witch environment file you want to use\n \
@@ -45,6 +45,8 @@ const supportedChains = SDK.API.utils.getSupportedChains().reduce(
     }),
     {} as { [key in TNetwork]: HttpNetworkConfig },
 );
+
+const chain = supportedChains[NODE_ENV == 'mainnet' ? 'ethereum' : NODE_ENV];
 
 const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     SDK: { project: 'tapioca-strategies' },
@@ -101,14 +103,14 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     networks: {
         hardhat: {
             saveDeployments: false,
-            forking: {
-                ...(process.env.FORKING_BLOCK_NUMBER ? {
-                    blockNumber: parseInt(process.env.FORKING_BLOCK_NUMBER)
-                } : null),
-                url: NODE_ENV == 'mainnet' ?
-                    supportedChains['ethereum'].url :
-                    supportedChains[NODE_ENV].url,
-            },
+            ...(chain?.url && {
+                forking: {
+                    url: chain.url,
+                    ...(process.env.FORKING_BLOCK_NUMBER ? {
+                        blockNumber: parseInt(process.env.FORKING_BLOCK_NUMBER)
+                    } : null),
+                }
+            }),
             hardfork: 'merge',
         },
 
