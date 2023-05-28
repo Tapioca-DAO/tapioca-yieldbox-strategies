@@ -10,10 +10,10 @@ import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 
-import "./interfaces/IRouter.sol";
-import "./interfaces/IRouterETH.sol";
-import "./interfaces/ILPStaking.sol";
-import "../../tapioca-periph/contracts/interfaces/INative.sol";
+import "./interfaces/ITricryptoLPGetter.sol";
+import "./interfaces/ITricryptoLPGauge.sol";
+import "./interfaces/ICurveMinter.sol";
+
 
 /*
 
@@ -28,31 +28,27 @@ __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\
         _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
 */
 
-//TODO: decide if we need to start with ETH and wrap it into WETH; stargate allows ETH. not WETH, while others allow WETH, not ETH
-//TODO: handle rewards deposits to yieldbox
-
-//Wrapped-native strategy for Stargate
-contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
+contract TricryptoLPStrategy is
+    BaseERC20Strategy,
+    BoringOwnable,
+    ReentrancyGuard
+{
     using BoringERC20 for IERC20;
 
     // ************ //
     // *** VARS *** //
     // ************ //
+    IERC20 public immutable lpToken;
     IERC20 public immutable wrappedNative;
     ISwapper public swapper;
-    address public stgEthPool;
 
-    IRouterETH public immutable addLiquidityRouter;
-    IRouter public immutable router;
-    ILPStaking public immutable lpStaking;
-
-    uint256 public lpStakingPid;
-    uint256 public lpRouterPid;
-    IERC20 public stgNative; //ex: stEth
-    IERC20 public stgTokenReward;
+    ITricryptoLPGauge public immutable lpGauge;
+    ICurveMinter public immutable minter;
+    ITricryptoLPGetter public lpGetter;
+    IERC20 public immutable rewardToken; //CRV token
 
     /// @notice Queues tokens up to depositThreshold
-    /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed
+    /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Curve is performed
     uint256 public depositThreshold;
 
     // ************** //
@@ -60,6 +56,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************** //
     event MultiSwapper(address indexed _old, address indexed _new);
     event DepositThreshold(uint256 _old, uint256 _new);
+    event LPGetterSet(address indexed _old, address indexed _new);
     event AmountQueued(uint256 amount);
     event AmountDeposited(uint256 amount);
     event AmountWithdrawn(address indexed to, uint256 amount);
@@ -67,31 +64,23 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     constructor(
         IYieldBox _yieldBox,
         address _token,
-        address _ethRouter,
-        address _lpStaking,
-        uint256 _stakingPid,
-        address _lpToken,
-        address _swapper,
-        address _stgEthPool
-    ) BaseERC20Strategy(_yieldBox, _token) {
+        address _lpGauge,
+        address _lpGetter,
+        address _minter,
+        address _multiSwapper
+    ) BaseERC20Strategy(_yieldBox, ITricryptoLPGetter(_lpGetter).lpToken()) {
         wrappedNative = IERC20(_token);
-        swapper = ISwapper(_swapper);
-        stgEthPool = _stgEthPool;
+        swapper = ISwapper(_multiSwapper);
+        lpGetter = ITricryptoLPGetter(_lpGetter);
+        lpGauge = ITricryptoLPGauge(_lpGauge);
+        minter = ICurveMinter(_minter);
+        lpToken = IERC20(lpGetter.lpToken());
+        rewardToken = IERC20(lpGauge.crv_token());
 
-        addLiquidityRouter = IRouterETH(_ethRouter);
-        lpStaking = ILPStaking(_lpStaking);
-        lpStakingPid = _stakingPid;
-
-        router = IRouter(addLiquidityRouter.stargateRouter());
-        lpRouterPid = addLiquidityRouter.poolId();
-
-        stgNative = IERC20(_lpToken);
-        stgNative.approve(_lpStaking, type(uint256).max);
-        stgNative.approve(address(router), type(uint256).max);
-
-        stgTokenReward = IERC20(lpStaking.stargate());
-
-        stgTokenReward.approve(_swapper, type(uint256).max);
+        lpToken.approve(_lpGauge, type(uint256).max);
+        lpToken.approve(_lpGetter, type(uint256).max);
+        rewardToken.approve(_multiSwapper, type(uint256).max);
+        wrappedNative.approve(_lpGetter, type(uint256).max);
     }
 
     // ********************** //
@@ -99,7 +88,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return "Stargate";
+        return "Curve-Tricrypto-LP";
     }
 
     /// @notice Returns the description of this strategy
@@ -109,19 +98,24 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return "Stargate strategy for wrapped native assets";
+        return "Curve-Tricrypto strategy for TricryptoLP";
     }
 
     /// @notice returns compounded amounts in wrappedNative
     function compoundAmount() public view returns (uint256 result) {
-        uint256 claimable = lpStaking.pendingStargate(
-            lpStakingPid,
-            address(this)
+        (bool success, bytes memory response) = address(lpGauge).staticcall(
+            abi.encodeWithSignature("claimable_tokens(address)", address(this))
         );
         result = 0;
+        uint256 claimable = 0;
+        if (success) {
+            claimable = abi.decode(response, (uint256));
+        }
         if (claimable > 0) {
+            // claim reward, compute swap to wrappedNative and then compute LP amount
+            // --
             ISwapper.SwapData memory swapData = swapper.buildSwapData(
-                address(stgTokenReward),
+                address(rewardToken),
                 address(wrappedNative),
                 claimable,
                 0,
@@ -129,8 +123,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false
             );
             result = swapper.getOutputAmount(swapData, "");
-
-            result = result - (result * 50) / 10_000; //0.5%
+            result = lpGetter.calcWethToLp(result);
         }
     }
 
@@ -148,43 +141,57 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @param _swapper The new swapper address
     function setMultiSwapper(address _swapper) external onlyOwner {
         emit MultiSwapper(address(swapper), _swapper);
-        stgTokenReward.approve(address(swapper), 0);
+        rewardToken.approve(address(swapper), 0);
+        rewardToken.approve(_swapper, type(uint256).max);
         swapper = ISwapper(_swapper);
-        stgTokenReward.approve(_swapper, type(uint256).max);
+    }
+
+    /// @notice Sets the Tricrypto LP Getter
+    /// @param _lpGetter the new address
+    function setTricryptoLPGetter(address _lpGetter) external onlyOwner {
+        emit LPGetterSet(address(lpGetter), _lpGetter);
+        wrappedNative.approve(address(lpGetter), 0);
+        lpGetter = ITricryptoLPGetter(_lpGetter);
+        wrappedNative.approve(_lpGetter, type(uint256).max);
     }
 
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
     function compound(bytes memory) public {
-        uint256 unclaimed = lpStaking.pendingStargate(
-            lpStakingPid,
-            address(this)
-        );
+        uint256 claimable = lpGauge.claimable_tokens(address(this));
+        if (claimable > 0) {
+            uint256 crvBalanceBefore = rewardToken.balanceOf(address(this));
+            minter.mint(address(lpGauge));
+            uint256 crvBalanceAfter = rewardToken.balanceOf(address(this));
 
-        if (unclaimed > 0) {
-            uint256 stgBalanceBefore = stgTokenReward.balanceOf(address(this));
-            lpStaking.deposit(2, 0);
-            uint256 stgBalanceAfter = stgTokenReward.balanceOf(address(this));
-
-            if (stgBalanceAfter > stgBalanceBefore) {
-                uint256 stgAmount = stgBalanceAfter - stgBalanceBefore;
+            if (crvBalanceAfter > crvBalanceBefore) {
+                uint256 crvAmount = crvBalanceAfter - crvBalanceBefore;
 
                 ISwapper.SwapData memory swapData = swapper.buildSwapData(
-                    address(stgTokenReward),
+                    address(rewardToken),
                     address(wrappedNative),
-                    stgAmount,
+                    crvAmount,
                     0,
                     false,
                     false
                 );
                 uint256 calcAmount = swapper.getOutputAmount(swapData, "");
                 uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
-
                 swapper.swap(swapData, minAmount, address(this), "");
 
-                uint256 queued = wrappedNative.balanceOf(address(this));
-                _stake(queued);
+                uint256 wrappedNativeAmount = wrappedNative.balanceOf(
+                    address(this)
+                );
+                calcAmount = lpGetter.calcWethToLp(wrappedNativeAmount);
+                minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
+                uint256 lpAmount = lpGetter.addLiquidityWeth(
+                    wrappedNativeAmount,
+                    minAmount
+                );
+                lpGauge.deposit(lpAmount, address(this), false);
+
+                emit AmountDeposited(lpAmount);
             }
         }
     }
@@ -193,80 +200,57 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
         compound("");
 
-        (uint256 toWithdraw, ) = lpStaking.userInfo(
-            lpStakingPid,
-            address(this)
-        );
-        lpStaking.withdraw(lpStakingPid, toWithdraw);
-        router.instantRedeemLocal(
-            uint16(lpRouterPid),
-            toWithdraw,
-            address(this)
-        );
-        result = address(this).balance;
-        INative(address(wrappedNative)).deposit{value: result}();
+        result = lpGauge.balanceOf(address(this));
+        lpGauge.withdraw(result, true);
     }
 
     // ************************* //
     // *** PRIVATE FUNCTIONS *** //
     // ************************* //
-    /// @dev queries 'getUserAccountData' from Stargate and gets the total collateral
+    /// @dev queries Curve-Tricrypto Liquidity Pool
     function _currentBalance() internal view override returns (uint256 amount) {
-        uint256 queued = wrappedNative.balanceOf(address(this));
-        (amount, ) = lpStaking.userInfo(lpStakingPid, address(this));
-        uint256 claimableRewards = compoundAmount();
-        return amount + queued + claimableRewards;
+        uint256 lpBalance = lpGauge.balanceOf(address(this));
+        uint256 queued = lpToken.balanceOf(address(this));
+        uint256 _compoundAmount = compoundAmount();
+        return lpBalance + queued + _compoundAmount;
     }
 
-    /// @dev deposits to Stargate or queues tokens if the 'depositThreshold' has not been met yet
-    ///      - when depositing to Stargate, aToken is minted to this contract
+    /// @dev deposits to Curve Tricrypto or queues tokens if the 'depositThreshold' has not been met yet
     function _deposited(uint256 amount) internal override nonReentrant {
-        uint256 queued = wrappedNative.balanceOf(address(this));
+        uint256 queued = lpToken.balanceOf(address(this));
         if (queued > depositThreshold) {
-            _stake(queued);
+            lpGauge.deposit(queued, address(this), false);
+            emit AmountDeposited(queued);
+            return;
         }
         emit AmountQueued(amount);
     }
 
-    function _stake(uint256 amount) private {
-        INative(address(wrappedNative)).withdraw(amount);
-
-        addLiquidityRouter.addLiquidityETH{value: amount}();
-        uint256 toStake = stgNative.balanceOf(address(this));
-        lpStaking.deposit(lpStakingPid, toStake);
-        emit AmountDeposited(amount);
-    }
-
-    /// @dev burns stgToken in exchange of Native and withdraws from Stargate Staking & Router
+    /// @dev withdraws from Curve Tricrypto
     function _withdraw(
         address to,
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, "StargateStrategy: amount not valid");
+        require(available >= amount, "TricryptoLPStrategy: amount not valid");
 
-        uint256 queued = wrappedNative.balanceOf(address(this));
+        uint256 queued = lpToken.balanceOf(address(this));
         if (amount > queued) {
             compound("");
-            uint256 toWithdraw = amount - queued;
-            lpStaking.withdraw(lpStakingPid, toWithdraw);
-            router.instantRedeemLocal(
-                uint16(lpRouterPid),
-                toWithdraw,
-                address(this)
-            );
-
-            INative(address(wrappedNative)).deposit{value: toWithdraw}();
+            uint256 lpBalance = lpGauge.balanceOf(address(this));
+            lpGauge.withdraw(lpBalance, true);
         }
-
         require(
-            amount <= wrappedNative.balanceOf(address(this)),
-            "Stargate: not enough"
+            lpToken.balanceOf(address(this)) >= amount,
+            "TricryptoLPStrategy: not enough"
         );
-        wrappedNative.safeTransfer(to, amount);
+        lpToken.safeTransfer(to, amount);
+
+        queued = lpToken.balanceOf(address(this));
+        if (queued > 0) {
+            lpGauge.deposit(queued, address(this), false);
+        }
 
         emit AmountWithdrawn(to, amount);
     }
-
-    receive() external payable {}
 }

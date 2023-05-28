@@ -1457,7 +1457,7 @@ describe('Strategies time dependent fork tests', () => {
                     0,
                     share,
                 ),
-            ).to.be.revertedWith('TricryptoStrategy: not enough');
+            ).to.be.revertedWith('TricryptoNativeStrategy: not enough');
         }
     });
 

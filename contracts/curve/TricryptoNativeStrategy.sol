@@ -8,7 +8,7 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 
 import "./interfaces/ITricryptoLPGetter.sol";
 import "./interfaces/ITricryptoLPGauge.sol";
@@ -27,7 +27,7 @@ __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\
         _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
 */
 
-contract TricryptoStrategy is
+contract TricryptoNativeStrategy is
     BaseERC20Strategy,
     BoringOwnable,
     ReentrancyGuard
@@ -38,7 +38,7 @@ contract TricryptoStrategy is
     // *** VARS *** //
     // ************ //
     IERC20 public immutable wrappedNative;
-    IUniswapV2Router02 public swapper;
+    ISwapper public swapper;
 
     ITricryptoLPGauge public immutable lpGauge;
     ICurveMinter public immutable minter;
@@ -68,7 +68,7 @@ contract TricryptoStrategy is
         address _multiSwapper
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
-        swapper = IUniswapV2Router02(_multiSwapper);
+        swapper = ISwapper(_multiSwapper);
 
         lpGauge = ITricryptoLPGauge(_lpGauge);
         minter = ICurveMinter(_minter);
@@ -86,7 +86,7 @@ contract TricryptoStrategy is
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return "Curve-Tricrypto";
+        return "Curve-Tricrypto-Native";
     }
 
     /// @notice Returns the description of this strategy
@@ -104,10 +104,15 @@ contract TricryptoStrategy is
         uint256 claimable = lpGauge.claimable_tokens(address(this));
         result = 0;
         if (claimable > 0) {
-            address[] memory path = new address[](2); //todo: check if path is right
-            path[0] = address(rewardToken);
-            path[1] = address(wrappedNative);
-            result = (swapper.getAmountsOut(claimable, path))[1];
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                address(rewardToken),
+                address(wrappedNative),
+                claimable,
+                0,
+                false,
+                false
+            );
+            result = swapper.getOutputAmount(swapData, "");
             result = result - (result * 50) / 10_000; //0.5%
         }
     }
@@ -128,7 +133,7 @@ contract TricryptoStrategy is
         emit MultiSwapper(address(swapper), _swapper);
         rewardToken.approve(address(swapper), 0);
         rewardToken.approve(_swapper, type(uint256).max);
-        swapper = IUniswapV2Router02(_swapper);
+        swapper = ISwapper(_swapper);
     }
 
     /// @notice Sets the Tricrypto LP Getter
@@ -153,20 +158,17 @@ contract TricryptoStrategy is
             if (crvBalanceAfter > crvBalanceBefore) {
                 uint256 crvAmount = crvBalanceAfter - crvBalanceBefore;
 
-                address[] memory path = new address[](2); //todo: check if path is right
-                path[0] = address(rewardToken);
-                path[1] = address(wrappedNative);
-                uint256 calcAmount = (swapper.getAmountsOut(crvAmount, path))[
-                    1
-                ];
-                uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
-                swapper.swapExactTokensForTokens(
+                ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                    address(rewardToken),
+                    address(wrappedNative),
                     crvAmount,
-                    minAmount,
-                    path,
-                    address(this),
-                    100 * 1e18
+                    0,
+                    false,
+                    false
                 );
+                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+                uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
+                swapper.swap(swapData, minAmount, address(this), "");
 
                 uint256 queued = wrappedNative.balanceOf(address(this));
 
@@ -216,7 +218,10 @@ contract TricryptoStrategy is
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, "TricryptoStrategy: amount not valid");
+        require(
+            available >= amount,
+            "TricryptoNativeStrategy: amount not valid"
+        );
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
@@ -229,7 +234,7 @@ contract TricryptoStrategy is
         }
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
-            "TricryptoStrategy: not enough"
+            "TricryptoNativeStrategy: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
         queued = wrappedNative.balanceOf(address(this));

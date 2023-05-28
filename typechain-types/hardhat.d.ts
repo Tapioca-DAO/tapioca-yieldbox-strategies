@@ -265,9 +265,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TricryptoLPGetter__factory>;
     getContractFactory(
-      name: "TricryptoStrategy",
+      name: "TricryptoLPStrategy",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TricryptoStrategy__factory>;
+    ): Promise<Contracts.TricryptoLPStrategy__factory>;
+    getContractFactory(
+      name: "TricryptoNativeStrategy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TricryptoNativeStrategy__factory>;
     getContractFactory(
       name: "GlpStrategy",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -392,6 +396,14 @@ declare module "hardhat/types/runtime" {
       name: "INative",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.INative__factory>;
+    getContractFactory(
+      name: "ICurveSwapper",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ICurveSwapper__factory>;
+    getContractFactory(
+      name: "ISwapper",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ISwapper__factory>;
     getContractFactory(
       name: "AssetRegister",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -765,10 +777,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TricryptoLPGetter>;
     getContractAt(
-      name: "TricryptoStrategy",
+      name: "TricryptoLPStrategy",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.TricryptoStrategy>;
+    ): Promise<Contracts.TricryptoLPStrategy>;
+    getContractAt(
+      name: "TricryptoNativeStrategy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TricryptoNativeStrategy>;
     getContractAt(
       name: "GlpStrategy",
       address: string,
@@ -924,6 +941,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.INative>;
+    getContractAt(
+      name: "ICurveSwapper",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ICurveSwapper>;
+    getContractAt(
+      name: "ISwapper",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ISwapper>;
     getContractAt(
       name: "AssetRegister",
       address: string,

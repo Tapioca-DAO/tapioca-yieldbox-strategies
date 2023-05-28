@@ -27,9 +27,8 @@ import type {
   PromiseOrValue,
 } from "../../common";
 
-export interface BalancerStrategyInterface extends utils.Interface {
+export interface TricryptoNativeStrategyInterface extends utils.Interface {
   functions: {
-    "bal()": FunctionFragment;
     "cheapWithdrawable()": FunctionFragment;
     "claimOwnership()": FunctionFragment;
     "compound(bytes)": FunctionFragment;
@@ -40,19 +39,20 @@ export interface BalancerStrategyInterface extends utils.Interface {
     "deposited(uint256)": FunctionFragment;
     "description()": FunctionFragment;
     "emergencyWithdraw()": FunctionFragment;
-    "helpers()": FunctionFragment;
+    "lpGauge()": FunctionFragment;
+    "lpGetter()": FunctionFragment;
+    "minter()": FunctionFragment;
     "name()": FunctionFragment;
     "owner()": FunctionFragment;
     "pendingOwner()": FunctionFragment;
-    "pool()": FunctionFragment;
-    "poolId()": FunctionFragment;
-    "rewardTokens(uint256)": FunctionFragment;
+    "rewardToken()": FunctionFragment;
     "setDepositThreshold(uint256)": FunctionFragment;
+    "setMultiSwapper(address)": FunctionFragment;
+    "setTricryptoLPGetter(address)": FunctionFragment;
+    "swapper()": FunctionFragment;
     "tokenId()": FunctionFragment;
     "tokenType()": FunctionFragment;
     "transferOwnership(address,bool,bool)": FunctionFragment;
-    "updateCache()": FunctionFragment;
-    "vault()": FunctionFragment;
     "withdraw(address,uint256)": FunctionFragment;
     "withdrawable()": FunctionFragment;
     "wrappedNative()": FunctionFragment;
@@ -61,7 +61,6 @@ export interface BalancerStrategyInterface extends utils.Interface {
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "bal"
       | "cheapWithdrawable"
       | "claimOwnership"
       | "compound"
@@ -72,26 +71,26 @@ export interface BalancerStrategyInterface extends utils.Interface {
       | "deposited"
       | "description"
       | "emergencyWithdraw"
-      | "helpers"
+      | "lpGauge"
+      | "lpGetter"
+      | "minter"
       | "name"
       | "owner"
       | "pendingOwner"
-      | "pool"
-      | "poolId"
-      | "rewardTokens"
+      | "rewardToken"
       | "setDepositThreshold"
+      | "setMultiSwapper"
+      | "setTricryptoLPGetter"
+      | "swapper"
       | "tokenId"
       | "tokenType"
       | "transferOwnership"
-      | "updateCache"
-      | "vault"
       | "withdraw"
       | "withdrawable"
       | "wrappedNative"
       | "yieldBox"
   ): FunctionFragment;
 
-  encodeFunctionData(functionFragment: "bal", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "cheapWithdrawable",
     values?: undefined
@@ -132,23 +131,32 @@ export interface BalancerStrategyInterface extends utils.Interface {
     functionFragment: "emergencyWithdraw",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "helpers", values?: undefined): string;
+  encodeFunctionData(functionFragment: "lpGauge", values?: undefined): string;
+  encodeFunctionData(functionFragment: "lpGetter", values?: undefined): string;
+  encodeFunctionData(functionFragment: "minter", values?: undefined): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "pendingOwner",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "pool", values?: undefined): string;
-  encodeFunctionData(functionFragment: "poolId", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "rewardTokens",
-    values: [PromiseOrValue<BigNumberish>]
+    functionFragment: "rewardToken",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "setDepositThreshold",
     values: [PromiseOrValue<BigNumberish>]
   ): string;
+  encodeFunctionData(
+    functionFragment: "setMultiSwapper",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setTricryptoLPGetter",
+    values: [PromiseOrValue<string>]
+  ): string;
+  encodeFunctionData(functionFragment: "swapper", values?: undefined): string;
   encodeFunctionData(functionFragment: "tokenId", values?: undefined): string;
   encodeFunctionData(functionFragment: "tokenType", values?: undefined): string;
   encodeFunctionData(
@@ -159,11 +167,6 @@ export interface BalancerStrategyInterface extends utils.Interface {
       PromiseOrValue<boolean>
     ]
   ): string;
-  encodeFunctionData(
-    functionFragment: "updateCache",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "vault", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
@@ -178,7 +181,6 @@ export interface BalancerStrategyInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "yieldBox", values?: undefined): string;
 
-  decodeFunctionResult(functionFragment: "bal", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "cheapWithdrawable",
     data: BytesLike
@@ -213,34 +215,38 @@ export interface BalancerStrategyInterface extends utils.Interface {
     functionFragment: "emergencyWithdraw",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "helpers", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "lpGauge", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "lpGetter", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "minter", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "pendingOwner",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "pool", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "poolId", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "rewardTokens",
+    functionFragment: "rewardToken",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setDepositThreshold",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "setMultiSwapper",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setTricryptoLPGetter",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "swapper", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tokenId", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tokenType", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "updateCache",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "vault", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "withdrawable",
@@ -257,16 +263,18 @@ export interface BalancerStrategyInterface extends utils.Interface {
     "AmountQueued(uint256)": EventFragment;
     "AmountWithdrawn(address,uint256)": EventFragment;
     "DepositThreshold(uint256,uint256)": EventFragment;
+    "LPGetterSet(address,address)": EventFragment;
+    "MultiSwapper(address,address)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "RewardTokens(uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "AmountDeposited"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AmountQueued"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "AmountWithdrawn"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "DepositThreshold"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "LPGetterSet"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "MultiSwapper"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardTokens"): EventFragment;
 }
 
 export interface AmountDepositedEventObject {
@@ -312,6 +320,28 @@ export type DepositThresholdEvent = TypedEvent<
 export type DepositThresholdEventFilter =
   TypedEventFilter<DepositThresholdEvent>;
 
+export interface LPGetterSetEventObject {
+  _old: string;
+  _new: string;
+}
+export type LPGetterSetEvent = TypedEvent<
+  [string, string],
+  LPGetterSetEventObject
+>;
+
+export type LPGetterSetEventFilter = TypedEventFilter<LPGetterSetEvent>;
+
+export interface MultiSwapperEventObject {
+  _old: string;
+  _new: string;
+}
+export type MultiSwapperEvent = TypedEvent<
+  [string, string],
+  MultiSwapperEventObject
+>;
+
+export type MultiSwapperEventFilter = TypedEventFilter<MultiSwapperEvent>;
+
 export interface OwnershipTransferredEventObject {
   previousOwner: string;
   newOwner: string;
@@ -324,22 +354,12 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export interface RewardTokensEventObject {
-  _count: BigNumber;
-}
-export type RewardTokensEvent = TypedEvent<
-  [BigNumber],
-  RewardTokensEventObject
->;
-
-export type RewardTokensEventFilter = TypedEventFilter<RewardTokensEvent>;
-
-export interface BalancerStrategy extends BaseContract {
+export interface TricryptoNativeStrategy extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: BalancerStrategyInterface;
+  interface: TricryptoNativeStrategyInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -361,8 +381,6 @@ export interface BalancerStrategy extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    bal(overrides?: CallOverrides): Promise<[string]>;
-
     cheapWithdrawable(
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { amount: BigNumber }>;
@@ -377,8 +395,8 @@ export interface BalancerStrategy extends BaseContract {
     ): Promise<ContractTransaction>;
 
     compoundAmount(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { result: BigNumber }>;
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
 
     contractAddress(overrides?: CallOverrides): Promise<[string]>;
 
@@ -401,7 +419,11 @@ export interface BalancerStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    helpers(overrides?: CallOverrides): Promise<[string]>;
+    lpGauge(overrides?: CallOverrides): Promise<[string]>;
+
+    lpGetter(overrides?: CallOverrides): Promise<[string]>;
+
+    minter(overrides?: CallOverrides): Promise<[string]>;
 
     name(overrides?: CallOverrides): Promise<[string] & { name_: string }>;
 
@@ -409,19 +431,24 @@ export interface BalancerStrategy extends BaseContract {
 
     pendingOwner(overrides?: CallOverrides): Promise<[string]>;
 
-    pool(overrides?: CallOverrides): Promise<[string]>;
-
-    poolId(overrides?: CallOverrides): Promise<[string]>;
-
-    rewardTokens(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
+    rewardToken(overrides?: CallOverrides): Promise<[string]>;
 
     setDepositThreshold(
       amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
+
+    setMultiSwapper(
+      _swapper: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    setTricryptoLPGetter(
+      _lpGetter: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<ContractTransaction>;
+
+    swapper(overrides?: CallOverrides): Promise<[string]>;
 
     tokenId(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -433,12 +460,6 @@ export interface BalancerStrategy extends BaseContract {
       renounce: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
-
-    updateCache(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<[string]>;
 
     withdraw(
       to: PromiseOrValue<string>,
@@ -455,8 +476,6 @@ export interface BalancerStrategy extends BaseContract {
     yieldBox(overrides?: CallOverrides): Promise<[string]>;
   };
 
-  bal(overrides?: CallOverrides): Promise<string>;
-
   cheapWithdrawable(overrides?: CallOverrides): Promise<BigNumber>;
 
   claimOwnership(
@@ -468,7 +487,9 @@ export interface BalancerStrategy extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  compoundAmount(overrides?: CallOverrides): Promise<BigNumber>;
+  compoundAmount(
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
 
   contractAddress(overrides?: CallOverrides): Promise<string>;
 
@@ -487,7 +508,11 @@ export interface BalancerStrategy extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  helpers(overrides?: CallOverrides): Promise<string>;
+  lpGauge(overrides?: CallOverrides): Promise<string>;
+
+  lpGetter(overrides?: CallOverrides): Promise<string>;
+
+  minter(overrides?: CallOverrides): Promise<string>;
 
   name(overrides?: CallOverrides): Promise<string>;
 
@@ -495,19 +520,24 @@ export interface BalancerStrategy extends BaseContract {
 
   pendingOwner(overrides?: CallOverrides): Promise<string>;
 
-  pool(overrides?: CallOverrides): Promise<string>;
-
-  poolId(overrides?: CallOverrides): Promise<string>;
-
-  rewardTokens(
-    arg0: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<string>;
+  rewardToken(overrides?: CallOverrides): Promise<string>;
 
   setDepositThreshold(
     amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
+
+  setMultiSwapper(
+    _swapper: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  setTricryptoLPGetter(
+    _lpGetter: PromiseOrValue<string>,
+    overrides?: Overrides & { from?: PromiseOrValue<string> }
+  ): Promise<ContractTransaction>;
+
+  swapper(overrides?: CallOverrides): Promise<string>;
 
   tokenId(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -519,12 +549,6 @@ export interface BalancerStrategy extends BaseContract {
     renounce: PromiseOrValue<boolean>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
-
-  updateCache(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
-
-  vault(overrides?: CallOverrides): Promise<string>;
 
   withdraw(
     to: PromiseOrValue<string>,
@@ -539,8 +563,6 @@ export interface BalancerStrategy extends BaseContract {
   yieldBox(overrides?: CallOverrides): Promise<string>;
 
   callStatic: {
-    bal(overrides?: CallOverrides): Promise<string>;
-
     cheapWithdrawable(overrides?: CallOverrides): Promise<BigNumber>;
 
     claimOwnership(overrides?: CallOverrides): Promise<void>;
@@ -567,7 +589,11 @@ export interface BalancerStrategy extends BaseContract {
 
     emergencyWithdraw(overrides?: CallOverrides): Promise<BigNumber>;
 
-    helpers(overrides?: CallOverrides): Promise<string>;
+    lpGauge(overrides?: CallOverrides): Promise<string>;
+
+    lpGetter(overrides?: CallOverrides): Promise<string>;
+
+    minter(overrides?: CallOverrides): Promise<string>;
 
     name(overrides?: CallOverrides): Promise<string>;
 
@@ -575,19 +601,24 @@ export interface BalancerStrategy extends BaseContract {
 
     pendingOwner(overrides?: CallOverrides): Promise<string>;
 
-    pool(overrides?: CallOverrides): Promise<string>;
-
-    poolId(overrides?: CallOverrides): Promise<string>;
-
-    rewardTokens(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<string>;
+    rewardToken(overrides?: CallOverrides): Promise<string>;
 
     setDepositThreshold(
       amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    setMultiSwapper(
+      _swapper: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setTricryptoLPGetter(
+      _lpGetter: PromiseOrValue<string>,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    swapper(overrides?: CallOverrides): Promise<string>;
 
     tokenId(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -599,10 +630,6 @@ export interface BalancerStrategy extends BaseContract {
       renounce: PromiseOrValue<boolean>,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    updateCache(overrides?: CallOverrides): Promise<BigNumber>;
-
-    vault(overrides?: CallOverrides): Promise<string>;
 
     withdraw(
       to: PromiseOrValue<string>,
@@ -639,6 +666,24 @@ export interface BalancerStrategy extends BaseContract {
     ): DepositThresholdEventFilter;
     DepositThreshold(_old?: null, _new?: null): DepositThresholdEventFilter;
 
+    "LPGetterSet(address,address)"(
+      _old?: PromiseOrValue<string> | null,
+      _new?: PromiseOrValue<string> | null
+    ): LPGetterSetEventFilter;
+    LPGetterSet(
+      _old?: PromiseOrValue<string> | null,
+      _new?: PromiseOrValue<string> | null
+    ): LPGetterSetEventFilter;
+
+    "MultiSwapper(address,address)"(
+      _old?: PromiseOrValue<string> | null,
+      _new?: PromiseOrValue<string> | null
+    ): MultiSwapperEventFilter;
+    MultiSwapper(
+      _old?: PromiseOrValue<string> | null,
+      _new?: PromiseOrValue<string> | null
+    ): MultiSwapperEventFilter;
+
     "OwnershipTransferred(address,address)"(
       previousOwner?: PromiseOrValue<string> | null,
       newOwner?: PromiseOrValue<string> | null
@@ -647,14 +692,9 @@ export interface BalancerStrategy extends BaseContract {
       previousOwner?: PromiseOrValue<string> | null,
       newOwner?: PromiseOrValue<string> | null
     ): OwnershipTransferredEventFilter;
-
-    "RewardTokens(uint256)"(_count?: null): RewardTokensEventFilter;
-    RewardTokens(_count?: null): RewardTokensEventFilter;
   };
 
   estimateGas: {
-    bal(overrides?: CallOverrides): Promise<BigNumber>;
-
     cheapWithdrawable(overrides?: CallOverrides): Promise<BigNumber>;
 
     claimOwnership(
@@ -666,7 +706,9 @@ export interface BalancerStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    compoundAmount(overrides?: CallOverrides): Promise<BigNumber>;
+    compoundAmount(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
 
     contractAddress(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -685,7 +727,11 @@ export interface BalancerStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    helpers(overrides?: CallOverrides): Promise<BigNumber>;
+    lpGauge(overrides?: CallOverrides): Promise<BigNumber>;
+
+    lpGetter(overrides?: CallOverrides): Promise<BigNumber>;
+
+    minter(overrides?: CallOverrides): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -693,19 +739,24 @@ export interface BalancerStrategy extends BaseContract {
 
     pendingOwner(overrides?: CallOverrides): Promise<BigNumber>;
 
-    pool(overrides?: CallOverrides): Promise<BigNumber>;
-
-    poolId(overrides?: CallOverrides): Promise<BigNumber>;
-
-    rewardTokens(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    rewardToken(overrides?: CallOverrides): Promise<BigNumber>;
 
     setDepositThreshold(
       amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
+
+    setMultiSwapper(
+      _swapper: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    setTricryptoLPGetter(
+      _lpGetter: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<BigNumber>;
+
+    swapper(overrides?: CallOverrides): Promise<BigNumber>;
 
     tokenId(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -717,12 +768,6 @@ export interface BalancerStrategy extends BaseContract {
       renounce: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
-
-    updateCache(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
-
-    vault(overrides?: CallOverrides): Promise<BigNumber>;
 
     withdraw(
       to: PromiseOrValue<string>,
@@ -738,8 +783,6 @@ export interface BalancerStrategy extends BaseContract {
   };
 
   populateTransaction: {
-    bal(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     cheapWithdrawable(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     claimOwnership(
@@ -751,7 +794,9 @@ export interface BalancerStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    compoundAmount(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    compoundAmount(
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
 
     contractAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -770,7 +815,11 @@ export interface BalancerStrategy extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    helpers(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    lpGauge(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    lpGetter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    minter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -778,19 +827,24 @@ export interface BalancerStrategy extends BaseContract {
 
     pendingOwner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    pool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    poolId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    rewardTokens(
-      arg0: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    rewardToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     setDepositThreshold(
       amount: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
+
+    setMultiSwapper(
+      _swapper: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setTricryptoLPGetter(
+      _lpGetter: PromiseOrValue<string>,
+      overrides?: Overrides & { from?: PromiseOrValue<string> }
+    ): Promise<PopulatedTransaction>;
+
+    swapper(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     tokenId(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -802,12 +856,6 @@ export interface BalancerStrategy extends BaseContract {
       renounce: PromiseOrValue<boolean>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
-
-    updateCache(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
-
-    vault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     withdraw(
       to: PromiseOrValue<string>,

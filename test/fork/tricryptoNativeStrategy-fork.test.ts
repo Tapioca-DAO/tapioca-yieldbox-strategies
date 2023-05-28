@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerFork } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe('TricryptoStrategy fork test', () => {
+describe('TricryptoNativeStrategy fork test', () => {
     before(function () {
         if (process.env.NODE_ENV != 'mainnet') {
             this.skip();
@@ -11,77 +11,77 @@ describe('TricryptoStrategy fork test', () => {
     });
 
     it('should test initial strategy values', async () => {
-        const { tricryptoStrategy, tricryptoLPGtter, weth, yieldBox } =
+        const { tricryptoNativeStrategy, tricryptoLPGtter, weth, yieldBox } =
             await loadFixture(registerFork);
 
-        const name = await tricryptoStrategy.name();
-        const description = await tricryptoStrategy.description();
+        const name = await tricryptoNativeStrategy.name();
+        const description = await tricryptoNativeStrategy.description();
 
-        expect(name).eq('Curve-Tricrypto');
+        expect(name).eq('Curve-Tricrypto-Native');
         expect(description).eq(
             'Curve-Tricrypto strategy for wrapped native assets',
         );
 
-        const contractAddress = await tricryptoStrategy.contractAddress();
+        const contractAddress = await tricryptoNativeStrategy.contractAddress();
         expect(contractAddress.toLowerCase()).eq(weth.address.toLowerCase());
 
-        const lpGaugeAddress = await tricryptoStrategy.lpGauge();
+        const lpGaugeAddress = await tricryptoNativeStrategy.lpGauge();
         expect(lpGaugeAddress.toLowerCase()).to.eq(
             process.env.TRICRYPTO_LP_GAUGE?.toLowerCase(),
         );
 
-        const lpGetterAddress = await tricryptoStrategy.lpGetter();
+        const lpGetterAddress = await tricryptoNativeStrategy.lpGetter();
         expect(lpGetterAddress.toLowerCase()).to.eq(
             tricryptoLPGtter.address.toLowerCase(),
         );
 
-        const minterAddress = await tricryptoStrategy.minter();
+        const minterAddress = await tricryptoNativeStrategy.minter();
         expect(minterAddress.toLowerCase()).to.eq(
             process.env.TRICRYPTO_MINTER?.toLowerCase(),
         );
 
-        const rewardAddress = await tricryptoStrategy.rewardToken();
+        const rewardAddress = await tricryptoNativeStrategy.rewardToken();
         expect(rewardAddress.toLowerCase()).to.eq(
             process.env.CRV_ADDRESS?.toLowerCase(),
         );
 
-        const yieldBoxAddress = await tricryptoStrategy.yieldBox();
+        const yieldBoxAddress = await tricryptoNativeStrategy.yieldBox();
         expect(yieldBoxAddress.toLowerCase()).to.eq(
             yieldBox.address.toLowerCase(),
         );
 
-        const currentBalance = await tricryptoStrategy.currentBalance();
+        const currentBalance = await tricryptoNativeStrategy.currentBalance();
         expect(currentBalance.eq(0)).to.be.true;
 
-        const queued = await weth.balanceOf(tricryptoStrategy.address);
+        const queued = await weth.balanceOf(tricryptoNativeStrategy.address);
         expect(queued.eq(0)).to.be.true;
     });
 
     it('should allow setting the deposit threshold', async () => {
-        const { tricryptoStrategy, weth, yieldBox } = await loadFixture(
+        const { tricryptoNativeStrategy, weth, yieldBox } = await loadFixture(
             registerFork,
         );
 
-        const currentThreshold = await tricryptoStrategy.depositThreshold();
+        const currentThreshold = await tricryptoNativeStrategy.depositThreshold();
 
         const newThreshold = ethers.BigNumber.from((1e18).toString()).mul(10);
-        await tricryptoStrategy.setDepositThreshold(newThreshold);
+        await tricryptoNativeStrategy.setDepositThreshold(newThreshold);
 
-        const finalThreshold = await tricryptoStrategy.depositThreshold();
+        const finalThreshold = await tricryptoNativeStrategy.depositThreshold();
 
         expect(currentThreshold).to.not.eq(finalThreshold);
     });
 
     it('should allow setting lp getter', async () => {
         const {
-            tricryptoStrategy,
+            tricryptoNativeStrategy,
             tricryptoLPGtter,
             deployTricryptoLPGetter,
             weth,
             yieldBox,
         } = await loadFixture(registerFork);
 
-        const currentLpGetter = await tricryptoStrategy.lpGetter();
+        const currentLpGetter = await tricryptoNativeStrategy.lpGetter();
         expect(currentLpGetter.toLowerCase()).to.eq(
             tricryptoLPGtter.address.toLowerCase(),
         );
@@ -96,21 +96,21 @@ describe('TricryptoStrategy fork test', () => {
             weth.address,
             weth.address,
         );
-        await tricryptoStrategy.setTricryptoLPGetter(
+        await tricryptoNativeStrategy.setTricryptoLPGetter(
             newTricryptoLpGetterDeployment.tricryptoLPGtter.address,
         );
 
-        const finalLpGetter = await tricryptoStrategy.lpGetter();
+        const finalLpGetter = await tricryptoNativeStrategy.lpGetter();
         expect(finalLpGetter.toLowerCase()).to.eq(
             newTricryptoLpGetterDeployment.tricryptoLPGtter.address.toLowerCase(),
         );
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { tricryptoStrategy, weth, yieldBox, deployer, binanceWallet } =
+        const { tricryptoNativeStrategy, weth, yieldBox, deployer, binanceWallet } =
             await loadFixture(registerFork);
 
-        const lpGaugeAddress = await tricryptoStrategy.lpGauge();
+        const lpGaugeAddress = await tricryptoNativeStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(
             'ITricryptoLPGauge',
             lpGaugeAddress,
@@ -119,18 +119,18 @@ describe('TricryptoStrategy fork test', () => {
         await yieldBox.registerAsset(
             1,
             weth.address,
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
             0,
         );
 
         const wethStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
             0,
         );
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
-        await tricryptoStrategy.setDepositThreshold(amount.mul(3));
+        await tricryptoNativeStrategy.setDepositThreshold(amount.mul(3));
 
         await weth
             .connect(binanceWallet)
@@ -147,10 +147,10 @@ describe('TricryptoStrategy fork test', () => {
         );
 
         let strategyWethBalance = await weth.balanceOf(
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
         );
         let lpGaugeBalance = await lpGaugeContract.balanceOf(
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
         );
         expect(strategyWethBalance.gt(0)).to.be.true;
         expect(lpGaugeBalance.eq(0)).to.be.true;
@@ -166,9 +166,9 @@ describe('TricryptoStrategy fork test', () => {
             0,
             share.mul(3),
         );
-        strategyWethBalance = await weth.balanceOf(tricryptoStrategy.address);
+        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
         lpGaugeBalance = await lpGaugeContract.balanceOf(
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
         );
         expect(strategyWethBalance.eq(0)).to.be.true;
         expect(lpGaugeBalance.gt(0)).to.be.true;
@@ -176,7 +176,7 @@ describe('TricryptoStrategy fork test', () => {
 
     it('should emergency withdraw', async () => {
         const {
-            tricryptoStrategy,
+            tricryptoNativeStrategy,
             weth,
             yieldBox,
             deployer,
@@ -184,7 +184,7 @@ describe('TricryptoStrategy fork test', () => {
             eoa1,
         } = await loadFixture(registerFork);
 
-        const lpGaugeAddress = await tricryptoStrategy.lpGauge();
+        const lpGaugeAddress = await tricryptoNativeStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(
             'ITricryptoLPGauge',
             lpGaugeAddress,
@@ -193,14 +193,14 @@ describe('TricryptoStrategy fork test', () => {
         await yieldBox.registerAsset(
             1,
             weth.address,
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
             0,
         );
 
         const wethStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
             0,
         );
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
@@ -224,22 +224,22 @@ describe('TricryptoStrategy fork test', () => {
         );
 
         let invested = await lpGaugeContract.balanceOf(
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
         );
         let strategyWethBalance = await weth.balanceOf(
-            tricryptoStrategy.address,
+            tricryptoNativeStrategy.address,
         );
 
         expect(strategyWethBalance.eq(0)).true;
         expect(invested.gt(0)).to.be.true;
 
-        await expect(tricryptoStrategy.connect(eoa1).emergencyWithdraw()).to.be
+        await expect(tricryptoNativeStrategy.connect(eoa1).emergencyWithdraw()).to.be
             .reverted;
 
-        await tricryptoStrategy.emergencyWithdraw();
+        await tricryptoNativeStrategy.emergencyWithdraw();
 
-        invested = await lpGaugeContract.balanceOf(tricryptoStrategy.address);
-        strategyWethBalance = await weth.balanceOf(tricryptoStrategy.address);
+        invested = await lpGaugeContract.balanceOf(tricryptoNativeStrategy.address);
+        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
         expect(strategyWethBalance.gt(0)).true;
         expect(invested.eq(0)).to.be.true;
     });

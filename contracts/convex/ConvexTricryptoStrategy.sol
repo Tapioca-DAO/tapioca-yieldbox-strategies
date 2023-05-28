@@ -8,7 +8,7 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "../../tapioca-mocks/contracts/uniswapv2/interfaces/IUniswapV2Router02.sol";
+import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 import "../curve/interfaces/ITricryptoLPGetter.sol";
 
 import "./interfaces/IConvexBooster.sol";
@@ -39,7 +39,7 @@ contract ConvexTricryptoStrategy is
     // *** VARS *** //
     // ************ //
     IERC20 public immutable wrappedNative;
-    IUniswapV2Router02 public swapper;
+    ISwapper public swapper;
 
     ITricryptoLPGetter public lpGetter;
     IConvexBooster public immutable booster;
@@ -91,7 +91,7 @@ contract ConvexTricryptoStrategy is
         address _multiSwapper
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
-        swapper = IUniswapV2Router02(_multiSwapper);
+        swapper = ISwapper(_multiSwapper);
 
         zap = IConvexZap(_zap);
         booster = IConvexBooster(_booster);
@@ -131,10 +131,15 @@ contract ConvexTricryptoStrategy is
         uint256 claimable = rewardPool.rewards(address(this));
         result = 0;
         if (claimable > 0) {
-            address[] memory path = new address[](2); //todo: check if path is right
-            path[0] = address(rewardToken);
-            path[1] = address(wrappedNative);
-            result = (swapper.getAmountsOut(claimable, path))[1];
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                address(rewardToken),
+                address(wrappedNative),
+                claimable,
+                0,
+                false,
+                false
+            );
+            result = swapper.getOutputAmount(swapData, "");
             result = result - (result * 50) / 10_000; //0.5%
         }
     }
@@ -165,7 +170,7 @@ contract ConvexTricryptoStrategy is
     function setMultiSwapper(address _swapper) external onlyOwner {
         emit MultiSwapper(address(swapper), _swapper);
         rewardToken.approve(address(swapper), 0);
-        swapper = IUniswapV2Router02(_swapper);
+        swapper = ISwapper(_swapper);
         rewardToken.approve(_swapper, type(uint256).max);
     }
 
@@ -190,20 +195,17 @@ contract ConvexTricryptoStrategy is
         for (uint256 i = 0; i < tokens.length; i++) {
             if (rewards[i] > 0) {
                 _safeApprove(tokens[i], address(swapper), rewards[i]);
-                address[] memory path = new address[](2); //todo: check if path is right
-                path[0] = tokens[i];
-                path[1] = address(wrappedNative);
-                uint256 calcAmount = (swapper.getAmountsOut(rewards[i], path))[
-                    1
-                ];
-                uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
-                swapper.swapExactTokensForTokens(
+                ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                    tokens[i],
+                    address(wrappedNative),
                     rewards[i],
-                    minAmount,
-                    path,
-                    address(this),
-                    100 * 1e18
+                    0,
+                    false,
+                    false
                 );
+                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+                uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
+                swapper.swap(swapData, minAmount, address(this), "");
             }
         }
 
