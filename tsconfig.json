@@ -13,6 +13,6 @@
         "./test",
         "./typechain",
         "./tasks",
-        "./deploy"
+        "deploy-deprecated"
     ]
 }
