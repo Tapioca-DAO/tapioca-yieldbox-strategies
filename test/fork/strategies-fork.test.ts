@@ -6,6 +6,12 @@ import _ from 'lodash';
 import { defaultAbiCoder } from '@ethersproject/abi';
 
 describe('Strategies time dependent fork tests', () => {
+    before(function () {
+        if (process.env.NODE_ENV != 'mainnet') {
+            this.skip();
+        }
+    });
+
     it('should increase amount in time for AAVE strategy - single user', async () => {
         const {
             aaveStrategy,

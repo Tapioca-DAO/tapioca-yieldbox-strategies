@@ -11,9 +11,20 @@ import SDK from 'tapioca-sdk';
 import { HttpNetworkConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
 import 'hardhat-tracer';
+import { TAPIOCA_PROJECTS_NAME } from './gitsub_tapioca-sdk/src/api/config';
 
 dotenv.config({ path: './env/.env' });
-const NODE_ENV = 'mainnet';
+const { NODE_ENV = 'mainnet' } = process.env;
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace NodeJS {
+        interface ProcessEnv {
+            ALCHEMY_API_KEY: string;
+        }
+    }
+}
+
 if (!NODE_ENV || NODE_ENV === '') {
     throw `Please specify witch environment file you want to use\n \
     E.g: NODE_ENV={environmentFileHere} yarn hardhat ${process.argv
@@ -22,6 +33,9 @@ if (!NODE_ENV || NODE_ENV === '') {
 }
 dotenv.config({ path: `./env/${process.env.NODE_ENV}.env` });
 
+type TNetwork = ReturnType<
+    typeof SDK.API.utils.getSupportedChains
+>[number]['name'];
 const supportedChains = SDK.API.utils.getSupportedChains().reduce(
     (sdkChains, chain) => ({
         ...sdkChains,
@@ -46,8 +60,10 @@ const supportedChains = SDK.API.utils.getSupportedChains().reduce(
     {} as { [key in TNetwork]: HttpNetworkConfig },
 );
 
+const chain = supportedChains[NODE_ENV == 'mainnet' ? 'ethereum' : NODE_ENV];
+
 const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
-    SDK: { project: 'tapioca-strategies' },
+    SDK: { project: TAPIOCA_PROJECTS_NAME.TapiocaStrategies },
     defaultNetwork: 'hardhat',
     namedAccounts: {
         deployer: 0,
@@ -101,10 +117,19 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     networks: {
         ...supportedChains,
         hardhat: {
-            forking: {
-                blockNumber: 16963096,
-                url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-            },
+            saveDeployments: false,
+            ...(chain?.url && {
+                forking: {
+                    url: chain.url,
+                    ...(process.env.FORKING_BLOCK_NUMBER
+                        ? {
+                              blockNumber: parseInt(
+                                  process.env.FORKING_BLOCK_NUMBER,
+                              ),
+                          }
+                        : null),
+                },
+            }),
             hardfork: 'merge',
             allowUnlimitedContractSize: true,
             accounts: {
@@ -134,6 +159,10 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     },
     mocha: {
         timeout: 50000000,
+    },
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5',
     },
 };
 

@@ -14,6 +14,8 @@
     "contracts_size": "yarn compile && NODE_ENV=hardhat hardhat size-contracts",
     "typechain": "npx hardhat typechain",
     "test": "NODE_ENV=mainnet hardhat test",
+    "test:arb": "NODE_ENV=arbitrum hardhat test",
+    "test:glp": "NODE_ENV=arbitrum hardhat test test/fork/glpStrategy-fork.test.ts",
     "sdk-gen": "npx hardhat exportSDK",
     "@comment deploy": "Deploy scripts",
     "deploy": "npx hardhat deploy",
