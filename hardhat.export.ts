@@ -102,21 +102,31 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     },
 
     networks: {
+        ...supportedChains,
         hardhat: {
             saveDeployments: false,
             ...(chain?.url && {
                 forking: {
                     url: chain.url,
-                    ...(process.env.FORKING_BLOCK_NUMBER ? {
-                        blockNumber: parseInt(process.env.FORKING_BLOCK_NUMBER)
-                    } : null),
-                }
+                    ...(process.env.FORKING_BLOCK_NUMBER
+                        ? {
+                              blockNumber: parseInt(
+                                  process.env.FORKING_BLOCK_NUMBER,
+                              ),
+                          }
+                        : null),
+                },
             }),
             hardfork: 'merge',
+            allowUnlimitedContractSize: true,
+            accounts: {
+                mnemonic:
+                    'test test test test test test test test test test test junk',
+                count: 10,
+                accountsBalance: '1000000000000000000000',
+            },
+            tags: ['testnet'],
         },
-
-        //mainnets
-        mainnet: supportedChains['ethereum'],
     },
     dodoc: {
         runOnCompile: false,
