@@ -147,6 +147,10 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     mocha: {
         timeout: 50000000,
     },
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5',
+    },
 };
 
 export default config;
