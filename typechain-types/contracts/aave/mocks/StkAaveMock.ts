@@ -41,6 +41,7 @@ export interface StkAaveMockInterface extends utils.Interface {
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
     "deposit()": FunctionFragment;
+    "eip712Domain()": FunctionFragment;
     "extractTokens(uint256)": FunctionFragment;
     "freeMint(uint256)": FunctionFragment;
     "hasMintRestrictions()": FunctionFragment;
@@ -80,6 +81,7 @@ export interface StkAaveMockInterface extends utils.Interface {
       | "decimals"
       | "decreaseAllowance"
       | "deposit"
+      | "eip712Domain"
       | "extractTokens"
       | "freeMint"
       | "hasMintRestrictions"
@@ -141,6 +143,10 @@ export interface StkAaveMockInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(functionFragment: "deposit", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "eip712Domain",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "extractTokens",
     values: [PromiseOrValue<BigNumberish>]
@@ -262,6 +268,10 @@ export interface StkAaveMockInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "eip712Domain",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "extractTokens",
     data: BytesLike
   ): Result;
@@ -325,6 +335,7 @@ export interface StkAaveMockInterface extends utils.Interface {
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "Deposit(address,uint256)": EventFragment;
+    "EIP712DomainChanged()": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
     "Withdrawal(address,uint256)": EventFragment;
@@ -332,6 +343,7 @@ export interface StkAaveMockInterface extends utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "EIP712DomainChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdrawal"): EventFragment;
@@ -356,6 +368,15 @@ export interface DepositEventObject {
 export type DepositEvent = TypedEvent<[string, BigNumber], DepositEventObject>;
 
 export type DepositEventFilter = TypedEventFilter<DepositEvent>;
+
+export interface EIP712DomainChangedEventObject {}
+export type EIP712DomainChangedEvent = TypedEvent<
+  [],
+  EIP712DomainChangedEventObject
+>;
+
+export type EIP712DomainChangedEventFilter =
+  TypedEventFilter<EIP712DomainChangedEvent>;
 
 export interface OwnershipTransferredEventObject {
   previousOwner: string;
@@ -463,6 +484,20 @@ export interface StkAaveMock extends BaseContract {
     deposit(
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
+
+    eip712Domain(
+      overrides?: CallOverrides
+    ): Promise<
+      [string, string, string, BigNumber, string, string, BigNumber[]] & {
+        fields: string;
+        name: string;
+        version: string;
+        chainId: BigNumber;
+        verifyingContract: string;
+        salt: string;
+        extensions: BigNumber[];
+      }
+    >;
 
     extractTokens(
       _amount: PromiseOrValue<BigNumberish>,
@@ -615,6 +650,20 @@ export interface StkAaveMock extends BaseContract {
     overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  eip712Domain(
+    overrides?: CallOverrides
+  ): Promise<
+    [string, string, string, BigNumber, string, string, BigNumber[]] & {
+      fields: string;
+      name: string;
+      version: string;
+      chainId: BigNumber;
+      verifyingContract: string;
+      salt: string;
+      extensions: BigNumber[];
+    }
+  >;
+
   extractTokens(
     _amount: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
@@ -762,6 +811,20 @@ export interface StkAaveMock extends BaseContract {
 
     deposit(overrides?: CallOverrides): Promise<void>;
 
+    eip712Domain(
+      overrides?: CallOverrides
+    ): Promise<
+      [string, string, string, BigNumber, string, string, BigNumber[]] & {
+        fields: string;
+        name: string;
+        version: string;
+        chainId: BigNumber;
+        verifyingContract: string;
+        salt: string;
+        extensions: BigNumber[];
+      }
+    >;
+
     extractTokens(
       _amount: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
@@ -885,6 +948,9 @@ export interface StkAaveMock extends BaseContract {
       wad?: null
     ): DepositEventFilter;
 
+    "EIP712DomainChanged()"(): EIP712DomainChangedEventFilter;
+    EIP712DomainChanged(): EIP712DomainChangedEventFilter;
+
     "OwnershipTransferred(address,address)"(
       previousOwner?: PromiseOrValue<string> | null,
       newOwner?: PromiseOrValue<string> | null
@@ -960,6 +1026,8 @@ export interface StkAaveMock extends BaseContract {
     deposit(
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
+
+    eip712Domain(overrides?: CallOverrides): Promise<BigNumber>;
 
     extractTokens(
       _amount: PromiseOrValue<BigNumberish>,
@@ -1112,6 +1180,8 @@ export interface StkAaveMock extends BaseContract {
     deposit(
       overrides?: PayableOverrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
+
+    eip712Domain(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     extractTokens(
       _amount: PromiseOrValue<BigNumberish>,
