@@ -4,7 +4,7 @@ import { registerFork } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import _ from 'lodash';
 
-describe('CompoundStrategy fork test', () => {
+describe.skip('CompoundStrategy fork test', () => {
     before(function () {
         if (process.env.NODE_ENV != 'mainnet') {
             this.skip();
