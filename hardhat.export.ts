@@ -11,9 +11,19 @@ import SDK from 'tapioca-sdk';
 import { HttpNetworkConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
 import 'hardhat-tracer';
+import { TAPIOCA_PROJECTS_NAME } from './gitsub_tapioca-sdk/src/api/config';
 
 dotenv.config({ path: './env/.env' });
 const { NODE_ENV = 'mainnet' } = process.env;
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace NodeJS {
+        interface ProcessEnv {
+            ALCHEMY_API_KEY: string;
+        }
+    }
+}
 
 if (!NODE_ENV || NODE_ENV === '') {
     throw `Please specify witch environment file you want to use\n \
@@ -23,6 +33,9 @@ if (!NODE_ENV || NODE_ENV === '') {
 }
 dotenv.config({ path: `./env/${process.env.NODE_ENV}.env` });
 
+type TNetwork = ReturnType<
+    typeof SDK.API.utils.getSupportedChains
+>[number]['name'];
 const supportedChains = SDK.API.utils.getSupportedChains().reduce(
     (sdkChains, chain) => ({
         ...sdkChains,
@@ -50,7 +63,7 @@ const supportedChains = SDK.API.utils.getSupportedChains().reduce(
 const chain = supportedChains[NODE_ENV == 'mainnet' ? 'ethereum' : NODE_ENV];
 
 const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
-    SDK: { project: 'tapioca-strategies' },
+    SDK: { project: TAPIOCA_PROJECTS_NAME.TapiocaStrategies },
     defaultNetwork: 'hardhat',
     namedAccounts: {
         deployer: 0,
