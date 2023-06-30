@@ -1,0 +1,1 @@
+cloc ./contracts/**/*Strategy.sol --exclude-content --hide-rate  --by-file --csv --quiet > cloc-report.csv
