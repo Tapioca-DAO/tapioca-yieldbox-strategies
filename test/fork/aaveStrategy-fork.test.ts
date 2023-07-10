@@ -98,7 +98,7 @@ describe('AaveStrategy fork test', () => {
         await weth
             .connect(binanceWallet)
             .transfer(deployer.address, amount.mul(10));
-        
+
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
 
         let share = await yieldBox.toShare(

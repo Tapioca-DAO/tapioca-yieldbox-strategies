@@ -86,11 +86,14 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         lpRouterPid = addLiquidityRouter.poolId();
 
         stgNative = IERC20(_lpToken);
+        stgNative.approve(_lpStaking, 0);
         stgNative.approve(_lpStaking, type(uint256).max);
+        stgNative.approve(address(router), 0);
         stgNative.approve(address(router), type(uint256).max);
 
         stgTokenReward = IERC20(lpStaking.stargate());
 
+        stgTokenReward.approve(_swapper, 0);
         stgTokenReward.approve(_swapper, type(uint256).max);
     }
 
@@ -137,6 +140,14 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice rescues unused ETH from the contract
+    /// @param amount the amount to rescue
+    /// @param to the recipient
+    function rescueEth(uint256 amount, address to) external onlyOwner {
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "StargateStrategy: transfer failed.");
+    }
+
     /// @notice Sets the deposit threshold
     /// @param amount The new threshold amount
     function setDepositThreshold(uint256 amount) external onlyOwner {

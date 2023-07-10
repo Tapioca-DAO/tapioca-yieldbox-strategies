@@ -75,9 +75,13 @@ contract TricryptoNativeStrategy is
         lpGetter = ITricryptoLPGetter(_lpGetter);
         rewardToken = IERC20(lpGauge.crv_token());
 
+        IERC20(lpGetter.lpToken()).approve(_lpGauge, 0);
         IERC20(lpGetter.lpToken()).approve(_lpGauge, type(uint256).max);
+        IERC20(lpGetter.lpToken()).approve(_lpGetter, 0);
         IERC20(lpGetter.lpToken()).approve(_lpGetter, type(uint256).max);
+        rewardToken.approve(_multiSwapper, 0);
         rewardToken.approve(_multiSwapper, type(uint256).max);
+        wrappedNative.approve(_lpGetter, 0);
         wrappedNative.approve(_lpGetter, type(uint256).max);
     }
 

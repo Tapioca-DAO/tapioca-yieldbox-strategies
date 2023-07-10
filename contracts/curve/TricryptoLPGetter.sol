@@ -219,6 +219,7 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
     ) private returns (uint256 result) {
         require(_amount > 0, "Amount not valid");
         IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(_token).approve(address(liquidityPool), 0);
         IERC20(_token).approve(address(liquidityPool), _amount);
 
         uint256 lpBalanceBefore = lpToken.balanceOf(address(this));
@@ -240,6 +241,7 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
         require(_amount > 0, "Amount not valid");
 
         lpToken.safeTransferFrom(msg.sender, address(this), _amount);
+        lpToken.approve(address(liquidityPool), 0);
         lpToken.approve(address(liquidityPool), _amount);
 
         uint256 assetBalanceBefore = IERC20(_token).balanceOf(address(this));

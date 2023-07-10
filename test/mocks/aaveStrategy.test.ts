@@ -301,7 +301,6 @@ describe('AaveStrategy test', () => {
             0,
         );
 
-
         const rewardToken = await ethers.getContractAt(
             'ERC20Mock',
             await aaveStrategy.rewardToken(),
@@ -343,7 +342,6 @@ describe('AaveStrategy test', () => {
         //     ethers.utils.toUtf8Bytes(''),
         // );
         // console.log(`----------- outputTest ${outputTest}`);
-
 
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
         await aaveStrategy.setDepositThreshold(amount.div(10000));

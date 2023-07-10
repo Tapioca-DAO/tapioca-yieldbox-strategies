@@ -76,9 +76,13 @@ contract TricryptoLPStrategy is
         lpToken = IERC20(lpGetter.lpToken());
         rewardToken = IERC20(lpGauge.crv_token());
 
+        lpToken.approve(_lpGauge, 0);
         lpToken.approve(_lpGauge, type(uint256).max);
+        lpToken.approve(_lpGetter, 0);
         lpToken.approve(_lpGetter, type(uint256).max);
+        rewardToken.approve(_multiSwapper, 0);
         rewardToken.approve(_multiSwapper, type(uint256).max);
+        wrappedNative.approve(_lpGetter, 0);
         wrappedNative.approve(_lpGetter, type(uint256).max);
     }
 

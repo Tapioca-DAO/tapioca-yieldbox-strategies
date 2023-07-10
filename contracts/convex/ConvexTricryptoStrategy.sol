@@ -102,9 +102,13 @@ contract ConvexTricryptoStrategy is
         lpToken = IERC20(booster.poolInfo(pid).lptoken);
         rewardToken = IERC20(rewardPool.rewardToken());
 
+        wrappedNative.approve(_lpGetter, 0);
         wrappedNative.approve(_lpGetter, type(uint256).max);
+        lpToken.approve(_lpGetter, 0);
         lpToken.approve(_lpGetter, type(uint256).max);
+        lpToken.approve(_booster, 0);
         lpToken.approve(_booster, type(uint256).max);
+        rewardToken.approve(_multiSwapper, 0);
         rewardToken.approve(_multiSwapper, type(uint256).max);
     }
 
@@ -353,6 +357,7 @@ contract ConvexTricryptoStrategy is
 
     function _safeApprove(address token, address to, uint256 value) private {
         // solhint-disable-next-line avoid-low-level-calls
+        require(token.code.length > 0, "ConvexTricryptoStrategy: no contract");
         (bool successEmtptyApproval, ) = token.call(
             abi.encodeWithSelector(
                 bytes4(keccak256("approve(address,uint256)")),

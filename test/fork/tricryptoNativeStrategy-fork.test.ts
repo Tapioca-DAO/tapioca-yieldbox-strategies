@@ -62,7 +62,8 @@ describe('TricryptoNativeStrategy fork test', () => {
             registerFork,
         );
 
-        const currentThreshold = await tricryptoNativeStrategy.depositThreshold();
+        const currentThreshold =
+            await tricryptoNativeStrategy.depositThreshold();
 
         const newThreshold = ethers.BigNumber.from((1e18).toString()).mul(10);
         await tricryptoNativeStrategy.setDepositThreshold(newThreshold);
@@ -107,8 +108,13 @@ describe('TricryptoNativeStrategy fork test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const { tricryptoNativeStrategy, weth, yieldBox, deployer, binanceWallet } =
-            await loadFixture(registerFork);
+        const {
+            tricryptoNativeStrategy,
+            weth,
+            yieldBox,
+            deployer,
+            binanceWallet,
+        } = await loadFixture(registerFork);
 
         const lpGaugeAddress = await tricryptoNativeStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(
@@ -166,7 +172,9 @@ describe('TricryptoNativeStrategy fork test', () => {
             0,
             share.mul(3),
         );
-        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
+        strategyWethBalance = await weth.balanceOf(
+            tricryptoNativeStrategy.address,
+        );
         lpGaugeBalance = await lpGaugeContract.balanceOf(
             tricryptoNativeStrategy.address,
         );
@@ -233,13 +241,17 @@ describe('TricryptoNativeStrategy fork test', () => {
         expect(strategyWethBalance.eq(0)).true;
         expect(invested.gt(0)).to.be.true;
 
-        await expect(tricryptoNativeStrategy.connect(eoa1).emergencyWithdraw()).to.be
-            .reverted;
+        await expect(tricryptoNativeStrategy.connect(eoa1).emergencyWithdraw())
+            .to.be.reverted;
 
         await tricryptoNativeStrategy.emergencyWithdraw();
 
-        invested = await lpGaugeContract.balanceOf(tricryptoNativeStrategy.address);
-        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
+        invested = await lpGaugeContract.balanceOf(
+            tricryptoNativeStrategy.address,
+        );
+        strategyWethBalance = await weth.balanceOf(
+            tricryptoNativeStrategy.address,
+        );
         expect(strategyWethBalance.gt(0)).true;
         expect(invested.eq(0)).to.be.true;
     });

@@ -1,7 +1,10 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { BigNumber, BigNumberish } from 'ethers';
 import hre, { ethers, network } from 'hardhat';
-import { UniswapV2Swapper__factory, UniswapV3Swapper__factory } from '../gitsub_tapioca-sdk/src/typechain/tapioca-periphery';
+import {
+    UniswapV2Swapper__factory,
+    UniswapV3Swapper__factory,
+} from '../gitsub_tapioca-sdk/src/typechain/tapioca-periphery';
 import {
     ERC20Mock__factory,
     UniswapV2RouterMock__factory,
@@ -145,8 +148,7 @@ async function registerUniswapV3Swapper(
     );
 
     return { uniswapV3Swapper };
-};
-
+}
 
 async function registerUniswapV3Mock(staging?: boolean) {
     const deployer = (await ethers.getSigners())[0];
@@ -754,7 +756,8 @@ async function registerTricryptoNativeStrategy(
             18,
             deployer.address,
         );
-        const hasMintRetrictionsCrvToken = await crvTokenMock.hasMintRestrictions();
+        const hasMintRetrictionsCrvToken =
+            await crvTokenMock.hasMintRestrictions();
         if (hasMintRetrictionsCrvToken) {
             await crvTokenMock.toggleRestrictions();
         }
@@ -854,7 +857,8 @@ async function registerTricryptoLPStrategy(
             18,
             deployer.address,
         );
-        const hasMintRetrictionsCrvToken = await crvTokenMock.hasMintRestrictions();
+        const hasMintRetrictionsCrvToken =
+            await crvTokenMock.hasMintRestrictions();
         if (hasMintRetrictionsCrvToken) {
             await crvTokenMock.toggleRestrictions();
         }
@@ -923,7 +927,6 @@ async function registerTricryptoLPStrategy(
 
     return { tricryptoLPStrategy, tricryptoLPGtter };
 }
-
 
 /*
 Lido stEth
@@ -1540,7 +1543,8 @@ export async function registerMocks(staging?: boolean) {
     );
 
     log('Deploying UNIV2 Environment', staging);
-    const { __uniFactory, __uniFactoryFee, __uniRouter } = await registerUniswapV2(staging);
+    const { __uniFactory, __uniFactoryFee, __uniRouter } =
+        await registerUniswapV2(staging);
     const wethPairAmount = ethers.BigNumber.from(1e6).mul((1e18).toString());
     const usdcPairAmount = wethPairAmount.mul(
         __wethUsdcPrice.div((1e18).toString()),
@@ -1860,10 +1864,9 @@ export async function registerFork() {
         process.env.UNISWAP_V2_ROUTER!,
         process.env.UNISWAP_V2_FACTORY!,
         yieldBox,
-        false
+        false,
     );
     log(`Deployed MultiSwapper ${swapperMock.address}`, false);
-
 
     log('Registering UniswapV3Swapper', false);
     const { uniswapV3Swapper } = await registerUniswapV3Swapper(
@@ -1895,7 +1898,6 @@ export async function registerFork() {
     log(`Deployed YearnStrategy ${yearnStrategy.address}`, false);
 
     log('Deploying StargateStrategy', false);
-
 
     const { stargateStrategy } = await registerStargateStrategy(
         yieldBox.address,
@@ -1938,7 +1940,7 @@ export async function registerFork() {
         yieldBox.address,
         process.env.TRICRYPTO_LIQUIDITY_POOL!,
         process.env.TRICRYPTO_LP_GAUGE!,
-        tricryptoLPGtter.address, 
+        tricryptoLPGtter.address,
         process.env.CRV_ADDRESS!,
         process.env.TRICRYPTO_MINTER!,
         swapperMock.address,

@@ -42,7 +42,8 @@ describe('TricryptoNativeStrategy test', () => {
             registerMocks,
         );
 
-        const currentThreshold = await tricryptoNativeStrategy.depositThreshold();
+        const currentThreshold =
+            await tricryptoNativeStrategy.depositThreshold();
 
         const newThreshold = ethers.BigNumber.from((1e18).toString()).mul(10);
         await tricryptoNativeStrategy.setDepositThreshold(newThreshold);
@@ -157,7 +158,9 @@ describe('TricryptoNativeStrategy test', () => {
             0,
             share.mul(3),
         );
-        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
+        strategyWethBalance = await weth.balanceOf(
+            tricryptoNativeStrategy.address,
+        );
         lpGaugeBalance = await lpGaugeContract.balanceOf(
             tricryptoNativeStrategy.address,
         );
@@ -268,7 +271,9 @@ describe('TricryptoNativeStrategy test', () => {
             0,
             share,
         );
-        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
+        strategyWethBalance = await weth.balanceOf(
+            tricryptoNativeStrategy.address,
+        );
         expect(strategyWethBalance.eq(0)).to.be.true;
     });
 
@@ -341,7 +346,9 @@ describe('TricryptoNativeStrategy test', () => {
             share,
         );
 
-        strategyWethBalance = await weth.balanceOf(tricryptoNativeStrategy.address);
+        strategyWethBalance = await weth.balanceOf(
+            tricryptoNativeStrategy.address,
+        );
         lpStakingBalance = await lpGaugeContract.balanceOf(
             await tricryptoNativeStrategy.address,
         );

@@ -72,7 +72,9 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         rewardToken = IERC20(stakedRewardToken.REWARD_TOKEN());
         receiptToken = IERC20(_receiptToken);
 
+        wrappedNative.approve(_lendingPool, 0);
         wrappedNative.approve(_lendingPool, type(uint256).max);
+        rewardToken.approve(_multiSwapper, 0);
         rewardToken.approve(_multiSwapper, type(uint256).max);
     }
 
