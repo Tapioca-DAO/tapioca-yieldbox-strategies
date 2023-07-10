@@ -56,6 +56,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         wrappedNative = IERC20(_token);
         vault = IYearnVault(_vault);
 
+        wrappedNative.approve(address(vault), 0);
         wrappedNative.approve(address(vault), type(uint256).max);
     }
 

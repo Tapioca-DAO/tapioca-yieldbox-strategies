@@ -182,7 +182,6 @@ describe('ConvexStrategy test', () => {
             uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
 
-
         if (await cvxReward1Token?.hasMintRestrictions()) {
             await cvxReward1Token?.toggleRestrictions();
         }
@@ -231,7 +230,6 @@ describe('ConvexStrategy test', () => {
             pairAmount,
             pairAmount,
         );
-
 
         const lpToken = await convexTricryptoStrategy.lpToken();
         const lpTokenContract = await ethers.getContractAt(

@@ -171,7 +171,8 @@ describe('TricryptoLPStrategy test', () => {
     });
 
     it('should emergency withdraw', async () => {
-        const { tricryptoLPStrategy, weth, yieldBox, deployer } = await loadFixture(registerMocks);
+        const { tricryptoLPStrategy, weth, yieldBox, deployer } =
+            await loadFixture(registerMocks);
 
         const lpGaugeAddress = await tricryptoLPStrategy.lpGauge();
         const lpGaugeContract = await ethers.getContractAt(

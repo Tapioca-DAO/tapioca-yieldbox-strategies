@@ -265,7 +265,8 @@ describe('TricryptoLPStrategy fork test', () => {
         expect(strategyLpBalance.eq(0)).true;
         expect(invested.gt(0)).to.be.true;
 
-        await expect(tricryptoLPStrategy.connect(eoa1).emergencyWithdraw()).to.be.reverted;
+        await expect(tricryptoLPStrategy.connect(eoa1).emergencyWithdraw()).to
+            .be.reverted;
 
         await tricryptoLPStrategy.emergencyWithdraw();
 

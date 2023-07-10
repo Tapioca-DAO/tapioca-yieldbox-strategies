@@ -55,6 +55,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         wrappedNative = IERC20(_token);
         cToken = ICToken(_cToken);
 
+        wrappedNative.approve(_cToken, 0);
         wrappedNative.approve(_cToken, type(uint256).max);
     }
 
@@ -77,13 +78,21 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @notice returns compounded amounts in wrappedNative
-    function compoundAmount() public pure returns (uint256 result) {
+    function compoundAmount() external pure returns (uint256 result) {
         return 0;
     }
 
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice rescues unused ETH from the contract
+    /// @param amount the amount to rescue
+    /// @param to the recipient
+    function rescueEth(uint256 amount, address to) external onlyOwner {
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "CompoundStrategy: transfer failed.");
+    }
+
     /// @notice Sets the deposit threshold
     /// @param amount The new threshold amount
     function setDepositThreshold(uint256 amount) external onlyOwner {

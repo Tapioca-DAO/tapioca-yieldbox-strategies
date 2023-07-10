@@ -101,7 +101,10 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         _vestByEsGmx();
     }
 
-    function harvestGmx(uint256 priceNum, uint256 priceDenom) public onlyOwner {
+    function harvestGmx(
+        uint256 priceNum,
+        uint256 priceDenom
+    ) external onlyOwner {
         _claimRewards();
         _sellGmx(priceNum, priceDenom);
         _buyGlp();
@@ -145,6 +148,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             glpVester.withdraw();
         }
         // Call this first; `_vestByGlp()` will lock the GLP again
+        require(amount > 0, "Strategy: amount is 0");
         IERC20(contractAddress).safeTransfer(to, amount);
         _vestByGlp();
         _stakeEsGmx();
@@ -172,6 +176,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             feesPending = _feesPending + fee;
             wethAmount -= fee;
 
+            weth.approve(address(glpManager), 0);
             weth.approve(address(glpManager), wethAmount);
             glpRewardRouter.mintAndStakeGlp(address(weth), wethAmount, 0, 0);
         }

@@ -18,6 +18,7 @@ contract ConvexBoosterMock {
         receiptToken = IERC20(_receiptToken);
         crvRewards = _crvRewards;
 
+        lpToken.approve(_crvRewards, 0);
         lpToken.approve(_crvRewards, type(uint256).max);
     }
 
