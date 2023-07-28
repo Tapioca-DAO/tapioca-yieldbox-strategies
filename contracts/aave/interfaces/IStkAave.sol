@@ -2,6 +2,11 @@
 pragma solidity ^0.8.18;
 
 interface IStkAave {
+    struct CooldownSnapshot {
+        uint40 timestamp;
+        uint216 amount;
+    }
+
     function REWARD_TOKEN() external view returns (address);
 
     function stake(address to, uint256 amount) external;
@@ -16,8 +21,13 @@ interface IStkAave {
         address _user
     ) external view returns (uint256);
 
-    function stakersCooldowns(address _user) external view returns (uint256);
+    function stakersCooldowns(
+        address _user
+    ) external view returns (uint40, uint216);
 
     function balanceOf(address _user) external view returns (uint256);
-    //   mapping(address => uint256) public stakersCooldowns;
+
+    function getTotalRewardsBalance(
+        address staker
+    ) external view returns (uint256);
 }

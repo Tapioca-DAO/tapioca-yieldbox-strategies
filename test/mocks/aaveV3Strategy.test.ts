@@ -3,72 +3,76 @@ import { ethers } from 'hardhat';
 import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import _ from 'lodash';
-import { ERC20Mock } from '../../gitsub_tapioca-sdk/src/typechain/tapioca-mocks/ERC20Mock';
 
-describe.skip('AaveStrategy test', () => {
+describe('AaveV3Strategy test', () => {
     it('should test initial strategy values', async () => {
-        const { aaveStrategy, weth, yieldBox } = await loadFixture(
+        const { aaveV3Strategy, weth, yieldBox } = await loadFixture(
             registerMocks,
         );
 
-        const name = await aaveStrategy.name();
-        const description = await aaveStrategy.description();
+        const name = await aaveV3Strategy.name();
+        const description = await aaveV3Strategy.description();
 
-        expect(name).eq('AAVE');
-        expect(description).eq('AAVE strategy for wrapped native assets');
+        expect(name).eq('AAVE V3');
+        expect(description).eq('AAVE V3 strategy for wrapped native assets');
 
-        const contractAddress = await aaveStrategy.contractAddress();
+        const contractAddress = await aaveV3Strategy.contractAddress();
         expect(contractAddress.toLowerCase()).eq(weth.address.toLowerCase());
 
-        const lendingPoolAddress = await aaveStrategy.lendingPool();
-        expect(lendingPoolAddress).to.not.eq(ethers.constants.AddressZero);
+        const aaveV3Pool = await aaveV3Strategy.aaveV3Pool();
+        expect(aaveV3Pool).to.not.eq(ethers.constants.AddressZero);
 
-        const yieldBoxAddress = await aaveStrategy.yieldBox();
+        const yieldBoxAddress = await aaveV3Strategy.yieldBox();
         expect(yieldBoxAddress.toLowerCase()).to.eq(
             yieldBox.address.toLowerCase(),
         );
 
-        const currentBalance = await aaveStrategy.currentBalance();
-        expect(currentBalance.eq(0)).to.be.true;
+        const currentBalance = await aaveV3Strategy.currentBalance();
+        expect(currentBalance.gt(0)).to.be.true;
 
-        const queued = await weth.balanceOf(aaveStrategy.address);
+        const queued = await weth.balanceOf(aaveV3Strategy.address);
         expect(queued.eq(0)).to.be.true;
     });
 
     it('should allow setting the deposit threshold', async () => {
-        const { aaveStrategy, weth, yieldBox } = await loadFixture(
+        const { aaveV3Strategy, weth, yieldBox } = await loadFixture(
             registerMocks,
         );
 
-        const currentThreshold = await aaveStrategy.depositThreshold();
+        const currentThreshold = await aaveV3Strategy.depositThreshold();
 
         const newThreshold = ethers.BigNumber.from((1e18).toString()).mul(10);
-        await aaveStrategy.setDepositThreshold(newThreshold);
+        await aaveV3Strategy.setDepositThreshold(newThreshold);
 
-        const finalThreshold = await aaveStrategy.depositThreshold();
+        const finalThreshold = await aaveV3Strategy.depositThreshold();
 
         expect(currentThreshold).to.not.eq(finalThreshold);
     });
 
     it('should queue and deposit when threshold is met', async () => {
         const {
-            aaveStrategy,
+            aaveV3Strategy,
             weth,
             wethAssetId,
             yieldBox,
             deployer,
             timeTravel,
         } = await loadFixture(registerMocks);
-        await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
+        await yieldBox.registerAsset(
+            1,
+            weth.address,
+            aaveV3Strategy.address,
+            0,
+        );
 
         const wethAaveStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
-            aaveStrategy.address,
+            aaveV3Strategy.address,
             0,
         );
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
-        await aaveStrategy.setDepositThreshold(amount.mul(3));
+        await aaveV3Strategy.setDepositThreshold(amount.mul(3));
         await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
         await weth.approve(yieldBox.address, ethers.constants.MaxUint256);
@@ -87,10 +91,10 @@ describe.skip('AaveStrategy test', () => {
         );
 
         let aaveStrategyWethBalance = await weth.balanceOf(
-            aaveStrategy.address,
+            aaveV3Strategy.address,
         );
         let aaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
         expect(aaveStrategyWethBalance.gt(0)).to.be.true;
         expect(aaveLendingPoolBalance.eq(0)).to.be.true;
@@ -106,17 +110,18 @@ describe.skip('AaveStrategy test', () => {
             0,
             share.mul(3),
         );
-        aaveStrategyWethBalance = await weth.balanceOf(aaveStrategy.address);
+        aaveStrategyWethBalance = await weth.balanceOf(aaveV3Strategy.address);
         aaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
+
         expect(aaveStrategyWethBalance.eq(0)).to.be.true;
         expect(aaveLendingPoolBalance.gt(0)).to.be.true;
     });
 
     it('should allow deposits and withdrawals', async () => {
         const {
-            aaveStrategy,
+            aaveV3Strategy,
             weth,
             wethAssetId,
             yieldBox,
@@ -127,13 +132,18 @@ describe.skip('AaveStrategy test', () => {
             uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
 
-        const lendingPoolAddress = await aaveStrategy.lendingPool();
-        await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
+        const lendingPoolAddress = await aaveV3Strategy.aaveV3Pool();
+        await yieldBox.registerAsset(
+            1,
+            weth.address,
+            aaveV3Strategy.address,
+            0,
+        );
 
         const wethAaveStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
-            aaveStrategy.address,
+            aaveV3Strategy.address,
             0,
         );
         expect(wethAaveStrategyAssetId).to.not.eq(wethAssetId);
@@ -144,7 +154,7 @@ describe.skip('AaveStrategy test', () => {
             weth.address.toLowerCase(),
         );
         expect(assetInfo.strategy.toLowerCase()).to.eq(
-            aaveStrategy.address.toLowerCase(),
+            aaveV3Strategy.address.toLowerCase(),
         );
         expect(assetInfo.tokenId).to.eq(0);
 
@@ -160,6 +170,7 @@ describe.skip('AaveStrategy test', () => {
             amount,
             false,
         );
+
         await yieldBox.depositAsset(
             wethAaveStrategyAssetId,
             deployer.address,
@@ -169,20 +180,20 @@ describe.skip('AaveStrategy test', () => {
         );
 
         const aaveStrategyWethBalance = await weth.balanceOf(
-            aaveStrategy.address,
+            aaveV3Strategy.address,
         );
         const aaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
         expect(aaveStrategyWethBalance.eq(0)).to.be.true;
         expect(aaveLendingPoolBalance.gt(amount)).to.be.true; //amount was initially deposited
 
-        await aaveStrategy.compound(ethers.utils.toUtf8Bytes('')); //to simulate rewards produced by mocks
+        await aaveV3Strategy.compound(ethers.utils.toUtf8Bytes('')); //to simulate rewards produced by mocks
         await timeTravel(86400 * 10); //10 days
 
         const rewardToken = await ethers.getContractAt(
             'ERC20Mock',
-            await aaveStrategy.rewardToken(),
+            await aaveV3Strategy.rewardToken(),
         );
 
         if (await rewardToken.hasMintRestrictions()) {
@@ -195,17 +206,11 @@ describe.skip('AaveStrategy test', () => {
         const rewardTokenPairAmount = ethers.BigNumber.from(1e6).mul(
             (1e18).toString(),
         );
-        await uniV2EnvironnementSetup(
-            deployer.address,
-            __uniFactory,
-            __uniRouter,
-            rewardToken,
-            weth,
-            rewardTokenPairAmount,
-            wethPairAmount,
-        );
 
         share = await yieldBox.toShare(wethAaveStrategyAssetId, amount, false);
+
+        const crtBalance = await aaveV3Strategy.currentBalance();
+        expect(crtBalance.gt(0)).to.be.true;
         await yieldBox.withdraw(
             wethAaveStrategyAssetId,
             deployer.address,
@@ -214,29 +219,34 @@ describe.skip('AaveStrategy test', () => {
             share,
         );
         const finalAaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
     });
 
     it('should withdraw from queue', async () => {
         const {
-            aaveStrategy,
+            aaveV3Strategy,
             weth,
             wethAssetId,
             yieldBox,
             deployer,
             timeTravel,
         } = await loadFixture(registerMocks);
-        await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
+        await yieldBox.registerAsset(
+            1,
+            weth.address,
+            aaveV3Strategy.address,
+            0,
+        );
 
         const wethAaveStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
-            aaveStrategy.address,
+            aaveV3Strategy.address,
             0,
         );
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
-        await aaveStrategy.setDepositThreshold(amount.mul(3));
+        await aaveV3Strategy.setDepositThreshold(amount.mul(3));
 
         await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
@@ -256,10 +266,10 @@ describe.skip('AaveStrategy test', () => {
         );
 
         let aaveStrategyWethBalance = await weth.balanceOf(
-            aaveStrategy.address,
+            aaveV3Strategy.address,
         );
         let aaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
         expect(aaveStrategyWethBalance.gt(0)).to.be.true;
         expect(aaveLendingPoolBalance.eq(0)).to.be.true;
@@ -272,17 +282,17 @@ describe.skip('AaveStrategy test', () => {
             share,
         );
 
-        aaveStrategyWethBalance = await weth.balanceOf(aaveStrategy.address);
+        aaveStrategyWethBalance = await weth.balanceOf(aaveV3Strategy.address);
         aaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
-        expect(aaveStrategyWethBalance.eq(0)).to.be.true;
+        expect(aaveStrategyWethBalance.lt(10)).to.be.true;
         expect(aaveLendingPoolBalance.eq(0)).to.be.true;
     });
 
     it('should compound rewards', async () => {
         const {
-            aaveStrategy,
+            aaveV3Strategy,
             weth,
             wethAssetId,
             yieldBox,
@@ -292,59 +302,31 @@ describe.skip('AaveStrategy test', () => {
             __uniRouter,
             uniV2EnvironnementSetup,
         } = await loadFixture(registerMocks);
-        await yieldBox.registerAsset(1, weth.address, aaveStrategy.address, 0);
+        await yieldBox.registerAsset(
+            1,
+            weth.address,
+            aaveV3Strategy.address,
+            0,
+        );
 
         const wethAaveStrategyAssetId = await yieldBox.ids(
             1,
             weth.address,
-            aaveStrategy.address,
+            aaveV3Strategy.address,
             0,
         );
 
         const rewardToken = await ethers.getContractAt(
             'ERC20Mock',
-            await aaveStrategy.rewardToken(),
+            await aaveV3Strategy.rewardToken(),
         );
 
         if (await rewardToken.hasMintRestrictions()) {
             await rewardToken.toggleRestrictions();
         }
 
-        const wethPairAmount = ethers.BigNumber.from(1e6).mul(
-            (1e18).toString(),
-        );
-        const rewardTokenPairAmount = ethers.BigNumber.from(1e6).mul(
-            (1e18).toString(),
-        );
-        await uniV2EnvironnementSetup(
-            deployer.address,
-            __uniFactory,
-            __uniRouter,
-            rewardToken,
-            weth,
-            rewardTokenPairAmount,
-            wethPairAmount,
-        );
-
-        // console.log('Testing output amount----------------');
-        // const swapDataTest = await swapperMock[
-        //     'buildSwapData(address,address,uint256,uint256,bool,bool)'
-        // ](
-        //     weth.address,
-        //     rewardToken.address,
-        //     ethers.utils.parseEther('1'),
-        //     0,
-        //     false,
-        //     false,
-        // );
-        // const outputTest = await swapperMock.getOutputAmount(
-        //     swapDataTest,
-        //     ethers.utils.toUtf8Bytes(''),
-        // );
-        // console.log(`----------- outputTest ${outputTest}`);
-
         const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
-        await aaveStrategy.setDepositThreshold(amount.div(10000));
+        await aaveV3Strategy.setDepositThreshold(amount.div(10000));
 
         await timeTravel(86400);
         await weth.freeMint(amount.mul(10));
@@ -355,6 +337,13 @@ describe.skip('AaveStrategy test', () => {
             amount,
             false,
         );
+        const stkAave = await aaveV3Strategy.stakedRewardToken();
+        const stkAaveContract = await ethers.getContractAt('IStkAave', stkAave);
+        let cooldownBefore = (
+            await stkAaveContract.stakersCooldowns(aaveV3Strategy.address)
+        )[0];
+        expect(cooldownBefore).eq(0);
+
         await yieldBox.depositAsset(
             wethAaveStrategyAssetId,
             deployer.address,
@@ -363,55 +352,59 @@ describe.skip('AaveStrategy test', () => {
             share,
         );
         const aaveStrategyWethBalance = await weth.balanceOf(
-            aaveStrategy.address,
+            aaveV3Strategy.address,
         );
         const aaveLendingPoolBalance = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
         expect(aaveStrategyWethBalance.eq(0)).to.be.true;
         expect(aaveLendingPoolBalance.gt(0)).to.be.true;
 
         timeTravel(100 * 86400);
 
-        const stkAave = await aaveStrategy.stakedRewardToken();
-        const stkAaveContract = await ethers.getContractAt('IStkAave', stkAave);
+        cooldownBefore = (
+            await stkAaveContract.stakersCooldowns(aaveV3Strategy.address)
+        )[0];
+        expect(cooldownBefore).eq(0);
+        await aaveV3Strategy.compound(ethers.utils.toUtf8Bytes(''));
+        cooldownBefore = (
+            await stkAaveContract.stakersCooldowns(aaveV3Strategy.address)
+        )[0];
 
-        let cooldownBefore = await stkAaveContract.stakersCooldowns(
-            aaveStrategy.address,
+        const balanceOfStkAave = await stkAaveContract.balanceOf(
+            aaveV3Strategy.address,
         );
-        expect(cooldownBefore.eq(0)).to.be.true;
-        await aaveStrategy.compound(ethers.utils.toUtf8Bytes(''));
-        cooldownBefore = await stkAaveContract.stakersCooldowns(
-            aaveStrategy.address,
-        );
-        expect(cooldownBefore.gt(0)).to.be.true;
+        if (balanceOfStkAave.eq(0)) {
+            expect(cooldownBefore).eq(0);
+        } else {
+            expect(cooldownBefore).gt(0);
+        }
 
         const aaveStrategyWethBalanceMid = await weth.balanceOf(
-            aaveStrategy.address,
+            aaveV3Strategy.address,
         );
         const aaveLendingPoolBalanceMid = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
         expect(aaveStrategyWethBalanceMid.eq(0)).to.be.true;
-        expect(aaveLendingPoolBalanceMid.eq(aaveLendingPoolBalance)).to.be.true;
 
-        await timeTravel(10 * 86400);
-        await aaveStrategy.compound(ethers.utils.toUtf8Bytes(''));
-        const finalCooldown = await stkAaveContract.stakersCooldowns(
-            aaveStrategy.address,
-        );
-        expect(finalCooldown.eq(cooldownBefore)).to.be.true;
+        await timeTravel(21 * 86400);
+        await aaveV3Strategy.compound(ethers.utils.toUtf8Bytes(''));
+        const finalCooldown = (
+            await stkAaveContract.stakersCooldowns(aaveV3Strategy.address)
+        )[0];
+        expect(finalCooldown).eq(cooldownBefore);
         const aaveLendingPoolBalanceFinal = await weth.balanceOf(
-            await aaveStrategy.lendingPool(),
+            await aaveV3Strategy.aaveV3Pool(),
         );
         expect(aaveLendingPoolBalanceFinal.gt(aaveLendingPoolBalanceMid)).to.be
             .true;
 
         await timeTravel(100 * 86400);
-        await aaveStrategy.compound(ethers.utils.toUtf8Bytes(''));
-        const newCooldown = await stkAaveContract.stakersCooldowns(
-            aaveStrategy.address,
-        );
-        expect(newCooldown.gt(finalCooldown)).to.be.true;
+        await aaveV3Strategy.compound(ethers.utils.toUtf8Bytes(''));
+        const newCooldown = (
+            await stkAaveContract.stakersCooldowns(aaveV3Strategy.address)
+        )[0];
+        expect(newCooldown).eq(finalCooldown);
     });
 });

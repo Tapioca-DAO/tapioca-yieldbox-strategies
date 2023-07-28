@@ -325,6 +325,119 @@ async function deployAaveIncentivesControllerMock(
     );
     return { incentivesControllerMock };
 }
+
+async function deployAaveV3Pool(assetAddress: string, staging?: boolean) {
+    const aaveV3Pool = await (
+        await ethers.getContractFactory('AaveV3PoolMock')
+    ).deploy(assetAddress);
+    await aaveV3Pool.deployed();
+    log(
+        `Deployed AaveV3PoolMock ${aaveV3Pool.address} with args [${assetAddress}]`,
+        staging,
+    );
+    await verifyEtherscan(aaveV3Pool.address, [assetAddress], staging);
+
+    return { aaveV3Pool };
+}
+
+async function deployAaveV3ReceiptToken(staging?: boolean) {
+    const deployer = (await ethers.getSigners())[0];
+    const ERC20Mock = new ERC20Mock__factory(deployer);
+    const receiptAaveV3 = await ERC20Mock.deploy(
+        'AAtoken receipt',
+        'aToken',
+        ethers.utils.parseEther('100000'),
+        18,
+        deployer.address,
+    );
+    await receiptAaveV3['toggleRestrictions()']();
+    log(
+        `Deployed Receipt AAVE V3 ${
+            receiptAaveV3.address
+        } with args ['AAtoken receipt', 'aToken', ${
+            (ethers.utils.parseEther('100000'), 18, deployer.address)
+        }]`,
+        staging,
+    );
+    await verifyEtherscan(
+        receiptAaveV3.address,
+        [
+            'AAtoken receipt',
+            'aToken',
+            ethers.utils.parseEther('100000'),
+            18,
+            deployer.address,
+        ],
+        staging,
+    );
+
+    return { receiptAaveV3 };
+}
+
+async function registerAaveV3Strategy(
+    wethAddress: string,
+    yieldBoxAddress: string,
+    aaveV3PoolAddress: string,
+    receiptAaveV3Address: string,
+    stkAaveAddress: string,
+    aaveSwapperAddress: string,
+    staging?: boolean,
+) {
+    if (aaveV3PoolAddress == ethers.constants.AddressZero) {
+        const { aaveV3Pool } = await deployAaveV3Pool(wethAddress, staging);
+        aaveV3PoolAddress = aaveV3Pool.address;
+        if (receiptAaveV3Address == ethers.constants.AddressZero) {
+            receiptAaveV3Address = await aaveV3Pool.aAsset();
+        }
+    }
+
+    if (stkAaveAddress == ethers.constants.AddressZero) {
+        const { stkAaveMock } = await deployStkAaveMock(wethAddress, staging);
+        stkAaveAddress = stkAaveMock.address;
+    }
+
+    const deployer = (await ethers.getSigners())[0];
+    const ERC20Mock = new ERC20Mock__factory(deployer);
+    const lpTokenMock = await ERC20Mock.deploy(
+        'LPTokenMock',
+        'LPTM',
+        ethers.utils.parseEther('100000'),
+        18,
+        deployer.address,
+    );
+    await lpTokenMock.updateMintLimit(ethers.utils.parseEther('1000000'));
+
+    const aaveV3Strategy = await (
+        await ethers.getContractFactory('AaveV3Strategy')
+    ).deploy(
+        yieldBoxAddress,
+        wethAddress,
+        aaveV3PoolAddress,
+        receiptAaveV3Address,
+        stkAaveAddress,
+        aaveSwapperAddress,
+    );
+    await aaveV3Strategy.deployed();
+
+    log(
+        `Deployed AaveV3Strategy ${aaveV3Strategy.address} with args [${yieldBoxAddress},${wethAddress},${aaveV3PoolAddress},${receiptAaveV3Address},${stkAaveAddress},${aaveSwapperAddress}]`,
+        staging,
+    );
+    await verifyEtherscan(
+        aaveV3Strategy.address,
+        [
+            yieldBoxAddress,
+            wethAddress,
+            aaveV3PoolAddress,
+            receiptAaveV3Address,
+            stkAaveAddress,
+            aaveSwapperAddress,
+        ],
+        staging,
+    );
+    return { aaveV3Strategy };
+}
+
 async function registerAaveStrategy(
     wethAddress: string,
     yieldBoxAddres: string,
@@ -1599,6 +1712,18 @@ export async function registerMocks(staging?: boolean) {
     );
     log(`Deployed AaveStrategy ${aaveStrategy.address}`, staging);
 
+    log('Deploying AaveV3Strategy', staging);
+    const { aaveV3Strategy } = await registerAaveV3Strategy(
+        weth.address,
+        yieldBox.address,
+        ethers.constants.AddressZero, //aave v3 pool
+        ethers.constants.AddressZero, //aave v3 pool
+        ethers.constants.AddressZero, //stk aave
+        uniswapV3SwapperMock.address, //swapper
+        staging,
+    );
+    log(`Deployed AaveV3Strategy ${aaveV3Strategy.address}`, staging);
+
     log('Deploying YearnStrategy', staging);
     const { yearnStrategy } = await registerYearnStrategy(
         weth.address,
@@ -1754,6 +1879,7 @@ export async function registerMocks(staging?: boolean) {
         wethAssetId,
         yieldBox,
         aaveStrategy,
+        aaveV3Strategy,
         yearnStrategy,
         stargateStrategy,
         tricryptoNativeStrategy,
@@ -1888,6 +2014,18 @@ export async function registerFork() {
     );
     log(`Deployed AaveStrategy ${aaveStrategy.address}`, false);
 
+    log('Deploying AaveV3Strategy', false);
+    const { aaveV3Strategy } = await registerAaveV3Strategy(
+        weth.address,
+        yieldBox.address,
+        process.env.AAVE_V3_POOL!, //lending pool
+        process.env.AAVE_V3_RECEIPT_TOKEN,
+        process.env.AAVE_STK!, //stkAave
+        swapperMock.address, //swapper
+        false,
+    );
+    log(`Deployed AaveV3Strategy ${aaveStrategy.address}`, false);
+
     log('Deploying YearnStrategy', false);
     const { yearnStrategy } = await registerYearnStrategy(
         weth.address,
@@ -2011,6 +2149,7 @@ export async function registerFork() {
         wethAssetId,
         yieldBox,
         aaveStrategy,
+        aaveV3Strategy,
         yearnStrategy,
         stargateStrategy,
         tricryptoLPGtter,
