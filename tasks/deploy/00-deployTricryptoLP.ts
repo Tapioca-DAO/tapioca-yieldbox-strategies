@@ -3,6 +3,8 @@ import inquirer from 'inquirer';
 import { loadVM } from '../utils';
 import SDK from 'tapioca-sdk';
 import { buildTricryptoLPStrategy } from '../deployBuilds/00-buildTricryptoLPStrategy';
+import { TOKENS_DEPLOYMENTS } from '../../gitsub_tapioca-sdk/src/api/constants';
+import { EChainID } from 'tapioca-sdk/dist/api/config';
 
 export const deployTricrytoLPStrategy__task = async (
     {},
@@ -21,7 +23,6 @@ export const deployTricrytoLPStrategy__task = async (
     }
 
     const project = hre.SDK.config.TAPIOCA_PROJECTS[2];
-    const subrepo = hre.SDK.db.SUBREPO_GLOBAL_DB_PATH;
     const yieldBox = await hre.SDK.db
         .loadGlobalDeployment(tag, project, chainInfo.chainId)
         .find((e) => e.name === 'YieldBox');
@@ -29,67 +30,27 @@ export const deployTricrytoLPStrategy__task = async (
         throw '[-] YieldBox not found';
     }
 
-    const { tricryptoLiquidityPool } = await inquirer.prompt({
-        type: 'input',
-        name: 'tricryptoLiquidityPool',
-        message: 'Tricrypto Liquidity Pool',
-        default: '0x0000000000000000000000000000000000000000',
-    });
-    const { usdtAddress } = await inquirer.prompt({
-        type: 'input',
-        name: 'usdtAddress',
-        message: 'USDT address',
-        default: '0x0000000000000000000000000000000000000000',
-    });
-    const { wbtcAddress } = await inquirer.prompt({
-        type: 'input',
-        name: 'wbtcAddress',
-        message: 'WBTC address',
-        default: '0x0000000000000000000000000000000000000000',
-    });
-    const { wethAddress } = await inquirer.prompt({
-        type: 'input',
-        name: 'wethAddress',
-        message: 'WETH address',
-        default: '0x0000000000000000000000000000000000000000',
-    });
-
-    const { lpGauge } = await inquirer.prompt({
-        type: 'input',
-        name: 'lpGauge',
-        message: 'LP Gauge',
-        default: '0x0000000000000000000000000000000000000000',
-    });
-
-    const { lpMinter } = await inquirer.prompt({
-        type: 'input',
-        name: 'lpMinter',
-        message: 'LP Minter',
-        default: '0x0000000000000000000000000000000000000000',
-    });
-
-    const { swapper } = await inquirer.prompt({
-        type: 'input',
-        name: 'swapper',
-        message: 'Swapper',
-        default: '0x0000000000000000000000000000000000000000',
-    });
+    const multiSwapper = await hre.SDK.db
+        .loadGlobalDeployment(tag, project, chainInfo.chainId)
+        .find((e) => e.name === 'MultiSwapper');
+    if (!multiSwapper) {
+        throw '[-] MultiSwapper not found';
+    }
 
     const [tricryptoLPGetter, tricryptoLPStrategy] =
         await buildTricryptoLPStrategy(
             hre,
-            tricryptoLiquidityPool,
-            usdtAddress,
-            wbtcAddress,
-            wethAddress,
+            CURVE_DEPLOYMENTS[chainInfo.chainId as EChainID].tricryptoLiquidityPool,
+            TOKENS_DEPLOYMENTS[chainInfo.chainId as EChainID].usdt,
+            TOKENS_DEPLOYMENTS[chainInfo.chainId as EChainID].wbtc,
+            TOKENS_DEPLOYMENTS[chainInfo.chainId as EChainID].weth,
             yieldBox.address,
-            lpGauge,
-            lpMinter,
-            swapper,
+            CURVE_DEPLOYMENTS[chainInfo.chainId as EChainID].tricryptoGauge,
+            CURVE_DEPLOYMENTS[chainInfo.chainId as EChainID].tricryptoMinter,
+            multiSwapper.address,
         );
 
     VM.add(tricryptoLPGetter).add(tricryptoLPStrategy);
-
 
     const initialBalance = await hre.ethers.provider.getBalance(signer.address);
     // Add and execute

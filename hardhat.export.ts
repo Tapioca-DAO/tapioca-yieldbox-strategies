@@ -91,7 +91,7 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
             {
                 version: '0.8.9',
                 settings: {
-                    viaIR: true,
+                    viaIR: false,
                     optimizer: {
                         enabled: true,
                         runs: 200,
@@ -101,7 +101,7 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
             {
                 version: '0.8.18',
                 settings: {
-                    viaIR: true,
+                    viaIR: false,
                     optimizer: {
                         enabled: true,
                         runs: 200,

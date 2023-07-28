@@ -38,13 +38,19 @@ contract StkAaveMock is ERC20Mock {
         return 100 * 1e18;
     }
 
-    function stakersCooldowns(address) external view returns (uint256) {
-        return lastCooldown;
+    function stakersCooldowns(address) external view returns (uint40, uint216) {
+        return (uint40(lastCooldown), uint216(0));
     }
 
     function claimRewards(address to, uint256 amount) external {
-        amount = stakerRewardsToClaim(address(0));
+        amount = getTotalRewardsBalance(address(0));
         token.freeMint(amount);
         token.transfer(to, amount);
+    }
+
+    function getTotalRewardsBalance(address) public view returns (uint256) {
+        if (lastCooldown == 0) return 100 * 1e18;
+        if (lastCooldown + 20 days < block.timestamp) return 0;
+        return 100 * 1e18;
     }
 }
