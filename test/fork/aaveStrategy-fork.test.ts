@@ -15,7 +15,6 @@ describe.skip('AaveStrategy fork test', () => {
         const { aaveStrategy, weth, yieldBox } = await loadFixture(
             registerFork,
         );
-
         const name = await aaveStrategy.name();
         const description = await aaveStrategy.description();
 
