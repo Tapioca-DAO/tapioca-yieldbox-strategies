@@ -189,10 +189,11 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                     false,
                     false
                 );
-                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
-                uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
 
-                swapper.swap(swapData, minAmount, address(this), "");
+                // already has slippage due to Uni tick rounding down ( at least 0.01% )
+                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+
+                swapper.swap(swapData, calcAmount, address(this), "");
 
                 uint256 queued = wrappedNative.balanceOf(address(this));
                 _stake(queued);

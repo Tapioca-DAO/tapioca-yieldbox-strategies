@@ -187,7 +187,7 @@ contract ConvexTricryptoStrategy is
 
         emit LPGetterSet(address(lpGetter), _lpGetter);
         lpGetter = ITricryptoLPGetter(_lpGetter);
-        
+
         // set new approvals
         wrappedNative.approve(_lpGetter, type(uint256).max);
         lpToken.approve(_lpGetter, type(uint256).max);
