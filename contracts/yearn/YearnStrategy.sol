@@ -40,6 +40,8 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Yearn is performed
     uint256 public depositThreshold;
 
+    uint256 public maxLoss;
+
     // ************** //
     // *** EVENTS *** //
     // ************** //
@@ -47,6 +49,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     event AmountQueued(uint256 amount);
     event AmountDeposited(uint256 amount);
     event AmountWithdrawn(address indexed to, uint256 amount);
+    event MaxLossSet(uint256 oldVal, uint256 newVal);
 
     constructor(
         IYieldBox _yieldBox,
@@ -86,6 +89,13 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice Sets the Yearn max loss param
+    /// @param _val The new max loss amount
+    function setMaxLoss(uint256 _val) external onlyOwner {
+        emit MaxLossSet(maxLoss, _val);
+        maxLoss = _val;
+    }
+
     /// @notice Sets the deposit threshold
     /// @param amount The new threshold amount
     function setDepositThreshold(uint256 amount) external onlyOwner {
@@ -103,7 +113,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         compound("");
 
         uint256 toWithdraw = vault.balanceOf(address(this));
-        result = vault.withdraw(toWithdraw, address(this), 0);
+        result = vault.withdraw(toWithdraw, address(this), maxLoss);
     }
 
     // ************************* //
@@ -143,7 +153,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             uint256 toWithdraw = (((amount - queued) *
                 (10 ** vault.decimals())) / pricePerShare);
 
-            vault.withdraw(toWithdraw, address(this), 0);
+            vault.withdraw(toWithdraw, address(this), maxLoss);
         }
         wrappedNative.safeTransfer(to, amount - 1); //rounding error
 
