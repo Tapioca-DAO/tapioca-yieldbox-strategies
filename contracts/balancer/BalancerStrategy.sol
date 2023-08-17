@@ -45,6 +45,8 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     uint256 public depositThreshold;
 
     uint256 private _cachedCalculatedAmount;
+    uint256 private _slippage = 50;
+    uint256 private _slippageIn = 250;
 
     // ************** //
     // *** EVENTS *** //
@@ -106,6 +108,18 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
+    }
+
+    /// @notice sets the slippage used in bptIn operation
+    /// @param _val the new slippage amount
+    function setSlippageIn(uint256 _val) external onlyOwner {
+        _slippageIn = _val;
+    }
+
     /// @notice rescues unused ETH from the contract
     /// @param amount the amount to rescue
     /// @param to the recipient
@@ -129,7 +143,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
         uint256 toWithdraw = updateCache();
-        toWithdraw = toWithdraw - (toWithdraw * 50) / 10_000; //0.5%
+        toWithdraw = toWithdraw - (toWithdraw * _slippage) / 10_000; //0.5%
 
         result = _vaultWithdraw(toWithdraw);
     }
@@ -184,7 +198,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             address(this),
             joinPoolRequest
         );
-        bptOut = bptOut - (bptOut * 50) / 10_000; //0.5%
+        bptOut = bptOut - (bptOut * _slippage) / 10_000; //0.5%
 
         joinPoolRequest.userData = abi.encode(2, bptOut, uint256(index));
 
@@ -257,7 +271,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             payable(this),
             exitRequest
         );
-        bptIn = bptIn + (bptIn * 250) / 10_000; //2.5%
+        bptIn = bptIn + (bptIn * _slippageIn) / 10_000; //2.5%
         uint256 maxBpt = pool.balanceOf(address(this));
         if (bptIn > maxBpt) {
             bptIn = maxBpt;

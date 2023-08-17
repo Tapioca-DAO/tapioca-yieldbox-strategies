@@ -99,13 +99,6 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         stgTokenReward.approve(_swapper, type(uint256).max);
     }
 
-    // *********************** //
-    // *** OWNER FUNCTIONS *** //
-    // *********************** //
-    function setSlippage(uint256 _val) external onlyOwner {
-        _slippage = _val;
-    }
-
     // ********************** //
     // *** VIEW FUNCTIONS *** //
     // ********************** //
@@ -148,6 +141,12 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
+    }
+
     /// @notice rescues unused ETH from the contract
     /// @param amount the amount to rescue
     /// @param to the recipient
@@ -200,7 +199,9 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
                 // already has slippage due to Uni tick rounding down ( at least 0.01% )
                 uint256 calcAmount = swapper.getOutputAmount(swapData, "");
-                uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.25%
+                uint256 minAmount = calcAmount -
+                    (calcAmount * _slippage) /
+                    10_000; //0.25%
                 swapper.swap(swapData, minAmount, address(this), "");
 
                 uint256 queued = wrappedNative.balanceOf(address(this));
