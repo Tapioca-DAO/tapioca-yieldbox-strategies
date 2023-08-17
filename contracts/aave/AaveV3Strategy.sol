@@ -224,8 +224,12 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             uint256 toWithdraw = amount - queued;
 
             uint256 balanceBefore = wrappedNative.balanceOf(address(this));
-            receiptToken.approve(address(aaveV3Pool), amount);
-            aaveV3Pool.withdraw(address(wrappedNative), amount, address(this));
+            receiptToken.approve(address(aaveV3Pool), toWithdraw);
+            aaveV3Pool.withdraw(
+                address(wrappedNative),
+                toWithdraw,
+                address(this)
+            );
             uint256 balanceAfter = wrappedNative.balanceOf(address(this));
 
             uint256 obtainedWrapped = balanceAfter - balanceBefore;

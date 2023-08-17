@@ -260,15 +260,13 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         if (amount > queued) {
             compound("");
 
-            uint256 toWithdraw = amount - queued;
-
             uint256 obtainedWrapped = lendingPool.withdraw(
                 address(wrappedNative),
-                toWithdraw,
+                amount,
                 address(this)
             );
-            if (obtainedWrapped > toWithdraw) {
-                amount += (obtainedWrapped - toWithdraw);
+            if (obtainedWrapped > amount) {
+                amount += (obtainedWrapped - amount);
             }
         }
 
