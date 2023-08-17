@@ -151,11 +151,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            uint256 pricePerShare = cToken.exchangeRateStored();
-            uint256 toWithdraw = (((amount - queued) * (10 ** 18)) /
-                pricePerShare);
-
-            cToken.redeem(toWithdraw);
+            cToken.redeemUnderlying(amount);
             INative(address(wrappedNative)).deposit{
                 value: address(this).balance
             }();
