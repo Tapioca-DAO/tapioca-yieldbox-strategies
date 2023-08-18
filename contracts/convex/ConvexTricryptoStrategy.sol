@@ -157,7 +157,7 @@ contract ConvexTricryptoStrategy is
         uint256 lpBalance = rewardPool.balanceOf(address(this));
         rewardPool.withdrawAndUnwrap(lpBalance, false);
         uint256 calcWithdraw = lpGetter.calcLpToWeth(lpBalance);
-        uint256 minAmount = (calcWithdraw * _slippage) / 10_000; //0.5%
+        uint256 minAmount = calcWithdraw - (calcWithdraw * _slippage) / 10_000; //0.5%
         result = lpGetter.removeLiquidityWeth(lpBalance, minAmount);
     }
 
