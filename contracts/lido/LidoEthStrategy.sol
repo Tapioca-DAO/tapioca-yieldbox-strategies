@@ -11,6 +11,7 @@ import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.so
 
 import "./interfaces/IStEth.sol";
 import "./interfaces/ICurveEthStEthPool.sol";
+import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
@@ -37,6 +38,12 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     IStEth public immutable stEth;
     ICurveEthStEthPool public curveStEthPool;
 
+    IOracle public oracleEthStEth;
+    bytes public oracleData;
+    uint256 public oracleDeviation = 1e4; //10%
+
+    uint256 private constant ORACLE_DEVIATON_PRECISION = 1e5;
+
     /// @notice Queues tokens up to depositThreshold
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed
     uint256 public depositThreshold;
@@ -50,16 +57,23 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     event AmountQueued(uint256 amount);
     event AmountDeposited(uint256 amount);
     event AmountWithdrawn(address indexed to, uint256 amount);
+    event OracleUpdated(address indexed _old, address _new);
+    event OracleDataUpdated();
+    event OracleDeviationUpdated(uint256 _old, uint256 _new);
 
     constructor(
         IYieldBox _yieldBox,
         address _token,
         address _stEth,
-        address _curvePool
+        address _curvePool,
+        IOracle _oracle,
+        bytes memory _oracleData
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
         stEth = IStEth(_stEth);
         curveStEthPool = ICurveEthStEthPool(_curvePool);
+        oracleEthStEth = _oracle;
+        oracleData = _oracleData;
 
         IERC20(_stEth).approve(_curvePool, 0);
         IERC20(_stEth).approve(_curvePool, type(uint256).max);
@@ -91,6 +105,31 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the oracle config
+    /// @dev values are changed only if <> than the type's default value
+    /// @param _oracle the new oracle
+    /// @param _oracleData the new oracleData
+    /// @param _oracleDeviation the new oracle deviation
+    function setOracleDetails(
+        address _oracle,
+        bytes calldata _oracleData,
+        uint256 _oracleDeviation
+    ) external onlyOwner {
+        if (_oracle != address(0)) {
+            emit OracleUpdated(address(oracleEthStEth), _oracle);
+            oracleEthStEth = IOracle(_oracle);
+        }
+
+        if (_oracleData.length > 0) {
+            emit OracleDataUpdated();
+            oracleData = _oracleData;
+        }
+
+        if (_oracleDeviation > 0) {
+            emit OracleDeviationUpdated(oracleDeviation, _oracleDeviation);
+            oracleDeviation = _oracleDeviation;
+        }
+    }
 
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
@@ -138,6 +177,22 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 calcEth = stEthBalance > 0
             ? curveStEthPool.get_dy(1, 0, stEthBalance)
             : 0;
+
+        (bool success, uint256 oraclePrice) = oracleEthStEth.peek(oracleData);
+        require(success, "LidoStrategy: oracle call failed");
+        uint256 oracleCalcEth = (oraclePrice * stEthBalance) / 1e18;
+        uint256 calcEthDeviation = (calcEth * oracleDeviation) /
+            ORACLE_DEVIATON_PRECISION;
+
+        require(
+            (calcEth - calcEthDeviation) <= oracleCalcEth,
+            "LidoStrategy: price not valid; too low"
+        );
+        require(
+            oracleCalcEth <= (calcEth + calcEthDeviation),
+            "LidoStrategy: price not valid; too high"
+        );
+
         uint256 queued = wrappedNative.balanceOf(address(this));
         return calcEth + queued;
     }

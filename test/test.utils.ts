@@ -13,6 +13,7 @@ import {
     UniswapV2Router02__factory,
     ERC20Mock,
     UniswapV3SwapperMock__factory,
+    OracleMock__factory,
 } from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
 
@@ -1106,9 +1107,25 @@ async function registerLidoStEthStrategy(
         curveSthEThPoolAddress = curveStEthPoolMock.address;
     }
 
+    const OracleMock = new OracleMock__factory((await ethers.getSigners())[0]);
+    const mockOracle = await OracleMock.deploy(
+        'WETHUSD0Mock',
+        'WSM',
+        (1e18).toString(),
+    );
+    await mockOracle.deployed();
+    log(`Deployed mock oracle at ${mockOracle.address}`, staging);
+
     const lidoEthStrategy = await (
         await ethers.getContractFactory('LidoEthStrategy')
-    ).deploy(yieldBoxAddres, wethAddress, stEthAddress, curveSthEThPoolAddress);
+    ).deploy(
+        yieldBoxAddres,
+        wethAddress,
+        stEthAddress,
+        curveSthEThPoolAddress,
+        mockOracle.address,
+        ethers.utils.toUtf8Bytes(''),
+    );
     await lidoEthStrategy.deployed();
 
     log(
