@@ -181,32 +181,27 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         );
 
         if (unclaimed > 0) {
-            uint256 stgBalanceBefore = stgTokenReward.balanceOf(address(this));
             lpStaking.deposit(2, 0);
-            uint256 stgBalanceAfter = stgTokenReward.balanceOf(address(this));
+        }
 
-            if (stgBalanceAfter > stgBalanceBefore) {
-                uint256 stgAmount = stgBalanceAfter - stgBalanceBefore;
+        uint256 stgBalanceAfter = stgTokenReward.balanceOf(address(this));
+        if (stgBalanceAfter > 0) {
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                address(stgTokenReward),
+                address(wrappedNative),
+                stgBalanceAfter,
+                0,
+                false,
+                false
+            );
 
-                ISwapper.SwapData memory swapData = swapper.buildSwapData(
-                    address(stgTokenReward),
-                    address(wrappedNative),
-                    stgAmount,
-                    0,
-                    false,
-                    false
-                );
+            // already has slippage due to Uni tick rounding down ( at least 0.01% )
+            uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+            uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000;
+            swapper.swap(swapData, minAmount, address(this), "");
 
-                // already has slippage due to Uni tick rounding down ( at least 0.01% )
-                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
-                uint256 minAmount = calcAmount -
-                    (calcAmount * _slippage) /
-                    10_000; //0.25%
-                swapper.swap(swapData, minAmount, address(this), "");
-
-                uint256 queued = wrappedNative.balanceOf(address(this));
-                _stake(queued);
-            }
+            uint256 queued = wrappedNative.balanceOf(address(this));
+            _stake(queued);
         }
     }
 
