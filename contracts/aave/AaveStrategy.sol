@@ -169,7 +169,9 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 balanceOfStkAave = stakedRewardToken.balanceOf(address(this));
         if (currentCooldown > 0) {
             //we have an active cooldown; check if we need to cooldown again
-            bool daysPassed = (currentCooldown + 12 days) < block.timestamp;
+            bool daysPassed = (currentCooldown +
+                stakedRewardToken.COOLDOWN_SECONDS() +
+                stakedRewardToken.UNSTAKE_WINDOW()) < block.timestamp;
             if (daysPassed && balanceOfStkAave > 0) {
                 stakedRewardToken.cooldown();
             }

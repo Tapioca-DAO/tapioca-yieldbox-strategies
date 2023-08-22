@@ -30,4 +30,8 @@ interface IStkAave {
     function getTotalRewardsBalance(
         address staker
     ) external view returns (uint256);
+
+    function COOLDOWN_SECONDS() external view returns (uint256);
+
+    function UNSTAKE_WINDOW() external view returns (uint256);
 }
