@@ -343,7 +343,7 @@ function stakedRewardToken() external view returns (contract IStkAave)
 ### swapper
 
 ```solidity
-function swapper() external view returns (contract IUniswapV2Router02)
+function swapper() external view returns (contract ISwapper)
 ```
 
 
@@ -355,7 +355,7 @@ function swapper() external view returns (contract IUniswapV2Router02)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IUniswapV2Router02 | undefined |
+| _0 | contract ISwapper | undefined |
 
 ### tokenId
 

@@ -240,6 +240,23 @@ function pendingOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### rescueEth
+
+```solidity
+function rescueEth(uint256 amount, address to) external nonpayable
+```
+
+rescues unused ETH from the contract
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | the amount to rescue |
+| to | address | the recipient |
+
 ### setDepositThreshold
 
 ```solidity

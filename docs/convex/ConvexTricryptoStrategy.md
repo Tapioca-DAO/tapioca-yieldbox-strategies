@@ -357,6 +357,22 @@ Sets the Swapper address
 |---|---|---|
 | _swapper | address | The new swapper address |
 
+### setSlippage
+
+```solidity
+function setSlippage(uint256 _val) external nonpayable
+```
+
+sets the slippage used in swap operations
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | uint256 | the new slippage amount |
+
 ### setTricryptoLPGetter
 
 ```solidity
@@ -376,7 +392,7 @@ Sets the Tricrypto LP Getter
 ### swapper
 
 ```solidity
-function swapper() external view returns (contract IUniswapV2Router02)
+function swapper() external view returns (contract ISwapper)
 ```
 
 
@@ -388,7 +404,7 @@ function swapper() external view returns (contract IUniswapV2Router02)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IUniswapV2Router02 | undefined |
+| _0 | contract ISwapper | undefined |
 
 ### tokenId
 

@@ -1,4 +1,4 @@
-# BalancerStrategy
+# GlpStrategy
 
 
 
@@ -9,23 +9,6 @@
 
 
 ## Methods
-
-### bal
-
-```solidity
-function bal() external view returns (contract IERC20)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20 | undefined |
 
 ### cheapWithdrawable
 
@@ -54,39 +37,6 @@ Needs to be called by `pendingOwner` to claim ownership.
 
 
 
-
-### compound
-
-```solidity
-function compound(bytes) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
-### compoundAmount
-
-```solidity
-function compoundAmount() external pure returns (uint256 result)
-```
-
-returns compounded amounts in wrappedNative
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | uint256 | undefined |
 
 ### contractAddress
 
@@ -122,23 +72,6 @@ Returns the total value the strategy holds (principle + gain) expressed in asset
 |---|---|---|
 | amount | uint256 | undefined |
 
-### depositThreshold
-
-```solidity
-function depositThreshold() external view returns (uint256)
-```
-
-Queues tokens up to depositThreshold
-
-*When the amount of tokens is greater than the threshold, a deposit operation to Yearn is performed*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### deposited
 
 ```solidity
@@ -158,10 +91,10 @@ Is called by YieldBox to signal funds have been added, the strategy may choose t
 ### description
 
 ```solidity
-function description() external pure returns (string description_)
+function description() external view returns (string)
 ```
 
-Returns the description of this strategy
+Returns a description for this strategy
 
 
 
@@ -170,15 +103,15 @@ Returns the description of this strategy
 
 | Name | Type | Description |
 |---|---|---|
-| description_ | string | undefined |
+| _0 | string | undefined |
 
-### emergencyWithdraw
+### feeRecipient
 
 ```solidity
-function emergencyWithdraw() external nonpayable returns (uint256 result)
+function feeRecipient() external view returns (address)
 ```
 
-withdraws everythig from the strategy
+
 
 
 
@@ -187,12 +120,12 @@ withdraws everythig from the strategy
 
 | Name | Type | Description |
 |---|---|---|
-| result | uint256 | undefined |
+| _0 | address | undefined |
 
-### helpers
+### feesPending
 
 ```solidity
-function helpers() external view returns (contract IBalancerHelpers)
+function feesPending() external view returns (uint256)
 ```
 
 
@@ -204,15 +137,43 @@ function helpers() external view returns (contract IBalancerHelpers)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IBalancerHelpers | undefined |
+| _0 | uint256 | undefined |
+
+### harvest
+
+```solidity
+function harvest() external nonpayable
+```
+
+
+
+
+
+
+### harvestGmx
+
+```solidity
+function harvestGmx(uint256 priceNum, uint256 priceDenom) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| priceNum | uint256 | undefined |
+| priceDenom | uint256 | undefined |
 
 ### name
 
 ```solidity
-function name() external pure returns (string name_)
+function name() external view returns (string)
 ```
 
-Returns the name of this strategy
+Returns a name for this strategy
 
 
 
@@ -221,7 +182,7 @@ Returns the name of this strategy
 
 | Name | Type | Description |
 |---|---|---|
-| name_ | string | undefined |
+| _0 | string | undefined |
 
 ### owner
 
@@ -257,61 +218,10 @@ function pendingOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### pool
+### setFeeRecipient
 
 ```solidity
-function pool() external view returns (contract IBalancerPool)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IBalancerPool | undefined |
-
-### poolId
-
-```solidity
-function poolId() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### rescueEth
-
-```solidity
-function rescueEth(uint256 amount, address to) external nonpayable
-```
-
-rescues unused ETH from the contract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | the amount to rescue |
-| to | address | the recipient |
-
-### rewardTokens
-
-```solidity
-function rewardTokens(uint256) external view returns (address)
+function setFeeRecipient(address recipient) external nonpayable
 ```
 
 
@@ -322,61 +232,7 @@ function rewardTokens(uint256) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### setDepositThreshold
-
-```solidity
-function setDepositThreshold(uint256 amount) external nonpayable
-```
-
-Sets the deposit threshold
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | The new threshold amount |
-
-### setSlippage
-
-```solidity
-function setSlippage(uint256 _val) external nonpayable
-```
-
-sets the slippage used in swap operations
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _val | uint256 | the new slippage amount |
-
-### setSlippageIn
-
-```solidity
-function setSlippageIn(uint256 _val) external nonpayable
-```
-
-sets the slippage used in bptIn operation
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _val | uint256 | the new slippage amount |
+| recipient | address | undefined |
 
 ### tokenId
 
@@ -430,39 +286,23 @@ Transfers ownership to `newOwner`. Either directly or claimable by the new pendi
 | direct | bool | True if `newOwner` should be set immediately. False if `newOwner` needs to use `claimOwnership`. |
 | renounce | bool | Allows the `newOwner` to be `address(0)` if `direct` and `renounce` is True. Has no effect otherwise. |
 
-### updateCache
+### uniswapV3SwapCallback
 
 ```solidity
-function updateCache() external nonpayable returns (uint256)
+function uniswapV3SwapCallback(int256, int256, bytes data) external nonpayable
 ```
 
 
 
 
 
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### vault
-
-```solidity
-function vault() external view returns (contract IBalancerVault)
-```
-
-
-
-
-
-
-#### Returns
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IBalancerVault | undefined |
+| _0 | int256 | undefined |
+| _1 | int256 | undefined |
+| data | bytes | undefined |
 
 ### withdraw
 
@@ -481,6 +321,17 @@ Is called by the YieldBox to ask the strategy to withdraw to the user When a str
 | to | address | undefined |
 | amount | uint256 | undefined |
 
+### withdrawFees
+
+```solidity
+function withdrawFees() external nonpayable
+```
+
+
+
+
+
+
 ### withdrawable
 
 ```solidity
@@ -497,23 +348,6 @@ Returns the maximum amount that can be withdrawn
 | Name | Type | Description |
 |---|---|---|
 | amount | uint256 | undefined |
-
-### wrappedNative
-
-```solidity
-function wrappedNative() external view returns (contract IERC20)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20 | undefined |
 
 ### yieldBox
 
@@ -536,72 +370,6 @@ Returns the address of the yieldBox that this strategy is for
 
 ## Events
 
-### AmountDeposited
-
-```solidity
-event AmountDeposited(uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount  | uint256 | undefined |
-
-### AmountQueued
-
-```solidity
-event AmountQueued(uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount  | uint256 | undefined |
-
-### AmountWithdrawn
-
-```solidity
-event AmountWithdrawn(address indexed to, uint256 amount)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| to `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
-### DepositThreshold
-
-```solidity
-event DepositThreshold(uint256 _old, uint256 _new)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _old  | uint256 | undefined |
-| _new  | uint256 | undefined |
-
 ### OwnershipTransferred
 
 ```solidity
@@ -618,22 +386,6 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 |---|---|---|
 | previousOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
-
-### RewardTokens
-
-```solidity
-event RewardTokens(uint256 _count)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _count  | uint256 | undefined |
 
 
 
