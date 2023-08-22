@@ -137,8 +137,13 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @notice Sets the Swapper address
     /// @param _swapper The new swapper address
     function setMultiSwapper(address _swapper) external onlyOwner {
+        rewardToken.approve(address(swapper), 0);
+
         emit MultiSwapper(address(swapper), _swapper);
         swapper = ISwapper(_swapper);
+
+        rewardToken.approve(_swapper, 0);
+        rewardToken.approve(_swapper, type(uint256).max);
     }
 
     // ************************ //
