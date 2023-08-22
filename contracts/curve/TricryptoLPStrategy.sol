@@ -129,6 +129,7 @@ contract TricryptoLPStrategy is
             );
             result = swapper.getOutputAmount(swapData, "");
             result = lpGetter.calcWethToLp(result);
+            result = result - (result * _slippage) / 10_000; //0.5%
         }
     }
 
