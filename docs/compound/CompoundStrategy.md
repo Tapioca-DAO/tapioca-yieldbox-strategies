@@ -44,6 +44,17 @@ Returns the maximum amount that can be withdrawn for a low gas fee When more tha
 |---|---|---|
 | amount | uint256 | undefined |
 
+### checkUpdateComptroller
+
+```solidity
+function checkUpdateComptroller() external nonpayable
+```
+
+updates `comptroller` state variable
+
+
+
+
 ### claimOwnership
 
 ```solidity
@@ -74,7 +85,7 @@ function compound(bytes) external nonpayable
 ### compoundAmount
 
 ```solidity
-function compoundAmount() external pure returns (uint256 result)
+function compoundAmount() external view returns (uint256 result)
 ```
 
 returns compounded amounts in wrappedNative
@@ -87,6 +98,23 @@ returns compounded amounts in wrappedNative
 | Name | Type | Description |
 |---|---|---|
 | result | uint256 | undefined |
+
+### comptroller
+
+```solidity
+function comptroller() external view returns (contract IComptroller)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IComptroller | undefined |
 
 ### contractAddress
 
@@ -273,6 +301,55 @@ Sets the deposit threshold
 |---|---|---|
 | amount | uint256 | The new threshold amount |
 
+### setMultiSwapper
+
+```solidity
+function setMultiSwapper(address _swapper) external nonpayable
+```
+
+Sets the Swapper address
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _swapper | address | The new swapper address |
+
+### setSlippage
+
+```solidity
+function setSlippage(uint256 _val) external nonpayable
+```
+
+sets the slippage used in swap operations
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | uint256 | the new slippage amount |
+
+### swapper
+
+```solidity
+function swapper() external view returns (contract ISwapper)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract ISwapper | undefined |
+
 ### tokenId
 
 ```solidity
@@ -446,6 +523,23 @@ event AmountWithdrawn(address indexed to, uint256 amount)
 | to `indexed` | address | undefined |
 | amount  | uint256 | undefined |
 
+### ComptrollerUpdated
+
+```solidity
+event ComptrollerUpdated(address indexed _old, address _new)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _old `indexed` | address | undefined |
+| _new  | address | undefined |
+
 ### DepositThreshold
 
 ```solidity
@@ -462,6 +556,23 @@ event DepositThreshold(uint256 _old, uint256 _new)
 |---|---|---|
 | _old  | uint256 | undefined |
 | _new  | uint256 | undefined |
+
+### MultiSwapper
+
+```solidity
+event MultiSwapper(address indexed _old, address indexed _new)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _old `indexed` | address | undefined |
+| _new `indexed` | address | undefined |
 
 ### OwnershipTransferred
 

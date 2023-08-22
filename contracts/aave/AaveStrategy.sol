@@ -46,6 +46,8 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed
     uint256 public depositThreshold;
 
+    uint256 private _slippage = 50;
+
     // ************** //
     // *** EVENTS *** //
     // ************** //
@@ -112,13 +114,19 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false
             );
             result = swapper.getOutputAmount(swapData, "");
-            result = result - (result * 50) / 10_000; //0.5%
+            result = result - (result * _slippage) / 10_000; //0.5%
         }
     }
 
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
+    }
+
     /// @notice Sets the deposit threshold
     /// @param amount The new threshold amount
     function setDepositThreshold(uint256 amount) external onlyOwner {
@@ -191,7 +199,7 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false
             );
             uint256 calcAmount = swapper.getOutputAmount(swapData, "");
-            uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
+            uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
             swapper.swap(swapData, minAmount, address(this), "");
 
             //stake if > depositThreshold

@@ -8,11 +8,14 @@ contract CTokenMock is ERC20Mock {
     using SafeERC20 for IERC20;
 
     address public underlying;
+    address public comptrollerAddr;
 
     constructor(
-        address _underlying
+        address _underlying,
+        address _comptroller
     ) ERC20Mock("CTokenMock", "CTM", 100_000 * 1e18, 18, msg.sender) {
         underlying = _underlying;
+        comptrollerAddr = _comptroller;
     }
 
     function exchangeRateStored() external pure returns (uint256) {
@@ -34,5 +37,9 @@ contract CTokenMock is ERC20Mock {
         payable(msg.sender).transfer(redeemTokens);
         _burn(msg.sender, redeemTokens);
         return redeemTokens;
+    }
+
+    function comptroller() external view returns (address) {
+        return comptrollerAddr;
     }
 }

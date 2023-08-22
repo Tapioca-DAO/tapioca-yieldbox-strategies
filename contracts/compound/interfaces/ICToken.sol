@@ -19,4 +19,6 @@ interface ICToken {
     function underlying() external view returns (address);
 
     function accrueInterest() external returns (uint256);
+
+    function comptroller() external view returns (address);
 }

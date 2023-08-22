@@ -10,7 +10,9 @@ import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
 import "../../tapioca-periph/contracts/interfaces/INative.sol";
+import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 import "./interfaces/ICToken.sol";
+import "./interfaces/IComptroller.sol";
 
 /*
 
@@ -34,26 +36,37 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     IERC20 public immutable wrappedNative;
 
     ICToken public immutable cToken;
+    IComptroller public comptroller;
+
+    ISwapper public swapper;
 
     /// @notice Queues tokens up to depositThreshold
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Yearn is performed
     uint256 public depositThreshold;
 
+    uint256 private _slippage = 50;
+
     // ************** //
     // *** EVENTS *** //
     // ************** //
+    event MultiSwapper(address indexed _old, address indexed _new);
     event DepositThreshold(uint256 _old, uint256 _new);
     event AmountQueued(uint256 amount);
     event AmountDeposited(uint256 amount);
     event AmountWithdrawn(address indexed to, uint256 amount);
+    event ComptrollerUpdated(address indexed _old, address _new);
 
     constructor(
         IYieldBox _yieldBox,
         address _token,
-        address _cToken
+        address _cToken,
+        address _multiSwapper
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
+        swapper = ISwapper(_multiSwapper);
+
         cToken = ICToken(_cToken);
+        comptroller = IComptroller(cToken.comptroller());
 
         wrappedNative.approve(_cToken, 0);
         wrappedNative.approve(_cToken, type(uint256).max);
@@ -78,13 +91,50 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     }
 
     /// @notice returns compounded amounts in wrappedNative
-    function compoundAmount() external pure returns (uint256 result) {
+    function compoundAmount() external view returns (uint256 result) {
+        uint256 claimable = comptroller.compReceivable(address(this));
+        result = 0;
+        if (claimable > 0) {
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                comptroller.getCompAddress(),
+                address(wrappedNative),
+                claimable,
+                0,
+                false,
+                false
+            );
+            result = swapper.getOutputAmount(swapData, "");
+            result = result - (result * _slippage) / 10_000; //0.5%
+        }
+
         return 0;
     }
 
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
+    }
+
+    /// @notice Sets the Swapper address
+    /// @param _swapper The new swapper address
+    function setMultiSwapper(address _swapper) external onlyOwner {
+        emit MultiSwapper(address(swapper), _swapper);
+        swapper = ISwapper(_swapper);
+    }
+
+    /// @notice updates `comptroller` state variable
+    function checkUpdateComptroller() external onlyOwner {
+        address newComptroller = cToken.comptroller();
+        if (newComptroller != address(comptroller)) {
+            emit ComptrollerUpdated(address(comptroller), newComptroller);
+            comptroller = IComptroller(newComptroller);
+        }
+    }
+
     /// @notice rescues unused ETH from the contract
     /// @param amount the amount to rescue
     /// @param to the recipient
@@ -103,7 +153,38 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory) public {}
+    function compound(bytes memory) public {
+        uint256 claimable = comptroller.compReceivable(address(this));
+
+        if (claimable > 0) {
+            comptroller.claimComp(address(this));
+        }
+
+        address compAddress = comptroller.getCompAddress();
+        uint256 balanceAfter = IERC20(compAddress).balanceOf(address(this));
+        if (balanceAfter > 0) {
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                compAddress,
+                address(wrappedNative),
+                balanceAfter,
+                0,
+                false,
+                false
+            );
+            uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+            uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
+            swapper.swap(swapData, minAmount, address(this), "");
+
+            //stake if > depositThreshold
+            uint256 queued = wrappedNative.balanceOf(address(this));
+            if (queued > depositThreshold) {
+                INative(address(wrappedNative)).withdraw(queued);
+                cToken.mint{value: queued}();
+                emit AmountDeposited(queued);
+            }
+            emit AmountDeposited(queued);
+        }
+    }
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
