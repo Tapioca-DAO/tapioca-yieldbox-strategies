@@ -122,7 +122,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory) public {
+    function compound(bytes memory) external {
         uint256 aaveBalanceBefore = rewardToken.balanceOf(address(this));
 
         uint256 claimable = stakedRewardToken.getTotalRewardsBalance(
@@ -180,7 +180,9 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound("");
+        try AaveV3Strategy(address(this)).compound("") {} catch (
+            bytes memory
+        ) {}
 
         receiptToken.approve(address(aaveV3Pool), 0);
         receiptToken.approve(address(aaveV3Pool), type(uint256).max);
@@ -231,7 +233,9 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound("");
+            try AaveV3Strategy(address(this)).compound("") {} catch (
+                bytes memory
+            ) {}
 
             uint256 toWithdraw = amount - queued;
 
