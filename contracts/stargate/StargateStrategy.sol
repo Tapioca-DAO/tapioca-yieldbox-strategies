@@ -181,7 +181,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         );
 
         if (unclaimed > 0) {
-            lpStaking.deposit(2, 0);
+            lpStaking.deposit(lpStakingPid, 0);
         }
 
         uint256 stgBalanceAfter = stgTokenReward.balanceOf(address(this));
