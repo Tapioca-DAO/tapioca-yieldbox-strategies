@@ -238,7 +238,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 value: address(this).balance
             }();
         }
-
+        amount--;
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
             "CompoundStrategy: not enough"

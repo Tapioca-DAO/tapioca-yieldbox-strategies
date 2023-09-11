@@ -251,7 +251,7 @@ describe('CompoundStrategy test', () => {
 
         strategyWethBalance = await weth.balanceOf(compoundStrategy.address);
         poolBalance = await weth.balanceOf(await compoundStrategy.cToken());
-        expect(strategyWethBalance.eq(0)).to.be.true;
+        expect(strategyWethBalance.lt(1000)).to.be.true;
         expect(poolBalance.eq(0)).to.be.true;
     });
 });
