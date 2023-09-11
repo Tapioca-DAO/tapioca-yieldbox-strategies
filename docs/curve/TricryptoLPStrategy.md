@@ -38,6 +38,23 @@ Needs to be called by `pendingOwner` to claim ownership.
 
 
 
+### claimableRewardsCache
+
+```solidity
+function claimableRewardsCache() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### compound
 
 ```solidity
@@ -440,6 +457,23 @@ Transfers ownership to `newOwner`. Either directly or claimable by the new pendi
 | newOwner | address | Address of the new owner. |
 | direct | bool | True if `newOwner` should be set immediately. False if `newOwner` needs to use `claimOwnership`. |
 | renounce | bool | Allows the `newOwner` to be `address(0)` if `direct` and `renounce` is True. Has no effect otherwise. |
+
+### updateClaimableRewardsCache
+
+```solidity
+function updateClaimableRewardsCache() external nonpayable returns (uint256 current)
+```
+
+update claimable rewards cache
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| current | uint256 | undefined |
 
 ### withdraw
 
