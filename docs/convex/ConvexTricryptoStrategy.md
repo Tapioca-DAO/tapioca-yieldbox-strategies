@@ -122,6 +122,28 @@ Returns the total value the strategy holds (principle + gain) expressed in asset
 |---|---|---|
 | amount | uint256 | undefined |
 
+### defaultSwapDatas
+
+```solidity
+function defaultSwapDatas(address) external view returns (bytes)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
 ### depositThreshold
 
 ```solidity
@@ -324,6 +346,23 @@ function rewardToken() external view returns (contract IERC20)
 | Name | Type | Description |
 |---|---|---|
 | _0 | contract IERC20 | undefined |
+
+### setDefaultSwapData
+
+```solidity
+function setDefaultSwapData(address token, bytes _data) external nonpayable
+```
+
+sets the default swap data
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| token | address | undefined |
+| _data | bytes | the new data |
 
 ### setDepositThreshold
 

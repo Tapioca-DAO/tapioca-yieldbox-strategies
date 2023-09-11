@@ -69,7 +69,7 @@ Needs to be called by `pendingOwner` to claim ownership.
 ### compound
 
 ```solidity
-function compound(bytes) external nonpayable
+function compound(bytes dexData) external nonpayable
 ```
 
 
@@ -80,7 +80,7 @@ function compound(bytes) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes | undefined |
+| dexData | bytes | undefined |
 
 ### compoundAmount
 
@@ -149,6 +149,23 @@ Returns the total value the strategy holds (principle + gain) expressed in asset
 | Name | Type | Description |
 |---|---|---|
 | amount | uint256 | undefined |
+
+### defaultSwapData
+
+```solidity
+function defaultSwapData() external view returns (bytes)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
 
 ### depositThreshold
 
@@ -284,6 +301,22 @@ rescues unused ETH from the contract
 |---|---|---|
 | amount | uint256 | the amount to rescue |
 | to | address | the recipient |
+
+### setDefaultSwapData
+
+```solidity
+function setDefaultSwapData(bytes _data) external nonpayable
+```
+
+sets the default swap data
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _data | bytes | the new data |
 
 ### setDepositThreshold
 

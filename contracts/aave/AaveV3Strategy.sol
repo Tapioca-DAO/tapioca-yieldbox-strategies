@@ -31,6 +31,8 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed
     uint256 public depositThreshold;
 
+    bytes public defaultSwapData;
+
     uint256 private _slippage = 50;
 
     // ************** //
@@ -92,7 +94,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false,
                 false
             );
-            result = swapper.getOutputAmount(swapData, "");
+            result = swapper.getOutputAmount(swapData, defaultSwapData);
             result = result - (result * _slippage) / 10_000; //0.5%
         }
     }
@@ -100,6 +102,12 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the default swap data
+    /// @param _data the new data
+    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
+        defaultSwapData = _data;
+    }
+
     /// @notice Sets the Swapper address
     /// @param _swapper The new swapper address
     function setMultiSwapper(address _swapper) external onlyOwner {
@@ -122,7 +130,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory) external {
+    function compound(bytes memory dexData) external {
         uint256 aaveBalanceBefore = rewardToken.balanceOf(address(this));
 
         uint256 claimable = stakedRewardToken.getTotalRewardsBalance(
@@ -163,7 +171,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false,
                 false
             );
-            uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+            uint256 calcAmount = swapper.getOutputAmount(swapData, dexData);
             uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
             rewardToken.approve(address(swapper), 0);
             rewardToken.approve(address(swapper), aaveAmount);
@@ -171,7 +179,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 swapData,
                 minAmount,
                 address(this),
-                ""
+                dexData
             );
 
             _performDeposit(amountOut);
@@ -180,7 +188,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        try AaveV3Strategy(address(this)).compound("") {} catch (
+        try AaveV3Strategy(address(this)).compound(defaultSwapData) {} catch (
             bytes memory
         ) {}
 
@@ -233,9 +241,9 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            try AaveV3Strategy(address(this)).compound("") {} catch (
-                bytes memory
-            ) {}
+            try
+                AaveV3Strategy(address(this)).compound(defaultSwapData)
+            {} catch (bytes memory) {}
 
             uint256 toWithdraw = amount - queued;
 
