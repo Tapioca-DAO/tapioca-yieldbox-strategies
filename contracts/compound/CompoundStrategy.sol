@@ -13,6 +13,7 @@ import "../../tapioca-periph/contracts/interfaces/INative.sol";
 import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 import "./interfaces/ICToken.sol";
 import "./interfaces/IComptroller.sol";
+import "./libraries/LibCompound.sol";
 
 /*
 
@@ -202,7 +203,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************* //
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 shares = cToken.balanceOf(address(this));
-        uint256 pricePerShare = cToken.exchangeRateStored();
+        uint256 pricePerShare = LibCompound.viewExchangeRate(cToken);
         uint256 invested = (shares * pricePerShare) / (10 ** 18);
         uint256 queued = wrappedNative.balanceOf(address(this));
         return queued + invested;

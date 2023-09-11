@@ -21,4 +21,18 @@ interface ICToken {
     function accrueInterest() external returns (uint256);
 
     function comptroller() external view returns (address);
+
+    function accrualBlockNumber() external view returns (uint256);
+
+    function getCash() external view returns (uint256);
+
+    function totalBorrows() external view returns (uint256);
+
+    function totalReserves() external view returns (uint256);
+
+    function borrowRatePerBlock() external view returns (uint256);
+
+    function reserveFactorMantissa() external view returns (uint256);
+
+    function totalSupply() external view returns (uint256);
 }

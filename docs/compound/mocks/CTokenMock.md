@@ -44,6 +44,23 @@ function MINT_WINDOW() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### accrualBlockNumber
+
+```solidity
+function accrualBlockNumber() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### allowance
 
 ```solidity
@@ -105,6 +122,23 @@ function balanceOf(address account) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### borrowRatePerBlock
+
+```solidity
+function borrowRatePerBlock() external pure returns (uint256)
+```
+
+
+
+
+
 
 #### Returns
 
@@ -245,6 +279,23 @@ function freeMint(uint256 _val) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _val | uint256 | undefined |
+
+### getCash
+
+```solidity
+function getCash() external pure returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### hasMintRestrictions
 
@@ -486,6 +537,23 @@ function renounceOwnership() external nonpayable
 *Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
 
 
+### reserveFactorMantissa
+
+```solidity
+function reserveFactorMantissa() external pure returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### symbol
 
 ```solidity
@@ -513,6 +581,40 @@ function toggleRestrictions() external nonpayable
 
 
 
+
+### totalBorrows
+
+```solidity
+function totalBorrows() external pure returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### totalReserves
+
+```solidity
+function totalReserves() external pure returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### totalSupply
 
