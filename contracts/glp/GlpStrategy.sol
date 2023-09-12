@@ -50,6 +50,8 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     address public feeRecipient;
     uint256 public feesPending;
 
+    bool public paused;
+
     constructor(
         IYieldBox _yieldBox,
         IGmxRewardRouterV2 _gmxRewardRouter,
@@ -101,6 +103,12 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         _vestByEsGmx();
     }
 
+    /// @notice updates the pause state
+    /// @param _val the new state
+    function updatePaused(bool _val) external onlyOwner {
+        paused = _val;
+    }
+
     function harvestGmx(
         uint256 priceNum,
         uint256 priceDenom
@@ -135,6 +143,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     }
 
     function _deposited(uint256 /* amount */) internal override {
+        require(!paused, "Stargate: paused");
         harvest();
     }
 

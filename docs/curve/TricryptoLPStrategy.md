@@ -308,6 +308,23 @@ function owner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### paused
+
+```solidity
+function paused() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### pendingOwner
 
 ```solidity
@@ -507,6 +524,22 @@ update claimable rewards cache
 | Name | Type | Description |
 |---|---|---|
 | current | uint256 | undefined |
+
+### updatePaused
+
+```solidity
+function updatePaused(bool _val) external nonpayable
+```
+
+updates the pause state
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | bool | the new state |
 
 ### withdraw
 

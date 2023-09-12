@@ -268,6 +268,23 @@ function owner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### paused
+
+```solidity
+function paused() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### pendingOwner
 
 ```solidity
@@ -434,6 +451,22 @@ Transfers ownership to `newOwner`. Either directly or claimable by the new pendi
 | newOwner | address | Address of the new owner. |
 | direct | bool | True if `newOwner` should be set immediately. False if `newOwner` needs to use `claimOwnership`. |
 | renounce | bool | Allows the `newOwner` to be `address(0)` if `direct` and `renounce` is True. Has no effect otherwise. |
+
+### updatePaused
+
+```solidity
+function updatePaused(bool _val) external nonpayable
+```
+
+updates the pause state
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | bool | the new state |
 
 ### withdraw
 

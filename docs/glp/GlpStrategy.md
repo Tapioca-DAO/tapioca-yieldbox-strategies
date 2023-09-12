@@ -201,6 +201,23 @@ function owner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### paused
+
+```solidity
+function paused() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### pendingOwner
 
 ```solidity
@@ -303,6 +320,22 @@ function uniswapV3SwapCallback(int256, int256, bytes data) external nonpayable
 | _0 | int256 | undefined |
 | _1 | int256 | undefined |
 | data | bytes | undefined |
+
+### updatePaused
+
+```solidity
+function updatePaused(bool _val) external nonpayable
+```
+
+updates the pause state
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | bool | the new state |
 
 ### withdraw
 
