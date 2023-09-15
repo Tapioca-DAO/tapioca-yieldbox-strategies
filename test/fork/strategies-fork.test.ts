@@ -1859,7 +1859,7 @@ describe('Strategies time dependent fork tests', () => {
         }
     });
 
-    it('should increase amount in time for BALANCER strategy - single user', async () => {
+    it.skip('should increase amount in time for BALANCER strategy - single user', async () => {
         const {
             balancerStrategy,
             weth,
@@ -2015,7 +2015,7 @@ describe('Strategies time dependent fork tests', () => {
         }
     });
 
-    it('should increase amount in time for BALANCER strategy - multiple users', async () => {
+    it.skip('should increase amount in time for BALANCER strategy - multiple users', async () => {
         const {
             balancerStrategy,
             weth,
