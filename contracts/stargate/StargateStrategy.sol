@@ -262,7 +262,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         //amount is the LP token; convert it to WETH
         (bool success, uint256 oraclePrice) = oracle.peek(oracleData);
-        require(success, "Stargat: oracle call failed");
+        require(success, "Stargate: oracle call failed");
         amount = (amount * oraclePrice) / 1e18;
 
         uint256 claimableRewards = compoundAmount();
