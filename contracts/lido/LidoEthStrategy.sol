@@ -174,6 +174,8 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         result = curveStEthPool.exchange(1, 0, toWithdraw, minAmount);
 
         INative(address(wrappedNative)).deposit{value: result}();
+
+        paused = true;
     }
 
     // ************************* //

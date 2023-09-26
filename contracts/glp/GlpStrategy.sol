@@ -146,7 +146,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             glpVester.withdraw();
         }
 
-        return IERC20(contractAddress).balanceOf(address(this));
+        result = IERC20(contractAddress).balanceOf(address(this));
+
+        paused = true;
     }
 
     function _currentBalance() internal view override returns (uint256 amount) {

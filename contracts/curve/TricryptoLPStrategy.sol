@@ -234,6 +234,8 @@ contract TricryptoLPStrategy is
 
         result = lpGauge.balanceOf(address(this));
         lpGauge.withdraw(result, true);
+
+        paused = true;
     }
 
     // ************************* //

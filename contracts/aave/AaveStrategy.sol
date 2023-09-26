@@ -250,6 +250,8 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             toWithdraw,
             address(this)
         );
+
+        paused = true;
     }
 
     // ************************* //

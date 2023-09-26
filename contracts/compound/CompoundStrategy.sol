@@ -211,6 +211,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         INative(address(wrappedNative)).deposit{value: address(this).balance}();
 
         result = address(this).balance;
+        paused = true;
     }
 
     // ************************* //
