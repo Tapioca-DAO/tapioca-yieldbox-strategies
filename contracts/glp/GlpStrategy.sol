@@ -137,6 +137,18 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         }
     }
 
+    /// @notice withdraws everythig from the strategy
+    function emergencyWithdraw() external onlyOwner returns (uint256 result) {
+        _claimRewards();
+        _buyGlp();
+        uint256 freeGlp = stakedGlpTracker.balanceOf(address(this));
+        if (freeGlp > 0) {
+            glpVester.withdraw();
+        }
+
+        return IERC20(contractAddress).balanceOf(address(this));
+    }
+
     function _currentBalance() internal view override returns (uint256 amount) {
         // This _should_ included both free and "reserved" GLP:
         amount = IERC20(contractAddress).balanceOf(address(this));
