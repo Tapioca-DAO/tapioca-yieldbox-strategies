@@ -274,6 +274,40 @@ Returns the name of this strategy
 |---|---|---|
 | name_ | string | undefined |
 
+### oracle
+
+```solidity
+function oracle() external view returns (contract IOracle)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IOracle | undefined |
+
+### oracleData
+
+```solidity
+function oracleData() external view returns (bytes)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
 ### owner
 
 ```solidity

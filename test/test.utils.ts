@@ -685,6 +685,13 @@ async function registerStargateStrategy(
         swapperAddress = stargateUniV3SwapperMock.address;
     }
 
+    const OracleMock = new OracleMock__factory((await ethers.getSigners())[0]);
+    const oracle = await OracleMock.deploy(
+        'STGETHLP-WETH',
+        'STGETHLP',
+        (1e18).toString(),
+    );
+
     const stargateStrategy = await (
         await ethers.getContractFactory('StargateStrategy')
     ).deploy(
@@ -696,6 +703,8 @@ async function registerStargateStrategy(
         lpToken,
         swapperAddress,
         poolAddress,
+        oracle.address,
+        ethers.utils.toUtf8Bytes(''),
     );
     await stargateStrategy.deployed();
 
