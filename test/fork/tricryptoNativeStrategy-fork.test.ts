@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerFork } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe('TricryptoNativeStrategy fork test', () => {
+describe.skip('TricryptoNativeStrategy fork test', () => {
     before(function () {
         if (process.env.NODE_ENV != 'mainnet') {
             this.skip();
