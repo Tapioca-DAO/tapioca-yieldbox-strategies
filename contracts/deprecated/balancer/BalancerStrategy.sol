@@ -54,11 +54,11 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************** //
     // *** EVENTS *** //
     // ************** //
-    event RewardTokens(uint256 _count);
-    event DepositThreshold(uint256 _old, uint256 _new);
-    event AmountQueued(uint256 amount);
-    event AmountDeposited(uint256 amount);
-    event AmountWithdrawn(address indexed to, uint256 amount);
+    event RewardTokens(uint256 indexed _count);
+    event DepositThreshold(uint256 indexed _old, uint256 indexed _new);
+    event AmountQueued(uint256 indexed amount);
+    event AmountDeposited(uint256 indexed amount);
+    event AmountWithdrawn(address indexed to, uint256 indexed amount);
 
     constructor(
         IYieldBox _yieldBox,
@@ -194,7 +194,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         int256 index = -1;
         uint256[] memory maxAmountsIn = new uint256[](poolTokens.length);
-        for (uint256 i = 0; i < poolTokens.length; i++) {
+        for (uint256 i; i < poolTokens.length; i++) {
             if (poolTokens[i] == address(wrappedNative)) {
                 maxAmountsIn[i] = amount;
                 index = int256(i);
@@ -263,7 +263,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         (address[] memory poolTokens, , ) = vault.getPoolTokens(poolId);
         int256 index = -1;
         uint256[] memory minAmountsOut = new uint256[](poolTokens.length);
-        for (uint256 i = 0; i < poolTokens.length; i++) {
+        for (uint256 i; i < poolTokens.length; i++) {
             if (poolTokens[i] == address(wrappedNative)) {
                 minAmountsOut[i] = amount;
                 index = int256(i);
@@ -315,7 +315,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         (address[] memory poolTokens, , ) = vault.getPoolTokens(poolId);
         uint256 index;
         uint256[] memory minAmountsOut = new uint256[](poolTokens.length);
-        for (uint256 i = 0; i < poolTokens.length; i++) {
+        for (uint256 i; i < poolTokens.length; i++) {
             if (poolTokens[i] == address(wrappedNative)) {
                 index = i;
             }

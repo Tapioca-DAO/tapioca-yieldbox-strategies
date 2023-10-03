@@ -55,13 +55,13 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************** //
     // *** EVENTS *** //
     // ************** //
-    event DepositThreshold(uint256 _old, uint256 _new);
-    event AmountQueued(uint256 amount);
-    event AmountDeposited(uint256 amount);
-    event AmountWithdrawn(address indexed to, uint256 amount);
-    event OracleUpdated(address indexed _old, address _new);
+    event DepositThreshold(uint256 indexed _old, uint256 indexed _new);
+    event AmountQueued(uint256 indexed amount);
+    event AmountDeposited(uint256 indexed amount);
+    event AmountWithdrawn(address indexed to, uint256 indexed amount);
+    event OracleUpdated(address indexed _old, address indexed _new);
     event OracleDataUpdated();
-    event OracleDeviationUpdated(uint256 _old, uint256 _new);
+    event OracleDeviationUpdated(uint256 indexed _old, uint256 indexed _new);
 
     constructor(
         IYieldBox _yieldBox,

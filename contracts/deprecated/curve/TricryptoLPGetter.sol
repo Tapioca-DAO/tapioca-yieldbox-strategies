@@ -43,14 +43,14 @@ contract TricryptoLPGetter is BoringOwnable, ReentrancyGuard {
     /// @notice event emitted when liquidity was added
     event AddedLiquidity(
         address indexed token,
-        uint256 amount,
-        uint256 obtainedLP
+        uint256 indexed amount,
+        uint256 indexed obtainedLP
     );
     /// @notice event emitted when liquidity was added
     event RemovedLiquidity(
         address indexed token,
-        uint256 amountLP,
-        uint256 obtainedAssets
+        uint256 indexed amountLP,
+        uint256 indexed obtainedAssets
     );
 
     constructor(

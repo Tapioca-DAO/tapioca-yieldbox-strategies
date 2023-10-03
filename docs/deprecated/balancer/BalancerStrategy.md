@@ -605,7 +605,7 @@ Returns the address of the yieldBox that this strategy is for
 ### AmountDeposited
 
 ```solidity
-event AmountDeposited(uint256 amount)
+event AmountDeposited(uint256 indexed amount)
 ```
 
 
@@ -616,12 +616,12 @@ event AmountDeposited(uint256 amount)
 
 | Name | Type | Description |
 |---|---|---|
-| amount  | uint256 | undefined |
+| amount `indexed` | uint256 | undefined |
 
 ### AmountQueued
 
 ```solidity
-event AmountQueued(uint256 amount)
+event AmountQueued(uint256 indexed amount)
 ```
 
 
@@ -632,12 +632,12 @@ event AmountQueued(uint256 amount)
 
 | Name | Type | Description |
 |---|---|---|
-| amount  | uint256 | undefined |
+| amount `indexed` | uint256 | undefined |
 
 ### AmountWithdrawn
 
 ```solidity
-event AmountWithdrawn(address indexed to, uint256 amount)
+event AmountWithdrawn(address indexed to, uint256 indexed amount)
 ```
 
 
@@ -649,12 +649,12 @@ event AmountWithdrawn(address indexed to, uint256 amount)
 | Name | Type | Description |
 |---|---|---|
 | to `indexed` | address | undefined |
-| amount  | uint256 | undefined |
+| amount `indexed` | uint256 | undefined |
 
 ### DepositThreshold
 
 ```solidity
-event DepositThreshold(uint256 _old, uint256 _new)
+event DepositThreshold(uint256 indexed _old, uint256 indexed _new)
 ```
 
 
@@ -665,8 +665,8 @@ event DepositThreshold(uint256 _old, uint256 _new)
 
 | Name | Type | Description |
 |---|---|---|
-| _old  | uint256 | undefined |
-| _new  | uint256 | undefined |
+| _old `indexed` | uint256 | undefined |
+| _new `indexed` | uint256 | undefined |
 
 ### OwnershipTransferred
 
@@ -688,7 +688,7 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 ### RewardTokens
 
 ```solidity
-event RewardTokens(uint256 _count)
+event RewardTokens(uint256 indexed _count)
 ```
 
 
@@ -699,7 +699,7 @@ event RewardTokens(uint256 _count)
 
 | Name | Type | Description |
 |---|---|---|
-| _count  | uint256 | undefined |
+| _count `indexed` | uint256 | undefined |
 
 
 

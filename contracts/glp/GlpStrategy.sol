@@ -24,10 +24,6 @@ import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     using BoringERC20 for IERC20;
 
-    string public constant override name = "sGLP";
-    string public constant override description =
-        "Holds staked GLP tokens and compounds the rewards";
-
     IERC20 private immutable gmx;
     IERC20 private immutable weth;
 
@@ -103,6 +99,21 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         wethGlpOracleData = _wethGlpOracleData;
         gmxGlpOracle = _gmxGlpOracle;
         gmxGlpOracleData = _gmxGlpOracleData;
+    }
+
+    /// @notice Returns the name of this strategy
+    function name() external pure override returns (string memory name_) {
+        return "sGLP";
+    }
+
+    /// @notice Returns the description of this strategy
+    function description()
+        external
+        pure
+        override
+        returns (string memory description_)
+    {
+        return "Holds staked GLP tokens and compounds the rewards";
     }
 
     // (For the GMX-ETH pool)

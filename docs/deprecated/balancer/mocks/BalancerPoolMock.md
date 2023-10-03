@@ -562,7 +562,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 ### Deposit
 
 ```solidity
-event Deposit(address indexed dst, uint256 wad)
+event Deposit(address indexed dst, uint256 indexed wad)
 ```
 
 
@@ -574,7 +574,7 @@ event Deposit(address indexed dst, uint256 wad)
 | Name | Type | Description |
 |---|---|---|
 | dst `indexed` | address | undefined |
-| wad  | uint256 | undefined |
+| wad `indexed` | uint256 | undefined |
 
 ### OwnershipTransferred
 
@@ -614,7 +614,7 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 ### Withdrawal
 
 ```solidity
-event Withdrawal(address indexed src, uint256 wad)
+event Withdrawal(address indexed src, uint256 indexed wad)
 ```
 
 
@@ -626,7 +626,7 @@ event Withdrawal(address indexed src, uint256 wad)
 | Name | Type | Description |
 |---|---|---|
 | src `indexed` | address | undefined |
-| wad  | uint256 | undefined |
+| wad `indexed` | uint256 | undefined |
 
 
 

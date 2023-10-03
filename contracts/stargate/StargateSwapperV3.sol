@@ -31,7 +31,7 @@ contract StargateSwapperV3 {
     // ************** //
     // *** EVENTS *** //
     // ************** //
-    event PoolFee(uint256 _old, uint256 _new);
+    event PoolFee(uint256 indexed _old, uint256 indexed _new);
 
     constructor(ISwapRouter _swapRouter) {
         swapRouter = _swapRouter;
