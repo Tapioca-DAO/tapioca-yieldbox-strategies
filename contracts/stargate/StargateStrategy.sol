@@ -13,6 +13,7 @@ import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
 import "./interfaces/IRouter.sol";
 import "./interfaces/IRouterETH.sol";
 import "./interfaces/ILPStaking.sol";
+import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 import "../../tapioca-periph/contracts/interfaces/INative.sol";
 
 /*
@@ -59,6 +60,9 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     bytes public defaultSwapData;
 
+    IOracle public oracle;
+    bytes public oracleData;
+
     uint256 private _slippage = 50;
 
     // ************** //
@@ -78,7 +82,9 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 _stakingPid,
         address _lpToken,
         address _swapper,
-        address _stgEthPool
+        address _stgEthPool,
+        address _oracle,
+        bytes memory _oracleData
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
         swapper = ISwapper(_swapper);
@@ -101,6 +107,9 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         stgTokenReward.approve(_swapper, 0);
         stgTokenReward.approve(_swapper, type(uint256).max);
+
+        oracle = IOracle(_oracle);
+        oracleData = _oracleData;
     }
 
     // ********************** //
@@ -248,6 +257,12 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 queued = wrappedNative.balanceOf(address(this));
         (amount, ) = lpStaking.userInfo(lpStakingPid, address(this));
+
+        //amount is the LP token; convert it to WETH
+        (bool success, uint256 oraclePrice) = oracle.peek(oracleData);
+        require(success, "Stargat: oracle call failed");
+        amount = (amount * oraclePrice) / 1e18;
+
         uint256 claimableRewards = compoundAmount();
         return amount + queued + claimableRewards;
     }
