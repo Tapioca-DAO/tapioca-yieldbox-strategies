@@ -181,10 +181,16 @@ contract ConvexTricryptoStrategy is
     /// @notice Sets the Tricrypto LP Getter
     /// @param _lpGetter the new address
     function setTricryptoLPGetter(address _lpGetter) external onlyOwner {
-        emit LPGetterSet(address(lpGetter), _lpGetter);
+        // reset old approvals
         wrappedNative.approve(address(lpGetter), 0);
+        lpToken.approve(address(lpGetter), 0);
+
+        emit LPGetterSet(address(lpGetter), _lpGetter);
         lpGetter = ITricryptoLPGetter(_lpGetter);
+        
+        // set new approvals
         wrappedNative.approve(_lpGetter, type(uint256).max);
+        lpToken.approve(_lpGetter, type(uint256).max);
     }
 
     // ************************ //
