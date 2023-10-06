@@ -49,6 +49,7 @@ contract TricryptoLPStrategy is
     /// @notice Queues tokens up to depositThreshold
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Curve is performed
     uint256 public depositThreshold;
+    uint256 public claimableRewardsCache;
 
     uint256 private _slippage = 50;
 
@@ -106,23 +107,22 @@ contract TricryptoLPStrategy is
         return "Curve-Tricrypto strategy for TricryptoLP";
     }
 
+    /// @notice update claimable rewards cache
+    function updateClaimableRewardsCache() public returns (uint256 current) {
+        current = lpGauge.claimable_tokens(address(this));
+        claimableRewardsCache = current;
+    }
+
     /// @notice returns compounded amounts in wrappedNative
     function compoundAmount() public view returns (uint256 result) {
-        (bool success, bytes memory response) = address(lpGauge).staticcall(
-            abi.encodeWithSignature("claimable_tokens(address)", address(this))
-        );
         result = 0;
-        uint256 claimable = 0;
-        if (success) {
-            claimable = abi.decode(response, (uint256));
-        }
-        if (claimable > 0) {
+        if (claimableRewardsCache > 0) {
             // claim reward, compute swap to wrappedNative and then compute LP amount
             // --
             ISwapper.SwapData memory swapData = swapper.buildSwapData(
                 address(rewardToken),
                 address(wrappedNative),
-                claimable,
+                claimableRewardsCache,
                 0,
                 false,
                 false
@@ -171,6 +171,7 @@ contract TricryptoLPStrategy is
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
     function compound(bytes memory) public {
+        claimableRewardsCache = 0;
         uint256 claimable = lpGauge.claimable_tokens(address(this));
         if (claimable > 0) {
             uint256 crvBalanceBefore = rewardToken.balanceOf(address(this));
@@ -213,6 +214,7 @@ contract TricryptoLPStrategy is
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
         compound("");
+        updateClaimableRewardsCache();
 
         result = lpGauge.balanceOf(address(this));
         lpGauge.withdraw(result, true);
@@ -238,6 +240,7 @@ contract TricryptoLPStrategy is
             return;
         }
         emit AmountQueued(amount);
+        updateClaimableRewardsCache();
     }
 
     /// @dev withdraws from Curve Tricrypto
@@ -266,5 +269,6 @@ contract TricryptoLPStrategy is
         }
 
         emit AmountWithdrawn(to, amount);
+        updateClaimableRewardsCache();
     }
 }
