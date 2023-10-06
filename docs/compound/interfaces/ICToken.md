@@ -10,6 +10,23 @@
 
 ## Methods
 
+### accrualBlockNumber
+
+```solidity
+function accrualBlockNumber() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### accrueInterest
 
 ```solidity
@@ -42,6 +59,23 @@ function balanceOf(address owner) external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | owner | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### borrowRatePerBlock
+
+```solidity
+function borrowRatePerBlock() external view returns (uint256)
+```
+
+
+
+
+
 
 #### Returns
 
@@ -117,6 +151,23 @@ function exchangeRateStored() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### getCash
+
+```solidity
+function getCash() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### mint
 
 ```solidity
@@ -165,6 +216,74 @@ function redeemUnderlying(uint256 redeemAmount) external nonpayable returns (uin
 | Name | Type | Description |
 |---|---|---|
 | redeemAmount | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### reserveFactorMantissa
+
+```solidity
+function reserveFactorMantissa() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### totalBorrows
+
+```solidity
+function totalBorrows() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### totalReserves
+
+```solidity
+function totalReserves() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### totalSupply
+
+```solidity
+function totalSupply() external view returns (uint256)
+```
+
+
+
+
+
 
 #### Returns
 

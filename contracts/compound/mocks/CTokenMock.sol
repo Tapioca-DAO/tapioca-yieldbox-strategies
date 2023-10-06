@@ -22,6 +22,30 @@ contract CTokenMock is ERC20Mock {
         return 1e18;
     }
 
+    function accrualBlockNumber() external view returns (uint256) {
+        return block.number;
+    }
+
+    function getCash() external pure returns (uint256) {
+        return 1;
+    }
+
+    function totalBorrows() external pure returns (uint256) {
+        return 1;
+    }
+
+    function totalReserves() external pure returns (uint256) {
+        return 1;
+    }
+
+    function borrowRatePerBlock() external pure returns (uint256) {
+        return 1;
+    }
+
+    function reserveFactorMantissa() external pure returns (uint256) {
+        return 1;
+    }
+
     function mint() external payable {
         freeMint(msg.value - 100);
         transfer(msg.sender, msg.value - 100);
