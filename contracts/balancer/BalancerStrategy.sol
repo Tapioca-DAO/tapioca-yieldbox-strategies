@@ -49,6 +49,8 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     uint256 private _slippageIn = 250;
     bytes public defaultSwapData;
 
+    bool public paused;
+
     // ************** //
     // *** EVENTS *** //
     // ************** //
@@ -109,6 +111,12 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice updates the pause state
+    /// @param _val the new state
+    function updatePaused(bool _val) external onlyOwner {
+        paused = _val;
+    }
+
     /// @notice sets the default swap data
     /// @param _data the new data
     function setDefaultSwapData(bytes calldata _data) external onlyOwner {
@@ -167,6 +175,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev deposits to Balancer or queues tokens if the 'depositThreshold' has not been met yet
     ///      - when depositing to Balancer, cToken is minted to this contract
     function _deposited(uint256 amount) internal override nonReentrant {
+        require(!paused, "Stargate: paused");
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
             _vaultDeposit(queued);

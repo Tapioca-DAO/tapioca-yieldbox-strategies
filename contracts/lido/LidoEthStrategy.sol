@@ -48,6 +48,8 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed
     uint256 public depositThreshold;
 
+    bool public paused;
+
     uint256 private _slippage = 50;
 
     // ************** //
@@ -105,6 +107,12 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice updates the pause state
+    /// @param _val the new state
+    function updatePaused(bool _val) external onlyOwner {
+        paused = _val;
+    }
+
     /// @notice sets the oracle config
     /// @dev values are changed only if <> than the type's default value
     /// @param _oracle the new oracle
@@ -199,6 +207,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @dev deposits to Lido or queues tokens if the 'depositThreshold' has not been met yet
     function _deposited(uint256 amount) internal override nonReentrant {
+        require(!paused, "Stargate: paused");
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
             require(!stEth.isStakingPaused(), "LidoStrategy: staking paused");

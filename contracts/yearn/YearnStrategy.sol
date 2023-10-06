@@ -40,6 +40,8 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Yearn is performed
     uint256 public depositThreshold;
 
+    bool public paused;
+
     uint256 public maxLoss;
 
     // ************** //
@@ -89,6 +91,12 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice updates the pause state
+    /// @param _val the new state
+    function updatePaused(bool _val) external onlyOwner {
+        paused = _val;
+    }
+
     /// @notice Sets the Yearn max loss param
     /// @param _val The new max loss amount
     function setMaxLoss(uint256 _val) external onlyOwner {
@@ -130,6 +138,7 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev deposits to Yearn or queues tokens if the 'depositThreshold' has not been met yet
     ///      - when depositing to Yearn, yToken is minted to this contract
     function _deposited(uint256 amount) internal override nonReentrant {
+        require(!paused, "Stargate: paused");
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
             vault.deposit(queued, address(this));

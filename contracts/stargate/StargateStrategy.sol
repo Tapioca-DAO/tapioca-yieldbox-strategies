@@ -51,6 +51,8 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     IERC20 public stgNative; //ex: stEth
     IERC20 public stgTokenReward;
 
+    bool public paused;
+
     /// @notice Queues tokens up to depositThreshold
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed
     uint256 public depositThreshold;
@@ -141,6 +143,12 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice updates the pause state
+    /// @param _val the new state
+    function updatePaused(bool _val) external onlyOwner {
+        paused = _val;
+    }
+
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
@@ -207,6 +215,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
+        paused = true;
         compound("");
 
         (uint256 toWithdraw, ) = lpStaking.userInfo(
@@ -238,6 +247,8 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev deposits to Stargate or queues tokens if the 'depositThreshold' has not been met yet
     ///      - when depositing to Stargate, aToken is minted to this contract
     function _deposited(uint256 amount) internal override nonReentrant {
+        require(!paused, "Stargate: paused");
+
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
             _stake(queued);

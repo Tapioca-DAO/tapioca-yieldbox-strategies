@@ -33,6 +33,8 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     bytes public defaultSwapData;
 
+    bool public paused;
+
     uint256 private _slippage = 50;
 
     // ************** //
@@ -102,6 +104,12 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice updates the pause state
+    /// @param _val the new state
+    function updatePaused(bool _val) external onlyOwner {
+        paused = _val;
+    }
+
     /// @notice sets the default swap data
     /// @param _data the new data
     function setDefaultSwapData(bytes calldata _data) external onlyOwner {
@@ -216,6 +224,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev deposits to AAVE or queues tokens if the 'depositThreshold' has not been met yet
     ///      - when depositing to AAVE, aToken is minted to this contract
     function _deposited(uint256 amount) internal override nonReentrant {
+        require(!paused, "Stargate: paused");
         _performDeposit(amount);
     }
 
