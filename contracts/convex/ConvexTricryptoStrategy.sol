@@ -233,17 +233,16 @@ contract ConvexTricryptoStrategy is
     // ************************ //
     function compound(bytes memory data) public {
         if (data.length == 0) return;
-        (uint256[] memory rewards, address[] memory tokens) = _executeClaim(
-            data
-        );
+        address[] memory tokens = _executeClaim(data);
 
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (rewards[i] > 0) {
-                _safeApprove(tokens[i], address(swapper), rewards[i]);
+            uint256 rewardBalance = IERC20(tokens[i]).balanceOf(address(this));
+            if (rewardBalance > 0) {
+                _safeApprove(tokens[i], address(swapper), rewardBalance);
                 ISwapper.SwapData memory swapData = swapper.buildSwapData(
                     tokens[i],
                     address(wrappedNative),
-                    rewards[i],
+                    rewardBalance,
                     0,
                     false,
                     false
@@ -263,7 +262,7 @@ contract ConvexTricryptoStrategy is
 
     function _executeClaim(
         bytes memory data
-    ) private returns (uint256[] memory, address[] memory) {
+    ) private returns (address[] memory) {
         ClaimTempData memory tempData;
 
         (
@@ -294,13 +293,6 @@ contract ConvexTricryptoStrategy is
             "ConvexTricryptoStrategy: nothing to claim for"
         );
 
-        uint256[] memory balancesBefore = new uint256[](tempData.tokens.length);
-        for (uint256 i = 0; i < tempData.tokens.length; i++) {
-            balancesBefore[i] = IERC20(tempData.tokens[i]).balanceOf(
-                address(this)
-            );
-        }
-
         zap.claimRewards(
             tempData.rewardContracts,
             tempData.extraRewardContracts,
@@ -319,12 +311,7 @@ contract ConvexTricryptoStrategy is
             );
         }
 
-        uint256[] memory finalBalances = new uint256[](tempData.tokens.length);
-        for (uint256 i = 0; i < tempData.tokens.length; i++) {
-            finalBalances[i] = balancesAfter[i] - balancesBefore[i];
-        }
-
-        return (finalBalances, tempData.tokens);
+        return tempData.tokens;
     }
 
     // ************************* //
@@ -353,7 +340,7 @@ contract ConvexTricryptoStrategy is
     function _addLiquidityAndStake(uint256 amount) private {
         uint256 calcAmount = lpGetter.calcWethToLp(amount);
         if (calcAmount >= 1e18) {
-            uint256 minAmount = calcAmount - (calcAmount * 50) / 10_000; //0.5%
+            uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
             uint256 lpAmount = lpGetter.addLiquidityWeth(amount, minAmount);
             booster.deposit(pid, lpAmount, true);
         }
@@ -374,9 +361,11 @@ contract ConvexTricryptoStrategy is
         if (amount > queued) {
             compound(bytes(""));
             uint256 lpBalance = rewardPool.balanceOf(address(this));
-            rewardPool.withdrawAndUnwrap(lpBalance, false);
+            rewardPool.withdrawAndUnwrap(lpBalance, true);
             uint256 calcWithdraw = lpGetter.calcLpToWeth(lpBalance);
-            uint256 minAmount = calcWithdraw - (calcWithdraw * 50) / 10_000; //0.5%
+            uint256 minAmount = calcWithdraw -
+                (calcWithdraw * _slippage) /
+                10_000; //0.5%
             lpGetter.removeLiquidityWeth(lpBalance, minAmount);
         }
 
