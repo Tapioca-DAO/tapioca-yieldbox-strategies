@@ -148,6 +148,33 @@ contract ConvexTricryptoStrategy is
             result = swapper.getOutputAmount(swapData, "");
             result = result - (result * _slippage) / 10_000; //0.5%
         }
+
+        result += _getCvxRewards();
+    }
+
+    function _getCvxRewards() private view returns (uint256 result) {
+        address cvxRewardsContract = zap.cvxRewards();
+        if (cvxRewardsContract == address(0)) {
+            return 0;
+        }
+
+        // it has the `rewards` property similar to IConvexRewardPool interface
+        uint256 claimableCvx = IConvexRewardPool(cvxRewardsContract).rewards(
+            address(this)
+        );
+        if (claimableCvx > 0) {
+            address cvx = zap.cvx();
+            ISwapper.SwapData memory swapData = swapper.buildSwapData(
+                cvx,
+                address(wrappedNative),
+                claimableCvx,
+                0,
+                false,
+                false
+            );
+            result = swapper.getOutputAmount(swapData, "");
+            result = result - (result * _slippage) / 10_000; //0.5%
+        }
     }
 
     /// @notice withdraws everythig from the strategy
