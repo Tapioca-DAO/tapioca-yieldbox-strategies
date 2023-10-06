@@ -292,7 +292,9 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 address(this)
             );
 
-            INative(address(wrappedNative)).deposit{value: toWithdraw}();
+            INative(address(wrappedNative)).deposit{
+                value: address(this).balance
+            }();
         }
 
         require(
@@ -300,6 +302,11 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             "Stargate: not enough"
         );
         wrappedNative.safeTransfer(to, amount);
+
+        queued = wrappedNative.balanceOf(address(this));
+        if (queued > 0) {
+            _stake(queued);
+        }
 
         emit AmountWithdrawn(to, amount);
     }
