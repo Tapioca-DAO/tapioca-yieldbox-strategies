@@ -138,7 +138,6 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************ //
     /// @notice
     function compound(bytes memory) public {
-        uint256 aaveBalanceBefore = rewardToken.balanceOf(address(this));
         //first claim stkAave
         uint256 unclaimedStkAave = incentivesController.getUserUnclaimedRewards(
             address(this)
@@ -181,14 +180,12 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         //try to stake
         uint256 aaveBalanceAfter = rewardToken.balanceOf(address(this));
-        if (aaveBalanceAfter > aaveBalanceBefore) {
-            uint256 aaveAmount = aaveBalanceAfter - aaveBalanceBefore;
-
+        if (aaveBalanceAfter > 0) {
             //swap AAVE to wrappedNative
             ISwapper.SwapData memory swapData = swapper.buildSwapData(
                 address(rewardToken),
                 address(wrappedNative),
-                aaveAmount,
+                aaveBalanceAfter,
                 0,
                 false,
                 false
