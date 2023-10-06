@@ -10,6 +10,23 @@
 
 ## Methods
 
+### COOLDOWN_SECONDS
+
+```solidity
+function COOLDOWN_SECONDS() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### REWARD_TOKEN
 
 ```solidity
@@ -26,6 +43,23 @@ function REWARD_TOKEN() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### UNSTAKE_WINDOW
+
+```solidity
+function UNSTAKE_WINDOW() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### balanceOf
 
