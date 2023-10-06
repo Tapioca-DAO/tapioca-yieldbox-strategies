@@ -36,6 +36,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************** //
     // *** EVENTS *** //
     // ************** //
+    event MultiSwapper(address indexed _old, address indexed _new);
     event DepositThreshold(uint256 _old, uint256 _new);
     event AmountQueued(uint256 amount);
     event AmountDeposited(uint256 amount);
@@ -99,6 +100,13 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice Sets the Swapper address
+    /// @param _swapper The new swapper address
+    function setMultiSwapper(address _swapper) external onlyOwner {
+        emit MultiSwapper(address(swapper), _swapper);
+        swapper = ISwapper(_swapper);
+    }
+
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
         _slippage = _val;
@@ -157,6 +165,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             );
             uint256 calcAmount = swapper.getOutputAmount(swapData, "");
             uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
+            rewardToken.approve(address(swapper), 0);
             rewardToken.approve(address(swapper), aaveAmount);
             (uint256 amountOut, ) = swapper.swap(
                 swapData,
@@ -203,6 +212,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _performDeposit(uint256 amount) private {
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
+            wrappedNative.approve(address(aaveV3Pool), 0);
             wrappedNative.approve(address(aaveV3Pool), queued);
             aaveV3Pool.supply(address(wrappedNative), queued, address(this), 0);
             emit AmountDeposited(queued);
@@ -226,6 +236,7 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             uint256 toWithdraw = amount - queued;
 
             uint256 balanceBefore = wrappedNative.balanceOf(address(this));
+            receiptToken.approve(address(aaveV3Pool), 0);
             receiptToken.approve(address(aaveV3Pool), toWithdraw);
             aaveV3Pool.withdraw(
                 address(wrappedNative),

@@ -290,6 +290,22 @@ Sets the deposit threshold
 |---|---|---|
 | amount | uint256 | The new threshold amount |
 
+### setMultiSwapper
+
+```solidity
+function setMultiSwapper(address _swapper) external nonpayable
+```
+
+Sets the Swapper address
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _swapper | address | The new swapper address |
+
 ### setSlippage
 
 ```solidity
@@ -529,6 +545,23 @@ event DepositThreshold(uint256 _old, uint256 _new)
 |---|---|---|
 | _old  | uint256 | undefined |
 | _new  | uint256 | undefined |
+
+### MultiSwapper
+
+```solidity
+event MultiSwapper(address indexed _old, address indexed _new)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _old `indexed` | address | undefined |
+| _new `indexed` | address | undefined |
 
 ### OwnershipTransferred
 
