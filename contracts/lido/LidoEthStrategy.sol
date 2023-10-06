@@ -41,6 +41,8 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed
     uint256 public depositThreshold;
 
+    uint256 private _slippage = 50;
+
     // ************** //
     // *** EVENTS *** //
     // ************** //
@@ -89,6 +91,13 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
+    }
+
     /// @notice rescues unused ETH from the contract
     /// @param amount the amount to rescue
     /// @param to the recipient
@@ -114,7 +123,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         compound("");
 
         uint256 toWithdraw = stEth.balanceOf(address(this));
-        uint256 minAmount = (toWithdraw * 50) / 10_000; //0.5%
+        uint256 minAmount = (toWithdraw * _slippage) / 10_000; //0.5%
         result = curveStEthPool.exchange(1, 0, toWithdraw, minAmount);
 
         INative(address(wrappedNative)).deposit{value: result}();
@@ -157,7 +166,7 @@ contract LidoEthStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
             uint256 toWithdraw = amount - queued; //1:1 between eth<>stEth
-            uint256 minAmount = toWithdraw - (toWithdraw * 250) / 10_000; //2.5%
+            uint256 minAmount = toWithdraw - (toWithdraw * _slippage) / 10_000; //2.5%
             uint256 obtainedEth = curveStEthPool.exchange(
                 1,
                 0,

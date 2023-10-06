@@ -55,6 +55,8 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed
     uint256 public depositThreshold;
 
+    uint256 private _slippage = 50;
+
     // ************** //
     // *** EVENTS *** //
     // ************** //
@@ -132,14 +134,19 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false
             );
             result = swapper.getOutputAmount(swapData, "");
-
-            result = result - (result * 50) / 10_000; //0.5%
+            result = result - (result * _slippage) / 10_000; //0.25%
         }
     }
 
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
+    }
+
     /// @notice rescues unused ETH from the contract
     /// @param amount the amount to rescue
     /// @param to the recipient
@@ -192,8 +199,10 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
                 // already has slippage due to Uni tick rounding down ( at least 0.01% )
                 uint256 calcAmount = swapper.getOutputAmount(swapData, "");
-
-                swapper.swap(swapData, calcAmount, address(this), "");
+                uint256 minAmount = calcAmount -
+                    (calcAmount * _slippage) /
+                    10_000; //0.25%
+                swapper.swap(swapData, minAmount, address(this), "");
 
                 uint256 queued = wrappedNative.balanceOf(address(this));
                 _stake(queued);
@@ -209,6 +218,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             lpStakingPid,
             address(this)
         );
+
         lpStaking.withdraw(lpStakingPid, toWithdraw);
         router.instantRedeemLocal(
             uint16(lpRouterPid),

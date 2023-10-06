@@ -29,4 +29,10 @@ contract CTokenMock is ERC20Mock {
         _burn(msg.sender, redeemTokens);
         return redeemTokens;
     }
+
+    function redeemUnderlying(uint256 redeemTokens) external returns (uint256) {
+        payable(msg.sender).transfer(redeemTokens);
+        _burn(msg.sender, redeemTokens);
+        return redeemTokens;
+    }
 }
