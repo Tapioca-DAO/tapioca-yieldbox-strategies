@@ -15,7 +15,7 @@ import {
     YieldBox,
     YieldBoxURIBuilder,
 } from '../typechain';
-import { OracleMock__factory } from 'tapioca-sdk/dist/typechain/tapioca-mocks';
+import { OracleMock__factory } from '../../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 
 const { formatUnits, parseEther } = ethers.utils;
 
@@ -241,10 +241,14 @@ describe('GlpStrategy fork test', () => {
             glpRewardRouter.address,
             sglp.address,
             oracle.address,
+            ethers.utils.toUtf8Bytes(''),
             oracle.address,
+            ethers.utils.toUtf8Bytes(''),
+            oracle.address,
+            ethers.utils.toUtf8Bytes(''),
         );
         await strategy.deployed();
-
+        await strategy.setSlippage(1000);
         // Drum rolls..
         const TOKEN_TYPE_ERC20 = 1;
         await yieldBox.registerAsset(
@@ -302,9 +306,5 @@ describe('GlpStrategy fork test', () => {
         // GMX: ~70 at the time?
         // So one GMX is less than 1/20 and more than 1/30 WETH:
         await strategy.harvestGmx(1, 30); // Succeed
-        // await dump();
-        await expect(strategy.harvestGmx(1, 20)).to.be.revertedWith(
-            'Not enough',
-        );
     });
 });

@@ -105,6 +105,23 @@ Returns a description for this strategy
 |---|---|---|
 | _0 | string | undefined |
 
+### emergencyWithdraw
+
+```solidity
+function emergencyWithdraw() external nonpayable returns (uint256 result)
+```
+
+withdraws everythig from the strategy
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| result | uint256 | undefined |
+
 ### feeRecipient
 
 ```solidity
@@ -138,6 +155,40 @@ function feesPending() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### gmxGlpOracle
+
+```solidity
+function gmxGlpOracle() external view returns (contract IOracle)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IOracle | undefined |
+
+### gmxGlpOracleData
+
+```solidity
+function gmxGlpOracleData() external view returns (bytes)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
 
 ### harvest
 
@@ -251,6 +302,22 @@ function setFeeRecipient(address recipient) external nonpayable
 |---|---|---|
 | recipient | address | undefined |
 
+### setSlippage
+
+```solidity
+function setSlippage(uint256 _val) external nonpayable
+```
+
+sets the slippage used in swap operations
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | uint256 | the new slippage amount |
+
 ### tokenId
 
 ```solidity
@@ -336,6 +403,74 @@ updates the pause state
 | Name | Type | Description |
 |---|---|---|
 | _val | bool | the new state |
+
+### wethGlpOracle
+
+```solidity
+function wethGlpOracle() external view returns (contract IOracle)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IOracle | undefined |
+
+### wethGlpOracleData
+
+```solidity
+function wethGlpOracleData() external view returns (bytes)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
+### wethUsdgOracle
+
+```solidity
+function wethUsdgOracle() external view returns (contract IOracle)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IOracle | undefined |
+
+### wethUsdgOracleData
+
+```solidity
+function wethUsdgOracleData() external view returns (bytes)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
 
 ### withdraw
 

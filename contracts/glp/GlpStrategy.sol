@@ -29,7 +29,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         "Holds staked GLP tokens and compounds the rewards";
 
     IERC20 private immutable gmx;
-    IERC20 private immutable esGmx;
     IERC20 private immutable weth;
 
     IGmxRewardTracker private immutable feeGmxTracker;
@@ -37,7 +36,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     IGmxRewardRouterV2 private immutable glpRewardRouter;
     IGmxRewardRouterV2 private immutable gmxRewardRouter;
     IGmxVester private immutable glpVester;
-    IGmxVester private immutable gmxVester;
     IGmxRewardTracker private immutable stakedGlpTracker;
     IGmxRewardTracker private immutable stakedGmxTracker;
 
@@ -59,6 +57,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     IOracle public wethGlpOracle;
     bytes public wethGlpOracleData;
 
+    IOracle public gmxGlpOracle;
+    bytes public gmxGlpOracleData;
+
     uint256 private _slippage = 50;
 
     constructor(
@@ -69,7 +70,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         IOracle _wethUsdgOracle,
         bytes memory _wethUsdgOracleData,
         IOracle _wethGlpOracle,
-        bytes memory _wethGlpOracleData
+        bytes memory _wethGlpOracleData,
+        IOracle _gmxGlpOracle,
+        bytes memory _gmxGlpOracleData
     ) BaseERC20Strategy(_yieldBox, address(_sGlp)) {
         weth = IERC20(_yieldBox.wrappedNative());
         require(address(weth) == _gmxRewardRouter.weth(), "WETH mismatch");
@@ -81,7 +84,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         require(_gmx != address(0), "Bad GMX reward router");
         gmxRewardRouter = _gmxRewardRouter;
         gmx = IERC20(_gmx);
-        esGmx = IERC20(_gmxRewardRouter.esGmx());
 
         stakedGlpTracker = IGmxRewardTracker(
             glpRewardRouter.stakedGlpTracker()
@@ -92,7 +94,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         feeGmxTracker = IGmxRewardTracker(gmxRewardRouter.feeGmxTracker());
         glpManager = IGlpManager(glpRewardRouter.glpManager());
         glpVester = IGmxVester(gmxRewardRouter.glpVester());
-        gmxVester = IGmxVester(gmxRewardRouter.gmxVester());
 
         feeRecipient = owner;
 
@@ -100,6 +101,8 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         wethUsdgOracleData = _wethUsdgOracleData;
         wethGlpOracle = _wethGlpOracle;
         wethGlpOracleData = _wethGlpOracleData;
+        gmxGlpOracle = _gmxGlpOracle;
+        gmxGlpOracleData = _gmxGlpOracleData;
     }
 
     // (For the GMX-ETH pool)
@@ -116,9 +119,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     function harvest() public {
         _claimRewards();
         _buyGlp();
-        _vestByGlp();
-        _stakeEsGmx();
-        _vestByEsGmx();
     }
 
     /// @notice sets the slippage used in swap operations
@@ -140,9 +140,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         _claimRewards();
         _sellGmx(priceNum, priceDenom);
         _buyGlp();
-        _vestByGlp();
-        _stakeEsGmx();
-        _vestByEsGmx();
     }
 
     function setFeeRecipient(address recipient) external onlyOwner {
@@ -171,15 +168,19 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         }
 
         result = IERC20(contractAddress).balanceOf(address(this));
-
         paused = true;
     }
 
     function _currentBalance() internal view override returns (uint256 amount) {
         // This _should_ included both free and "reserved" GLP:
         amount = IERC20(contractAddress).balanceOf(address(this));
-        uint256 vestedGlp = glpVester.claimable(address(this));
-        amount += vestedGlp;
+
+        uint256 claimableGmx = glpVester.claimable(address(this));
+        (bool success, uint256 gmxPrice) = gmxGlpOracle.peek(gmxGlpOracleData);
+        require(success, "Glp: oracle call failed");
+        uint256 claimableGlp = (claimableGmx * gmxPrice) / 1e18;
+
+        amount += claimableGlp;
     }
 
     function _deposited(uint256 /* amount */) internal override {
@@ -199,16 +200,13 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         // Call this first; `_vestByGlp()` will lock the GLP again
         require(amount > 0, "Strategy: amount is 0");
         IERC20(contractAddress).safeTransfer(to, amount);
-        _vestByGlp();
-        _stakeEsGmx();
-        _vestByEsGmx();
     }
 
     function _claimRewards() private {
         gmxRewardRouter.handleRewards({
             _shouldClaimGmx: true,
             _shouldStakeGmx: false,
-            _shouldClaimEsGmx: true,
+            _shouldClaimEsGmx: false,
             _shouldStakeEsGmx: false,
             _shouldStakeMultiplierPoints: true,
             _shouldClaimWeth: true,
@@ -230,12 +228,12 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             uint256 glpPrice;
             (success, usdgPrice) = wethUsdgOracle.get(wethUsdgOracleData);
             require(success, "Glp: oracle call failed");
-            uint256 amountInUsdg = wethAmount * usdgPrice;
+            uint256 amountInUsdg = (wethAmount * usdgPrice) / 1e18;
             amountInUsdg = amountInUsdg - (amountInUsdg * _slippage) / 10_000; //0.5%
 
             (success, glpPrice) = wethGlpOracle.get(wethGlpOracleData);
             require(success, "Glp: oracle call failed");
-            uint256 amountInGlp = wethAmount * glpPrice;
+            uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
             amountInGlp = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
 
             weth.approve(address(glpManager), 0);
@@ -246,142 +244,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
                 amountInUsdg,
                 amountInGlp
             );
-        }
-    }
-
-    /// @dev Underreports if not all vesting claims have been made.
-    function _getVestableAmount(
-        IGmxVester vester,
-        uint256 available,
-        uint256 tokenAvailable
-    ) private view returns (uint256) {
-        if (available == 0) {
-            return 0;
-        }
-
-        uint256 totalVestable = vester.getMaxVestableAmount(address(this));
-        uint256 vestingNow = vester.balances(address(this));
-        uint256 alreadyVested = vester.cumulativeClaimAmounts(address(this));
-        uint256 vestable = totalVestable - vestingNow - alreadyVested;
-        if (vestable == 0) {
-            return 0;
-        }
-
-        if (available < vestable) {
-            vestable = available;
-        }
-
-        // Make sure we meet the "reserved" amount. In the following, "token"
-        // means the thing we need to reserve; either GLP or (GMX+esGMX+MPs):
-        uint256 avgTokenStake = vester.getCombinedAverageStakedAmount(
-            address(this)
-        );
-        uint256 minTokenReserve = ((vestingNow + vestable) * avgTokenStake) /
-            totalVestable;
-        uint256 tokenReserved = vester.pairAmounts(address(this));
-        tokenAvailable += tokenReserved;
-        if (tokenAvailable < minTokenReserve) {
-            // What amount can we vest that will still pass the check?
-            //
-            // The equation used to check is of the form
-            //
-            // floor(C(A+B) / D) <= X,
-            //
-            // where
-            //     A = vestingNow
-            //     B = vestable
-            //     C = avgTokenStake,
-            //     D = totalVestable,
-            //     X = tokenAvailable,
-            //
-            // and we control B. If we overestimate, the transaction will
-            // revert, so we make sure every step here results in a stricter or
-            // equal upper bound:
-            //
-            // floor(C(A+B) / D) <= X,
-            //        C(A+B) / D <= X         (remove rounding that favored us)
-            //            C(A+B) <= DX
-            //               A+B <= DX / C
-            //               A+B <= floor(DX / C)  (add rounding that costs us)
-            //                 B <= floor(DX / C) - A
-            //
-            // OK, we're safe:
-            //
-            // (TODO: Check that the multiplication does not overflow!)
-            //
-            // No DBZ: totalVestable is zero if there are no tokens staked
-            // (TODO: Check edge case where the average calculation drops to
-            // zero?)
-            vestable =
-                (totalVestable * tokenAvailable) /
-                avgTokenStake -
-                vestingNow;
-        }
-        return vestable;
-    }
-
-    /// @dev Assumes all vestable tokens have been claimed
-    /// @dev May withdraw all from the vest-by-esGMX vault (to unstake esGMX)
-    function _vestByGlp() private {
-        uint256 freeEsGmx = esGmx.balanceOf(address(this));
-        uint256 stakedEsGmx = stakedGmxTracker.depositBalances(
-            address(this),
-            address(esGmx)
-        );
-        uint256 available = freeEsGmx + stakedEsGmx;
-        uint256 vestable = _getVestableAmount(
-            glpVester,
-            available,
-            stakedGlpTracker.balanceOf(address(this))
-        );
-        if (vestable == 0) {
-            return;
-        }
-
-        if (vestable > freeEsGmx) {
-            // Reverts if the total of (tokens vesting) + (tokens claimable) is
-            // zero, which is possible if the reward distributor ran out of
-            // esGMX. Rather than calculating this twice, let the call fail:
-            try gmxVester.withdraw() {} catch {}
-            gmxRewardRouter.unstakeEsGmx(vestable - freeEsGmx);
-        }
-
-        glpVester.deposit(vestable);
-    }
-
-    function _vestByEsGmx() private {
-        uint256 freeEsGmx = esGmx.balanceOf(address(this));
-        // As "reserved token" we can use:
-        // - staked esGMX
-        // - staked Multiplier Points
-        // - (staked GMX, but we don't have this)
-        // The following counts all staked, but not currently used for vesting,
-        // tokens -- reserved tokens are transferred to the vester contract:
-        uint256 unusedStakedTokens = feeGmxTracker.balanceOf(address(this));
-        uint256 vestable = _getVestableAmount(
-            gmxVester,
-            freeEsGmx,
-            unusedStakedTokens
-        );
-        if (vestable == 0) {
-            return;
-        }
-
-        gmxVester.deposit(vestable);
-    }
-
-    function _stakeEsGmx() private {
-        uint256 freeEsGmx = esGmx.balanceOf(address(this));
-        // This counts all esGMX that we staked (here); "reserved" or not
-        uint256 stakedEsGmx = stakedGmxTracker.depositBalances(
-            address(this),
-            address(esGmx)
-        );
-        // Frequent staking and unstaking costs us "Multiplier Points".
-        // Aim for 95% staked to handle fluctuations in GLP balance:
-        uint256 buffer = (freeEsGmx + stakedEsGmx) / 20;
-        if (freeEsGmx > buffer) {
-            gmxRewardRouter.stakeEsGmx(freeEsGmx - buffer);
         }
     }
 
