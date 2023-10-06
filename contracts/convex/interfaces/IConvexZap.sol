@@ -13,4 +13,8 @@ interface IConvexZap {
         uint256 spendCvxAmount,
         uint256 options
     ) external;
+
+    function cvxRewards() external view returns (address);
+
+    function cvx() external view returns (address);
 }
