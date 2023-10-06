@@ -1,4 +1,4 @@
-# StargateStrategy
+# AaveV3Strategy
 
 
 
@@ -10,10 +10,10 @@
 
 ## Methods
 
-### addLiquidityRouter
+### aaveV3Pool
 
 ```solidity
-function addLiquidityRouter() external view returns (contract IRouterETH)
+function aaveV3Pool() external view returns (contract IAaveV3Pool)
 ```
 
 
@@ -25,7 +25,7 @@ function addLiquidityRouter() external view returns (contract IRouterETH)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IRouterETH | undefined |
+| _0 | contract IAaveV3Pool | undefined |
 
 ### cheapWithdrawable
 
@@ -130,7 +130,7 @@ function depositThreshold() external view returns (uint256)
 
 Queues tokens up to depositThreshold
 
-*When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed*
+*When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed*
 
 
 #### Returns
@@ -189,57 +189,6 @@ withdraws everythig from the strategy
 |---|---|---|
 | result | uint256 | undefined |
 
-### lpRouterPid
-
-```solidity
-function lpRouterPid() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### lpStaking
-
-```solidity
-function lpStaking() external view returns (contract ILPStaking)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract ILPStaking | undefined |
-
-### lpStakingPid
-
-```solidity
-function lpStakingPid() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### name
 
 ```solidity
@@ -291,27 +240,10 @@ function pendingOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### rescueEth
+### receiptToken
 
 ```solidity
-function rescueEth(uint256 amount, address to) external nonpayable
-```
-
-rescues unused ETH from the contract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | the amount to rescue |
-| to | address | the recipient |
-
-### router
-
-```solidity
-function router() external view returns (contract IRouter)
+function receiptToken() external view returns (contract IERC20)
 ```
 
 
@@ -323,7 +255,24 @@ function router() external view returns (contract IRouter)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IRouter | undefined |
+| _0 | contract IERC20 | undefined |
+
+### rewardToken
+
+```solidity
+function rewardToken() external view returns (contract IERC20)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IERC20 | undefined |
 
 ### setDepositThreshold
 
@@ -341,29 +290,13 @@ Sets the deposit threshold
 |---|---|---|
 | amount | uint256 | The new threshold amount |
 
-### setMultiSwapper
-
-```solidity
-function setMultiSwapper(address _swapper) external nonpayable
-```
-
-Sets the Swapper address
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _swapper | address | The new swapper address |
-
 ### setSlippage
 
 ```solidity
 function setSlippage(uint256 _val) external nonpayable
 ```
 
-sets the slippage used in swap operations
+
 
 
 
@@ -373,10 +306,10 @@ sets the slippage used in swap operations
 |---|---|---|
 | _val | uint256 | the new slippage amount |
 
-### stgEthPool
+### stakedRewardToken
 
 ```solidity
-function stgEthPool() external view returns (address)
+function stakedRewardToken() external view returns (contract IStkAave)
 ```
 
 
@@ -388,41 +321,7 @@ function stgEthPool() external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
-
-### stgNative
-
-```solidity
-function stgNative() external view returns (contract IERC20)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20 | undefined |
-
-### stgTokenReward
-
-```solidity
-function stgTokenReward() external view returns (contract IERC20)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20 | undefined |
+| _0 | contract IStkAave | undefined |
 
 ### swapper
 
@@ -630,23 +529,6 @@ event DepositThreshold(uint256 _old, uint256 _new)
 |---|---|---|
 | _old  | uint256 | undefined |
 | _new  | uint256 | undefined |
-
-### MultiSwapper
-
-```solidity
-event MultiSwapper(address indexed _old, address indexed _new)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _old `indexed` | address | undefined |
-| _new `indexed` | address | undefined |
 
 ### OwnershipTransferred
 

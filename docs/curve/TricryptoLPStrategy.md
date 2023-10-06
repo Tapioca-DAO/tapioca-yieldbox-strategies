@@ -1,4 +1,4 @@
-# StargateStrategy
+# TricryptoLPStrategy
 
 
 
@@ -9,23 +9,6 @@
 
 
 ## Methods
-
-### addLiquidityRouter
-
-```solidity
-function addLiquidityRouter() external view returns (contract IRouterETH)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IRouterETH | undefined |
 
 ### cheapWithdrawable
 
@@ -130,7 +113,7 @@ function depositThreshold() external view returns (uint256)
 
 Queues tokens up to depositThreshold
 
-*When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed*
+*When the amount of tokens is greater than the threshold, a deposit operation to Curve is performed*
 
 
 #### Returns
@@ -189,10 +172,10 @@ withdraws everythig from the strategy
 |---|---|---|
 | result | uint256 | undefined |
 
-### lpRouterPid
+### lpGauge
 
 ```solidity
-function lpRouterPid() external view returns (uint256)
+function lpGauge() external view returns (contract ITricryptoLPGauge)
 ```
 
 
@@ -204,12 +187,12 @@ function lpRouterPid() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _0 | contract ITricryptoLPGauge | undefined |
 
-### lpStaking
+### lpGetter
 
 ```solidity
-function lpStaking() external view returns (contract ILPStaking)
+function lpGetter() external view returns (contract ITricryptoLPGetter)
 ```
 
 
@@ -221,12 +204,12 @@ function lpStaking() external view returns (contract ILPStaking)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract ILPStaking | undefined |
+| _0 | contract ITricryptoLPGetter | undefined |
 
-### lpStakingPid
+### lpToken
 
 ```solidity
-function lpStakingPid() external view returns (uint256)
+function lpToken() external view returns (contract IERC20)
 ```
 
 
@@ -238,7 +221,24 @@ function lpStakingPid() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _0 | contract IERC20 | undefined |
+
+### minter
+
+```solidity
+function minter() external view returns (contract ICurveMinter)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract ICurveMinter | undefined |
 
 ### name
 
@@ -291,27 +291,10 @@ function pendingOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### rescueEth
+### rewardToken
 
 ```solidity
-function rescueEth(uint256 amount, address to) external nonpayable
-```
-
-rescues unused ETH from the contract
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| amount | uint256 | the amount to rescue |
-| to | address | the recipient |
-
-### router
-
-```solidity
-function router() external view returns (contract IRouter)
+function rewardToken() external view returns (contract IERC20)
 ```
 
 
@@ -323,7 +306,7 @@ function router() external view returns (contract IRouter)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | contract IRouter | undefined |
+| _0 | contract IERC20 | undefined |
 
 ### setDepositThreshold
 
@@ -373,56 +356,21 @@ sets the slippage used in swap operations
 |---|---|---|
 | _val | uint256 | the new slippage amount |
 
-### stgEthPool
+### setTricryptoLPGetter
 
 ```solidity
-function stgEthPool() external view returns (address)
+function setTricryptoLPGetter(address _lpGetter) external nonpayable
 ```
 
+Sets the Tricrypto LP Getter
 
 
 
-
-
-#### Returns
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
-
-### stgNative
-
-```solidity
-function stgNative() external view returns (contract IERC20)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20 | undefined |
-
-### stgTokenReward
-
-```solidity
-function stgTokenReward() external view returns (contract IERC20)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IERC20 | undefined |
+| _lpGetter | address | the new address |
 
 ### swapper
 
@@ -630,6 +578,23 @@ event DepositThreshold(uint256 _old, uint256 _new)
 |---|---|---|
 | _old  | uint256 | undefined |
 | _new  | uint256 | undefined |
+
+### LPGetterSet
+
+```solidity
+event LPGetterSet(address indexed _old, address indexed _new)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _old `indexed` | address | undefined |
+| _new `indexed` | address | undefined |
 
 ### MultiSwapper
 

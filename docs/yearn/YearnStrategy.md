@@ -172,6 +172,23 @@ withdraws everythig from the strategy
 |---|---|---|
 | result | uint256 | undefined |
 
+### maxLoss
+
+```solidity
+function maxLoss() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### name
 
 ```solidity
@@ -238,6 +255,22 @@ Sets the deposit threshold
 | Name | Type | Description |
 |---|---|---|
 | amount | uint256 | The new threshold amount |
+
+### setMaxLoss
+
+```solidity
+function setMaxLoss(uint256 _val) external nonpayable
+```
+
+Sets the Yearn max loss param
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | uint256 | The new max loss amount |
 
 ### tokenId
 
@@ -445,6 +478,23 @@ event DepositThreshold(uint256 _old, uint256 _new)
 |---|---|---|
 | _old  | uint256 | undefined |
 | _new  | uint256 | undefined |
+
+### MaxLossSet
+
+```solidity
+event MaxLossSet(uint256 oldVal, uint256 newVal)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| oldVal  | uint256 | undefined |
+| newVal  | uint256 | undefined |
 
 ### OwnershipTransferred
 

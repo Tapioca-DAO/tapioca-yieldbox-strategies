@@ -142,7 +142,7 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
         },
     },
     dodoc: {
-        runOnCompile: false,
+        runOnCompile: true,
         freshOutput: true,
         exclude: [],
     },

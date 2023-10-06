@@ -206,6 +206,57 @@ Returns the name of this strategy
 |---|---|---|
 | name_ | string | undefined |
 
+### oracleData
+
+```solidity
+function oracleData() external view returns (bytes)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes | undefined |
+
+### oracleDeviation
+
+```solidity
+function oracleDeviation() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### oracleEthStEth
+
+```solidity
+function oracleEthStEth() external view returns (contract IOracle)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IOracle | undefined |
+
 ### owner
 
 ```solidity
@@ -240,6 +291,23 @@ function pendingOwner() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### rescueEth
+
+```solidity
+function rescueEth(uint256 amount, address to) external nonpayable
+```
+
+rescues unused ETH from the contract
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | the amount to rescue |
+| to | address | the recipient |
+
 ### setDepositThreshold
 
 ```solidity
@@ -255,6 +323,40 @@ Sets the deposit threshold
 | Name | Type | Description |
 |---|---|---|
 | amount | uint256 | The new threshold amount |
+
+### setOracleDetails
+
+```solidity
+function setOracleDetails(address _oracle, bytes _oracleData, uint256 _oracleDeviation) external nonpayable
+```
+
+sets the oracle config
+
+*values are changed only if &lt;&gt; than the type&#39;s default value*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _oracle | address | the new oracle |
+| _oracleData | bytes | the new oracleData |
+| _oracleDeviation | uint256 | the new oracle deviation |
+
+### setSlippage
+
+```solidity
+function setSlippage(uint256 _val) external nonpayable
+```
+
+sets the slippage used in swap operations
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | uint256 | the new slippage amount |
 
 ### stEth
 
@@ -462,6 +564,51 @@ event DepositThreshold(uint256 _old, uint256 _new)
 |---|---|---|
 | _old  | uint256 | undefined |
 | _new  | uint256 | undefined |
+
+### OracleDataUpdated
+
+```solidity
+event OracleDataUpdated()
+```
+
+
+
+
+
+
+### OracleDeviationUpdated
+
+```solidity
+event OracleDeviationUpdated(uint256 _old, uint256 _new)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _old  | uint256 | undefined |
+| _new  | uint256 | undefined |
+
+### OracleUpdated
+
+```solidity
+event OracleUpdated(address indexed _old, address _new)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _old `indexed` | address | undefined |
+| _new  | address | undefined |
 
 ### OwnershipTransferred
 
