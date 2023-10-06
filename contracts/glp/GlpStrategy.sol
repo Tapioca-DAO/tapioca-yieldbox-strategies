@@ -18,6 +18,7 @@ import "../interfaces/gmx/IGmxRewardRouter.sol";
 import "../interfaces/gmx/IGmxRewardTracker.sol";
 import "../interfaces/gmx/IGmxVester.sol";
 import "../interfaces/gmx/IGmxVault.sol";
+import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 
 // NOTE: Specific to a UniV3 pool!! This will not work on Avalanche!
 contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
@@ -52,11 +53,23 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     bool public paused;
 
+    IOracle public wethUsdgOracle;
+    bytes public wethUsdgOracleData;
+
+    IOracle public wethGlpOracle;
+    bytes public wethGlpOracleData;
+
+    uint256 private _slippage = 50;
+
     constructor(
         IYieldBox _yieldBox,
         IGmxRewardRouterV2 _gmxRewardRouter,
         IGmxRewardRouterV2 _glpRewardRouter,
-        IERC20 _sGlp
+        IERC20 _sGlp,
+        IOracle _wethUsdgOracle,
+        bytes memory _wethUsdgOracleData,
+        IOracle _wethGlpOracle,
+        bytes memory _wethGlpOracleData
     ) BaseERC20Strategy(_yieldBox, address(_sGlp)) {
         weth = IERC20(_yieldBox.wrappedNative());
         require(address(weth) == _gmxRewardRouter.weth(), "WETH mismatch");
@@ -82,6 +95,11 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         gmxVester = IGmxVester(gmxRewardRouter.gmxVester());
 
         feeRecipient = owner;
+
+        wethUsdgOracle = _wethUsdgOracle;
+        wethUsdgOracleData = _wethUsdgOracleData;
+        wethGlpOracle = _wethGlpOracle;
+        wethGlpOracleData = _wethGlpOracleData;
     }
 
     // (For the GMX-ETH pool)
@@ -101,6 +119,12 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         _vestByGlp();
         _stakeEsGmx();
         _vestByEsGmx();
+    }
+
+    /// @notice sets the slippage used in swap operations
+    /// @param _val the new slippage amount
+    function setSlippage(uint256 _val) external onlyOwner {
+        _slippage = _val;
     }
 
     /// @notice updates the pause state
@@ -137,6 +161,20 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         }
     }
 
+    /// @notice withdraws everythig from the strategy
+    function emergencyWithdraw() external onlyOwner returns (uint256 result) {
+        _claimRewards();
+        _buyGlp();
+        uint256 freeGlp = stakedGlpTracker.balanceOf(address(this));
+        if (freeGlp > 0) {
+            glpVester.withdraw();
+        }
+
+        result = IERC20(contractAddress).balanceOf(address(this));
+
+        paused = true;
+    }
+
     function _currentBalance() internal view override returns (uint256 amount) {
         // This _should_ included both free and "reserved" GLP:
         amount = IERC20(contractAddress).balanceOf(address(this));
@@ -145,7 +183,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     }
 
     function _deposited(uint256 /* amount */) internal override {
-        require(!paused, "Stargate: paused");
+        require(!paused, "Glp: paused");
         harvest();
     }
 
@@ -187,9 +225,27 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             feesPending = _feesPending + fee;
             wethAmount -= fee;
 
+            bool success;
+            uint256 usdgPrice;
+            uint256 glpPrice;
+            (success, usdgPrice) = wethUsdgOracle.get(wethUsdgOracleData);
+            require(success, "Glp: oracle call failed");
+            uint256 amountInUsdg = wethAmount * usdgPrice;
+            amountInUsdg = amountInUsdg - (amountInUsdg * _slippage) / 10_000; //0.5%
+
+            (success, glpPrice) = wethGlpOracle.get(wethGlpOracleData);
+            require(success, "Glp: oracle call failed");
+            uint256 amountInGlp = wethAmount * glpPrice;
+            amountInGlp = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
+
             weth.approve(address(glpManager), 0);
             weth.approve(address(glpManager), wethAmount);
-            glpRewardRouter.mintAndStakeGlp(address(weth), wethAmount, 0, 0);
+            glpRewardRouter.mintAndStakeGlp(
+                address(weth),
+                wethAmount,
+                amountInUsdg,
+                amountInGlp
+            );
         }
     }
 

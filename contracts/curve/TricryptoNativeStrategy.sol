@@ -217,6 +217,8 @@ contract TricryptoNativeStrategy is
         uint256 calcWithdraw = lpGetter.calcLpToWeth(lpBalance);
         uint256 minAmount = calcWithdraw - (calcWithdraw * 50) / 10_000; //0.5%
         result = lpGetter.removeLiquidityWeth(lpBalance, minAmount);
+
+        paused = true;
     }
 
     // ************************* //

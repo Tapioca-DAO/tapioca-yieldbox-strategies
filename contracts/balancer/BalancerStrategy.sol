@@ -161,6 +161,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         toWithdraw = toWithdraw - (toWithdraw * _slippage) / 10_000; //0.5%
 
         result = _vaultWithdraw(toWithdraw);
+        paused = true;
     }
 
     // ************************* //

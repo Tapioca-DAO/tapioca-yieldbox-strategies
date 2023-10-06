@@ -15,6 +15,7 @@ import {
     YieldBox,
     YieldBoxURIBuilder,
 } from '../typechain';
+import { OracleMock__factory } from 'tapioca-sdk/dist/typechain/tapioca-mocks';
 
 const { formatUnits, parseEther } = ethers.utils;
 
@@ -223,6 +224,15 @@ describe('GlpStrategy fork test', () => {
         expect(sglpBal).to.be.gt(parseEther('17'));
         expect(await stakedGlpTracker.balanceOf(me.address)).to.equal(sglpBal);
 
+        const OracleMock = new OracleMock__factory(
+            (await ethers.getSigners())[0],
+        );
+        const oracle = await OracleMock.deploy(
+            'STGETHLP-WETH',
+            'STGETHLP',
+            (1e18).toString(),
+        );
+
         const strategy = await (
             await ethers.getContractFactory('GlpStrategy')
         ).deploy(
@@ -230,6 +240,8 @@ describe('GlpStrategy fork test', () => {
             gmxRewardRouter.address,
             glpRewardRouter.address,
             sglp.address,
+            oracle.address,
+            oracle.address,
         );
         await strategy.deployed();
 

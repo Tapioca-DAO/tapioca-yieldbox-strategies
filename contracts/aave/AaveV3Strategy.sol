@@ -208,6 +208,8 @@ contract AaveV3Strategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             address(this)
         );
         receiptToken.approve(address(aaveV3Pool), 0);
+
+        paused = true;
     }
 
     // ************************* //

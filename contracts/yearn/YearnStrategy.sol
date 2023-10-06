@@ -122,6 +122,8 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         uint256 toWithdraw = vault.balanceOf(address(this));
         result = vault.withdraw(toWithdraw, address(this), maxLoss);
+
+        paused = true;
     }
 
     // ************************* //
