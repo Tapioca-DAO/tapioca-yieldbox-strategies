@@ -197,12 +197,14 @@ contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
             //stake if > depositThreshold
             uint256 queued = wrappedNative.balanceOf(address(this));
-            lendingPool.deposit(
-                address(wrappedNative),
-                queued,
-                address(this),
-                0
-            );
+            if (queued > depositThreshold) {
+                lendingPool.deposit(
+                    address(wrappedNative),
+                    queued,
+                    address(this),
+                    0
+                );
+            }
             emit AmountDeposited(queued);
         }
     }
