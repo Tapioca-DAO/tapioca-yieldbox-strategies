@@ -47,6 +47,7 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     uint256 private _cachedCalculatedAmount;
     uint256 private _slippage = 50;
     uint256 private _slippageIn = 250;
+    bytes public defaultSwapData;
 
     // ************** //
     // *** EVENTS *** //
@@ -108,6 +109,12 @@ contract BalancerStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the default swap data
+    /// @param _data the new data
+    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
+        defaultSwapData = _data;
+    }
+
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {

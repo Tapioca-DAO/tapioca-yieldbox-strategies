@@ -46,6 +46,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     uint256 public depositThreshold;
 
     uint256 private _slippage = 50;
+    bytes public defaultSwapData;
 
     // ************** //
     // *** EVENTS *** //
@@ -104,7 +105,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false,
                 false
             );
-            result = swapper.getOutputAmount(swapData, "");
+            result = swapper.getOutputAmount(swapData, defaultSwapData);
             result = result - (result * _slippage) / 10_000; //0.5%
         }
 
@@ -114,6 +115,12 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the default swap data
+    /// @param _data the new data
+    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
+        defaultSwapData = _data;
+    }
+
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
@@ -154,7 +161,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory) public {
+    function compound(bytes memory dexData) public {
         uint256 claimable = comptroller.compReceivable(address(this));
 
         if (claimable > 0) {
@@ -172,9 +179,9 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
                 false,
                 false
             );
-            uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+            uint256 calcAmount = swapper.getOutputAmount(swapData, dexData);
             uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
-            swapper.swap(swapData, minAmount, address(this), "");
+            swapper.swap(swapData, minAmount, address(this), dexData);
 
             //stake if > depositThreshold
             uint256 queued = wrappedNative.balanceOf(address(this));
@@ -189,7 +196,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound("");
+        compound(defaultSwapData);
 
         uint256 toWithdraw = cToken.balanceOf(address(this));
         cToken.redeem(toWithdraw);
@@ -233,12 +240,15 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
+            try
+                CompoundStrategy(payable(this)).compound(defaultSwapData)
+            {} catch (bytes memory) {}
             cToken.redeemUnderlying(amount);
             INative(address(wrappedNative)).deposit{
                 value: address(this).balance
             }();
         }
-
+        amount--;
         require(
             wrappedNative.balanceOf(address(this)) >= amount,
             "CompoundStrategy: not enough"

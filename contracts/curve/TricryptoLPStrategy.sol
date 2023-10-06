@@ -51,6 +51,7 @@ contract TricryptoLPStrategy is
     uint256 public depositThreshold;
     uint256 public claimableRewardsCache;
 
+    bytes public defaultSwapData;
     uint256 private _slippage = 50;
 
     // ************** //
@@ -127,7 +128,7 @@ contract TricryptoLPStrategy is
                 false,
                 false
             );
-            result = swapper.getOutputAmount(swapData, "");
+            result = swapper.getOutputAmount(swapData, defaultSwapData);
             result = lpGetter.calcWethToLp(result);
             result = result - (result * _slippage) / 10_000; //0.5%
         }
@@ -136,6 +137,12 @@ contract TricryptoLPStrategy is
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the default swap data
+    /// @param _data the new data
+    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
+        defaultSwapData = _data;
+    }
+
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
@@ -170,7 +177,7 @@ contract TricryptoLPStrategy is
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory) public {
+    function compound(bytes memory dexData) public {
         claimableRewardsCache = 0;
         uint256 claimable = lpGauge.claimable_tokens(address(this));
         if (claimable > 0) {
@@ -189,11 +196,11 @@ contract TricryptoLPStrategy is
                     false,
                     false
                 );
-                uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+                uint256 calcAmount = swapper.getOutputAmount(swapData, dexData);
                 uint256 minAmount = calcAmount -
                     (calcAmount * _slippage) /
                     10_000; //0.5%
-                swapper.swap(swapData, minAmount, address(this), "");
+                swapper.swap(swapData, minAmount, address(this), dexData);
 
                 uint256 wrappedNativeAmount = wrappedNative.balanceOf(
                     address(this)
@@ -213,7 +220,7 @@ contract TricryptoLPStrategy is
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        compound("");
+        compound(defaultSwapData);
         updateClaimableRewardsCache();
 
         result = lpGauge.balanceOf(address(this));
@@ -253,7 +260,7 @@ contract TricryptoLPStrategy is
 
         uint256 queued = lpToken.balanceOf(address(this));
         if (amount > queued) {
-            compound("");
+            compound(defaultSwapData);
             uint256 lpBalance = lpGauge.balanceOf(address(this));
             lpGauge.withdraw(lpBalance, true);
         }
