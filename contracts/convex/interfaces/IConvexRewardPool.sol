@@ -25,4 +25,6 @@ interface IConvexRewardPool {
     function stakeFor(address _for, uint256 _amount) external;
 
     function pid() external view returns (uint256);
+
+    function extraRewardsLength() external view returns (uint256);
 }
