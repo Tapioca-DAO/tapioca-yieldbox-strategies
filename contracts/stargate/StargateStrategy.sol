@@ -57,6 +57,8 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed
     uint256 public depositThreshold;
 
+    bytes public defaultSwapData;
+
     uint256 private _slippage = 50;
 
     // ************** //
@@ -143,6 +145,12 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice sets the default swap data
+    /// @param _data the new data
+    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
+        defaultSwapData = _data;
+    }
+
     /// @notice updates the pause state
     /// @param _val the new state
     function updatePaused(bool _val) external onlyOwner {
@@ -182,7 +190,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory) public {
+    function compound(bytes memory dexData) public {
         uint256 unclaimed = lpStaking.pendingStargate(
             lpStakingPid,
             address(this)
@@ -204,9 +212,9 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
             );
 
             // already has slippage due to Uni tick rounding down ( at least 0.01% )
-            uint256 calcAmount = swapper.getOutputAmount(swapData, "");
+            uint256 calcAmount = swapper.getOutputAmount(swapData, dexData);
             uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000;
-            swapper.swap(swapData, minAmount, address(this), "");
+            swapper.swap(swapData, minAmount, address(this), dexData);
 
             uint256 queued = wrappedNative.balanceOf(address(this));
             _stake(queued);
@@ -216,7 +224,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
         paused = true;
-        compound("");
+        compound(defaultSwapData);
 
         (uint256 toWithdraw, ) = lpStaking.userInfo(
             lpStakingPid,
@@ -275,7 +283,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound("");
+            compound(defaultSwapData);
             uint256 toWithdraw = amount - queued;
             lpStaking.withdraw(lpStakingPid, toWithdraw);
             router.instantRedeemLocal(

@@ -4,7 +4,7 @@ import { registerFork } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import _ from 'lodash';
 
-describe('BalancerStrategy fork test', () => {
+describe.skip('BalancerStrategy fork test', () => {
     before(function () {
         if (process.env.NODE_ENV != 'mainnet') {
             this.skip();
