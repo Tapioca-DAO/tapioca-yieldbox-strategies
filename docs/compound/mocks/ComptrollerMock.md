@@ -1,4 +1,4 @@
-# CTokenMock
+# ComptrollerMock
 
 
 
@@ -112,39 +112,43 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### comptroller
+### claimComp
 
 ```solidity
-function comptroller() external view returns (address)
+function claimComp(address holder) external nonpayable
 ```
 
 
 
 
 
-
-#### Returns
+#### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| holder | address | undefined |
 
-### comptrollerAddr
+### compReceivable
 
 ```solidity
-function comptrollerAddr() external view returns (address)
+function compReceivable(address) external pure returns (uint256)
 ```
 
 
 
 
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| _0 | uint256 | undefined |
 
 ### decimals
 
@@ -197,23 +201,6 @@ function deposit() external payable
 
 
 
-### exchangeRateStored
-
-```solidity
-function exchangeRateStored() external pure returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### extractTokens
 
 ```solidity
@@ -245,6 +232,23 @@ function freeMint(uint256 _val) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _val | uint256 | undefined |
+
+### getCompAddress
+
+```solidity
+function getCompAddress() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### hasMintRestrictions
 
@@ -286,16 +290,22 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
-### mint
+### isComptroller
 
 ```solidity
-function mint() external payable
+function isComptroller() external pure returns (bool)
 ```
 
 
 
 
 
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### mintLimit
 
@@ -431,50 +441,6 @@ function permit(address owner, address spender, uint256 value, uint256 deadline,
 | r | bytes32 | undefined |
 | s | bytes32 | undefined |
 
-### redeem
-
-```solidity
-function redeem(uint256 redeemTokens) external nonpayable returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| redeemTokens | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### redeemUnderlying
-
-```solidity
-function redeemUnderlying(uint256 redeemTokens) external nonpayable returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| redeemTokens | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### renounceOwnership
 
 ```solidity
@@ -593,23 +559,6 @@ function transferOwnership(address newOwner) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | newOwner | address | undefined |
-
-### underlying
-
-```solidity
-function underlying() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### updateMintLimit
 

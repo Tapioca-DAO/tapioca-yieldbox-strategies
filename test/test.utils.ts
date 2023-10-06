@@ -1146,17 +1146,26 @@ Compound
 */
 
 async function deployCToken(wethAddress: string, staging?: boolean) {
+    const comptrollerMock = await (
+        await ethers.getContractFactory('ComptrollerMock')
+    ).deploy();
+    await comptrollerMock.deployed();
+
     const cTokenMock = await (
         await ethers.getContractFactory('CTokenMock')
-    ).deploy(wethAddress);
+    ).deploy(wethAddress, comptrollerMock.address);
     await cTokenMock.deployed();
 
     log(
-        `Deployed CTokenMock ${cTokenMock.address} with args [${wethAddress}]`,
+        `Deployed CTokenMock ${cTokenMock.address} with args [${wethAddress}, ${comptrollerMock.address}]`,
         staging,
     );
 
-    await verifyEtherscan(cTokenMock.address, [wethAddress], staging);
+    await verifyEtherscan(
+        cTokenMock.address,
+        [wethAddress, comptrollerMock.address],
+        staging,
+    );
 
     return { cTokenMock };
 }
@@ -1165,6 +1174,7 @@ async function registerCompoundStrategy(
     yieldBoxAddres: string,
     wethAddress: string,
     cTokenAddress: string,
+    swapperAddress: string,
     staging?: boolean,
 ) {
     if (cTokenAddress == ethers.constants.AddressZero) {
@@ -1174,17 +1184,17 @@ async function registerCompoundStrategy(
 
     const compoundStrategy = await (
         await ethers.getContractFactory('CompoundStrategy')
-    ).deploy(yieldBoxAddres, wethAddress, cTokenAddress);
+    ).deploy(yieldBoxAddres, wethAddress, cTokenAddress, swapperAddress);
     await compoundStrategy.deployed();
 
     log(
-        `Deployed CompoundStrategy ${compoundStrategy.address} with args [${yieldBoxAddres},${wethAddress},${cTokenAddress}]`,
+        `Deployed CompoundStrategy ${compoundStrategy.address} with args [${yieldBoxAddres},${wethAddress},${cTokenAddress}, ${swapperAddress}]`,
         staging,
     );
 
     await verifyEtherscan(
         compoundStrategy.address,
-        [yieldBoxAddres, wethAddress, cTokenAddress],
+        [yieldBoxAddres, wethAddress, cTokenAddress, swapperAddress],
         staging,
     );
     return { compoundStrategy };
@@ -1823,6 +1833,7 @@ export async function registerMocks(staging?: boolean) {
         yieldBox.address,
         weth.address,
         ethers.constants.AddressZero,
+        swapperMock.address, //swapper
         staging,
     );
     log(`Deployed CompoundStrategy ${compoundStrategy.address}`, staging);
@@ -2118,6 +2129,7 @@ export async function registerFork() {
         yieldBox.address,
         weth.address,
         process.env.COMPOUND_ETH!,
+        swapperMock.address,
         false,
     );
     log(`Deployed CompoundStrategy ${compoundStrategy.address}`, false);

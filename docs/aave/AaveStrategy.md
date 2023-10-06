@@ -323,6 +323,22 @@ Sets the Swapper address
 |---|---|---|
 | _swapper | address | The new swapper address |
 
+### setSlippage
+
+```solidity
+function setSlippage(uint256 _val) external nonpayable
+```
+
+sets the slippage used in swap operations
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | uint256 | the new slippage amount |
+
 ### stakedRewardToken
 
 ```solidity
