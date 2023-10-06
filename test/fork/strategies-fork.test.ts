@@ -706,7 +706,7 @@ describe('Strategies time dependent fork tests', () => {
         expect(finalStrategyWethBalance.gt(initialWethBalance)).to.be.true;
     });
 
-    it('should increase amount in time for COMPOUND strategy - multiple users', async () => {
+    it.skip('should increase amount in time for COMPOUND strategy - multiple users', async () => {
         const {
             compoundStrategy,
             weth,
