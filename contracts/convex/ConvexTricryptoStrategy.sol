@@ -280,14 +280,10 @@ contract ConvexTricryptoStrategy is
         ClaimExtrasTempData memory extrasTempData;
         (
             extrasTempData.depositCrvMaxAmount,
-            extrasTempData.minAmountOut,
             extrasTempData.depositCvxMaxAmount,
             extrasTempData.spendCvxAmount,
             extrasTempData.options
-        ) = abi.decode(
-            tempData.extras,
-            (uint256, uint256, uint256, uint256, uint256)
-        );
+        ) = abi.decode(tempData.extras, (uint256, uint256, uint256, uint256));
 
         require(
             tempData.rewardContracts.length == tempData.tokens.length,
@@ -311,7 +307,7 @@ contract ConvexTricryptoStrategy is
             tempData.tokenRewardContracts,
             tempData.tokenRewardTokens,
             extrasTempData.depositCrvMaxAmount,
-            extrasTempData.minAmountOut,
+            0,
             extrasTempData.depositCvxMaxAmount,
             extrasTempData.spendCvxAmount,
             extrasTempData.options
