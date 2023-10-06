@@ -140,6 +140,8 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     function _currentBalance() internal view override returns (uint256 amount) {
         // This _should_ included both free and "reserved" GLP:
         amount = IERC20(contractAddress).balanceOf(address(this));
+        uint256 vestedGlp = glpVester.claimable(address(this));
+        amount += vestedGlp;
     }
 
     function _deposited(uint256 /* amount */) internal override {
