@@ -33,4 +33,12 @@ contract ConvexZapMock is IConvexZap {
         IERC20(reward1).safeTransfer(msg.sender, 10 ** 19);
         IERC20(reward2).safeTransfer(msg.sender, 10 ** 19);
     }
+
+    function cvx() external pure override returns (address) {
+        return address(0);
+    }
+
+    function cvxRewards() external pure override returns (address) {
+        return address(0);
+    }
 }
