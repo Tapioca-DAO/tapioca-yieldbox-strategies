@@ -250,8 +250,6 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         );
         result = address(this).balance;
         INative(address(wrappedNative)).deposit{value: result}();
-
-        paused = true;
     }
 
     // ************************* //

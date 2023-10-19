@@ -14,6 +14,7 @@ import {
     ERC20Mock,
     UniswapV3SwapperMock__factory,
     OracleMock__factory,
+    TOFTMock__factory,
 } from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
 
@@ -439,6 +440,66 @@ async function registerAaveV3Strategy(
     return { aaveV3Strategy };
 }
 
+async function registersDaiStrategyFork(
+    yieldBoxAddres: string,
+    daiAddress: string,
+    sDaiAddress: string,
+    staging?: boolean,
+) {
+    const deployer = (await ethers.getSigners())[0];
+    const TOFTMock = new TOFTMock__factory(deployer);
+    const tDai = await TOFTMock.deploy(daiAddress);
+    log('Deployed tDai', staging);
+
+    const sDaiStrategyFactory = await ethers.getContractFactory('sDaiStrategy');
+    const sDaiStrategy = await sDaiStrategyFactory.deploy(
+        yieldBoxAddres,
+        tDai.address,
+        sDaiAddress,
+    );
+    await sDaiStrategy.deployed();
+    log('Deployed sDaiStrategy', staging);
+
+    return { tDai, sDaiStrategy };
+}
+async function registerSDaiStrategy(yieldBoxAddres: string, staging?: boolean) {
+    const deployer = (await ethers.getSigners())[0];
+
+    const ERC20Mock = new ERC20Mock__factory(deployer);
+    const dai = await ERC20Mock.deploy(
+        'DAI Mock',
+        'DAIM',
+        ethers.utils.parseEther('1000'),
+        18,
+        deployer.address,
+    );
+    log('Deployed Dai', staging);
+
+    const hasMintRetrictions = await dai.hasMintRestrictions();
+    if (hasMintRetrictions) {
+        await dai.toggleRestrictions();
+    }
+
+    const TOFTMock = new TOFTMock__factory(deployer);
+    const tDai = await TOFTMock.deploy(dai.address);
+    log('Deployed tDai', staging);
+
+    const sDaiFactory = await ethers.getContractFactory('SavingsDaiMock');
+    const sDai = await sDaiFactory.deploy(dai.address);
+    await sDai.deployed();
+    log('Deployed sDai', staging);
+
+    const sDaiStrategyFactory = await ethers.getContractFactory('sDaiStrategy');
+    const sDaiStrategy = await sDaiStrategyFactory.deploy(
+        yieldBoxAddres,
+        tDai.address,
+        sDai.address,
+    );
+    await sDaiStrategy.deployed();
+    log('Deployed sDaiStrategy', staging);
+
+    return { dai, tDai, sDai, sDaiStrategy };
+}
 async function registerAaveStrategy(
     wethAddress: string,
     yieldBoxAddres: string,
@@ -1734,6 +1795,12 @@ export async function registerMocks(staging?: boolean) {
         `Deployed UniswapV3SwapperMock ${uniswapV3SwapperMock.address}`,
         staging,
     );
+    log('Deploying sDaiStrategy', staging);
+    const { dai, tDai, sDai, sDaiStrategy } = await registerSDaiStrategy(
+        yieldBox.address,
+        staging,
+    );
+    log(`Deployed sDaiStrategy ${sDaiStrategy.address}`, staging);
 
     log('Deploying AaveStrategy', staging);
     const { aaveStrategy } = await registerAaveStrategy(
@@ -1912,6 +1979,10 @@ export async function registerMocks(staging?: boolean) {
         deployer,
         usdc,
         weth,
+        dai,
+        tDai,
+        sDai,
+        sDaiStrategy,
         usdcAssetId,
         wethAssetId,
         yieldBox,
@@ -1978,9 +2049,22 @@ export async function registerFork() {
     await setBalance(eoa2.address, 100000);
 
     log('Using existing Tokens', false);
-    const weth = await ethers.getContractAt('ERC20', process.env.WETH_ADDRESS!);
-    const usdc = await ethers.getContractAt('ERC20', process.env.USDC_ADDRESS!);
-    const usdt = await ethers.getContractAt('ERC20', process.env.USDT_ADDRESS!);
+    const weth = await ethers.getContractAt(
+        '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
+        process.env.WETH_ADDRESS!,
+    );
+    const usdc = await ethers.getContractAt(
+        '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
+        process.env.USDC_ADDRESS!,
+    );
+    const usdt = await ethers.getContractAt(
+        '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
+        process.env.USDT_ADDRESS!,
+    );
+    const dai = await ethers.getContractAt(
+        '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
+        process.env.DAI_ADDRESS!,
+    );
 
     log(
         `Initialized tokens  USDC: ${usdc.address}, WETH: ${weth.address}`,
@@ -2037,6 +2121,14 @@ export async function registerFork() {
         process.env.UNISWAP_V3_ROUTER!,
         process.env.UNISWAP_V3_FACTORY!,
     );
+    log('Deploying sDaiStrategy', false);
+    const { sDaiStrategy, tDai } = await registersDaiStrategyFork(
+        yieldBox.address,
+        process.env.DAI_ADDRESS!,
+        process.env.SDAI!,
+        false,
+    );
+    log(`Deployed sDaiStrategy ${sDaiStrategy.address}`, false);
 
     log('Deploying AaveStrategy', false);
     const { aaveStrategy } = await registerAaveStrategy(
@@ -2183,9 +2275,12 @@ export async function registerFork() {
         usdc,
         usdt,
         weth,
+        dai,
+        tDai,
         usdcAssetId,
         wethAssetId,
         yieldBox,
+        sDaiStrategy,
         aaveStrategy,
         aaveV3Strategy,
         yearnStrategy,
