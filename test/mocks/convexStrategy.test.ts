@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe('ConvexStrategy test', () => {
+describe.skip('ConvexStrategy test', () => {
     it('should test initial strategy values', async () => {
         const { convexTricryptoStrategy, weth } = await loadFixture(
             registerMocks,

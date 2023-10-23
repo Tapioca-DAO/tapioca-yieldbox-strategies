@@ -8,16 +8,12 @@ import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
 import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "../../tapioca-periph/contracts/interfaces/ISwapper.sol";
-
-import "./interfaces/IRouter.sol";
-import "./interfaces/IRouterETH.sol";
-import "./interfaces/ILPStaking.sol";
-import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
-import "../../tapioca-periph/contracts/interfaces/INative.sol";
+import "../../../tapioca-periph/contracts/interfaces/ISwapper.sol";
+import "./interfaces/IStkAave.sol";
+import "./interfaces/ILendingPool.sol";
+import "./interfaces/IIncentivesController.sol";
 
 /*
-
 __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
  _\///////\\\/////____/\\\\\\\\\\\\\__\/\\\/////////\\\_\/////\\\///______/\\\///\\\________/\\\////////____/\\\\\\\\\\\\\__       
   _______\/\\\________/\\\/////////\\\_\/\\\_______\/\\\_____\/\\\_______/\\\/__\///\\\____/\\\/____________/\\\/////////\\\_      
@@ -29,11 +25,8 @@ __/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\
         _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
 */
 
-//TODO: decide if we need to start with ETH and wrap it into WETH; stargate allows ETH. not WETH, while others allow WETH, not ETH
-//TODO: handle rewards deposits to yieldbox
-
-//Wrapped-native strategy for Stargate
-contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
+//Wrapped-native strategy for AAVE
+contract AaveStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     using BoringERC20 for IERC20;
 
     // ************ //
@@ -41,27 +34,21 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************ //
     IERC20 public immutable wrappedNative;
     ISwapper public swapper;
-    address public stgEthPool;
 
-    IRouterETH public immutable addLiquidityRouter;
-    IRouter public immutable router;
-    ILPStaking public immutable lpStaking;
-
-    uint256 public lpStakingPid;
-    uint256 public lpRouterPid;
-    IERC20 public stgNative; //ex: stEth
-    IERC20 public stgTokenReward;
-
-    bool public paused;
+    //AAVE
+    IStkAave public immutable stakedRewardToken;
+    IERC20 public immutable rewardToken;
+    IERC20 public immutable receiptToken;
+    ILendingPool public immutable lendingPool;
+    IIncentivesController public immutable incentivesController;
 
     /// @notice Queues tokens up to depositThreshold
-    /// @dev When the amount of tokens is greater than the threshold, a deposit operation to Stargate is performed
+    /// @dev When the amount of tokens is greater than the threshold, a deposit operation to AAVE is performed
     uint256 public depositThreshold;
 
     bytes public defaultSwapData;
 
-    IOracle public oracle;
-    bytes public oracleData;
+    bool public paused;
 
     uint256 private _slippage = 50;
 
@@ -77,39 +64,24 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     constructor(
         IYieldBox _yieldBox,
         address _token,
-        address _ethRouter,
-        address _lpStaking,
-        uint256 _stakingPid,
-        address _lpToken,
-        address _swapper,
-        address _stgEthPool,
-        address _oracle,
-        bytes memory _oracleData
+        address _lendingPool,
+        address _incentivesController,
+        address _receiptToken,
+        address _multiSwapper
     ) BaseERC20Strategy(_yieldBox, _token) {
         wrappedNative = IERC20(_token);
-        swapper = ISwapper(_swapper);
-        stgEthPool = _stgEthPool;
+        swapper = ISwapper(_multiSwapper);
 
-        addLiquidityRouter = IRouterETH(_ethRouter);
-        lpStaking = ILPStaking(_lpStaking);
-        lpStakingPid = _stakingPid;
+        lendingPool = ILendingPool(_lendingPool);
+        incentivesController = IIncentivesController(_incentivesController);
+        stakedRewardToken = IStkAave(incentivesController.REWARD_TOKEN());
+        rewardToken = IERC20(stakedRewardToken.REWARD_TOKEN());
+        receiptToken = IERC20(_receiptToken);
 
-        router = IRouter(addLiquidityRouter.stargateRouter());
-        lpRouterPid = addLiquidityRouter.poolId();
-
-        stgNative = IERC20(_lpToken);
-        stgNative.approve(_lpStaking, 0);
-        stgNative.approve(_lpStaking, type(uint256).max);
-        stgNative.approve(address(router), 0);
-        stgNative.approve(address(router), type(uint256).max);
-
-        stgTokenReward = IERC20(lpStaking.stargate());
-
-        stgTokenReward.approve(_swapper, 0);
-        stgTokenReward.approve(_swapper, type(uint256).max);
-
-        oracle = IOracle(_oracle);
-        oracleData = _oracleData;
+        wrappedNative.approve(_lendingPool, 0);
+        wrappedNative.approve(_lendingPool, type(uint256).max);
+        rewardToken.approve(_multiSwapper, 0);
+        rewardToken.approve(_multiSwapper, type(uint256).max);
     }
 
     // ********************** //
@@ -117,7 +89,7 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ********************** //
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
-        return "Stargate";
+        return "AAVE";
     }
 
     /// @notice Returns the description of this strategy
@@ -127,59 +99,48 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
         override
         returns (string memory description_)
     {
-        return "Stargate strategy for wrapped native assets";
+        return "AAVE strategy for wrapped native assets";
     }
 
     /// @notice returns compounded amounts in wrappedNative
     function compoundAmount() public view returns (uint256 result) {
-        uint256 claimable = lpStaking.pendingStargate(
-            lpStakingPid,
+        uint256 claimable = stakedRewardToken.stakerRewardsToClaim(
             address(this)
         );
-        uint256 stargateBalance = stgTokenReward.balanceOf(address(this));
-        claimable += stargateBalance;
         result = 0;
         if (claimable > 0) {
             ISwapper.SwapData memory swapData = swapper.buildSwapData(
-                address(stgTokenReward),
+                address(rewardToken),
                 address(wrappedNative),
                 claimable,
                 0,
                 false,
                 false
             );
-            result = swapper.getOutputAmount(swapData, "");
-            result = result - (result * _slippage) / 10_000; //0.25%
+            result = swapper.getOutputAmount(swapData, defaultSwapData);
+            result = result - (result * _slippage) / 10_000; //0.5%
         }
     }
 
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
-    /// @notice sets the default swap data
-    /// @param _data the new data
-    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
-        defaultSwapData = _data;
-    }
-
     /// @notice updates the pause state
     /// @param _val the new state
     function updatePaused(bool _val) external onlyOwner {
         paused = _val;
     }
 
+    /// @notice sets the default swap data
+    /// @param _data the new data
+    function setDefaultSwapData(bytes calldata _data) external onlyOwner {
+        defaultSwapData = _data;
+    }
+
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
         _slippage = _val;
-    }
-
-    /// @notice rescues unused ETH from the contract
-    /// @param amount the amount to rescue
-    /// @param to the recipient
-    function rescueEth(uint256 amount, address to) external onlyOwner {
-        (bool success, ) = to.call{value: amount}("");
-        require(success, "StargateStrategy: transfer failed.");
     }
 
     /// @notice Sets the deposit threshold
@@ -192,64 +153,103 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     /// @notice Sets the Swapper address
     /// @param _swapper The new swapper address
     function setMultiSwapper(address _swapper) external onlyOwner {
+        rewardToken.approve(address(swapper), 0);
+
         emit MultiSwapper(address(swapper), _swapper);
-        stgTokenReward.approve(address(swapper), 0);
         swapper = ISwapper(_swapper);
-        stgTokenReward.approve(_swapper, type(uint256).max);
+
+        rewardToken.approve(_swapper, 0);
+        rewardToken.approve(_swapper, type(uint256).max);
     }
 
     // ************************ //
     // *** PUBLIC FUNCTIONS *** //
     // ************************ //
-    function compound(bytes memory dexData) public {
-        uint256 unclaimed = lpStaking.pendingStargate(
-            lpStakingPid,
+    /// @notice
+    function compound(bytes memory dexData) external {
+        //first claim stkAave
+        uint256 unclaimedStkAave = incentivesController.getUserUnclaimedRewards(
             address(this)
         );
 
-        if (unclaimed > 0) {
-            lpStaking.deposit(lpStakingPid, 0);
+        if (unclaimedStkAave > 0) {
+            address[] memory tokens = new address[](1);
+            tokens[0] = address(receiptToken);
+            incentivesController.claimRewards(
+                tokens,
+                type(uint256).max,
+                address(this)
+            );
+        }
+        //try to claim AAVE
+        uint256 claimable = stakedRewardToken.stakerRewardsToClaim(
+            address(this)
+        );
+        if (claimable > 0) {
+            stakedRewardToken.claimRewards(address(this), claimable);
         }
 
-        uint256 stgBalanceAfter = stgTokenReward.balanceOf(address(this));
-        if (stgBalanceAfter > 0) {
+        //try to cooldown
+        (uint40 currentCooldown, ) = stakedRewardToken.stakersCooldowns(
+            address(this)
+        );
+
+        uint256 balanceOfStkAave = stakedRewardToken.balanceOf(address(this));
+        if (currentCooldown > 0) {
+            //we have an active cooldown; check if we need to cooldown again
+            bool daysPassed = (currentCooldown +
+                stakedRewardToken.COOLDOWN_SECONDS() +
+                stakedRewardToken.UNSTAKE_WINDOW()) < block.timestamp;
+            if (daysPassed && balanceOfStkAave > 0) {
+                stakedRewardToken.cooldown();
+            }
+        } else if (balanceOfStkAave > 0) {
+            stakedRewardToken.cooldown();
+        }
+
+        //try to stake
+        uint256 aaveBalanceAfter = rewardToken.balanceOf(address(this));
+        if (aaveBalanceAfter > 0) {
+            //swap AAVE to wrappedNative
             ISwapper.SwapData memory swapData = swapper.buildSwapData(
-                address(stgTokenReward),
+                address(rewardToken),
                 address(wrappedNative),
-                stgBalanceAfter,
+                aaveBalanceAfter,
                 0,
                 false,
                 false
             );
-
-            // already has slippage due to Uni tick rounding down ( at least 0.01% )
             uint256 calcAmount = swapper.getOutputAmount(swapData, dexData);
-            uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000;
+            uint256 minAmount = calcAmount - (calcAmount * _slippage) / 10_000; //0.5%
             swapper.swap(swapData, minAmount, address(this), dexData);
 
+            //stake if > depositThreshold
             uint256 queued = wrappedNative.balanceOf(address(this));
-            _stake(queued);
+            if (queued > depositThreshold) {
+                lendingPool.deposit(
+                    address(wrappedNative),
+                    queued,
+                    address(this),
+                    0
+                );
+            }
+            emit AmountDeposited(queued);
         }
     }
 
     /// @notice withdraws everythig from the strategy
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        paused = true;
-        compound(defaultSwapData);
-
-        (uint256 toWithdraw, ) = lpStaking.userInfo(
-            lpStakingPid,
+        try AaveStrategy(address(this)).compound(defaultSwapData) {} catch (
+            bytes memory
+        ) {}
+        (uint256 toWithdraw, , , , , ) = lendingPool.getUserAccountData(
             address(this)
         );
-
-        lpStaking.withdraw(lpStakingPid, toWithdraw);
-        router.instantRedeemLocal(
-            uint16(lpRouterPid),
+        result = lendingPool.withdraw(
+            address(wrappedNative),
             toWithdraw,
             address(this)
         );
-        result = address(this).balance;
-        INative(address(wrappedNative)).deposit{value: result}();
 
         paused = true;
     }
@@ -257,78 +257,60 @@ contract StargateStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************************* //
     // *** PRIVATE FUNCTIONS *** //
     // ************************* //
-    /// @dev queries 'getUserAccountData' from Stargate and gets the total collateral
+    /// @dev queries 'getUserAccountData' from AAVE and gets the total collateral
     function _currentBalance() internal view override returns (uint256 amount) {
+        (amount, , , , , ) = lendingPool.getUserAccountData(address(this));
         uint256 queued = wrappedNative.balanceOf(address(this));
-        (amount, ) = lpStaking.userInfo(lpStakingPid, address(this));
-
-        //amount is the LP token; convert it to WETH
-        (bool success, uint256 oraclePrice) = oracle.peek(oracleData);
-        require(success, "Stargate: oracle call failed");
-        amount = (amount * oraclePrice) / 1e18;
-
         uint256 claimableRewards = compoundAmount();
         return amount + queued + claimableRewards;
     }
 
-    /// @dev deposits to Stargate or queues tokens if the 'depositThreshold' has not been met yet
-    ///      - when depositing to Stargate, aToken is minted to this contract
+    /// @dev deposits to AAVE or queues tokens if the 'depositThreshold' has not been met yet
+    ///      - when depositing to AAVE, aToken is minted to this contract
     function _deposited(uint256 amount) internal override nonReentrant {
         require(!paused, "Stargate: paused");
-
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (queued > depositThreshold) {
-            _stake(queued);
+            lendingPool.deposit(
+                address(wrappedNative),
+                queued,
+                address(this),
+                0
+            );
+            emit AmountDeposited(queued);
+            return;
         }
         emit AmountQueued(amount);
     }
 
-    function _stake(uint256 amount) private {
-        INative(address(wrappedNative)).withdraw(amount);
-
-        addLiquidityRouter.addLiquidityETH{value: amount}();
-        uint256 toStake = stgNative.balanceOf(address(this));
-        lpStaking.deposit(lpStakingPid, toStake);
-        emit AmountDeposited(amount);
-    }
-
-    /// @dev burns stgToken in exchange of Native and withdraws from Stargate Staking & Router
+    /// @dev burns aToken in exchange of Token and withdraws from AAVE LendingPool
     function _withdraw(
         address to,
         uint256 amount
     ) internal override nonReentrant {
         uint256 available = _currentBalance();
-        require(available >= amount, "StargateStrategy: amount not valid");
+        require(available >= amount, "AaveStrategy: amount not valid");
 
         uint256 queued = wrappedNative.balanceOf(address(this));
         if (amount > queued) {
-            compound(defaultSwapData);
+            try AaveStrategy(address(this)).compound(defaultSwapData) {} catch (
+                bytes memory
+            ) {}
+
+            queued = wrappedNative.balanceOf(address(this));
             uint256 toWithdraw = amount - queued;
-            lpStaking.withdraw(lpStakingPid, toWithdraw);
-            router.instantRedeemLocal(
-                uint16(lpRouterPid),
+
+            uint256 obtainedWrapped = lendingPool.withdraw(
+                address(wrappedNative),
                 toWithdraw,
                 address(this)
             );
-
-            INative(address(wrappedNative)).deposit{
-                value: address(this).balance
-            }();
+            if (obtainedWrapped > toWithdraw) {
+                amount += (obtainedWrapped - toWithdraw);
+            }
         }
 
-        require(
-            amount <= wrappedNative.balanceOf(address(this)),
-            "Stargate: not enough"
-        );
         wrappedNative.safeTransfer(to, amount);
-
-        queued = wrappedNative.balanceOf(address(this));
-        if (queued > 0) {
-            _stake(queued);
-        }
-
         emit AmountWithdrawn(to, amount);
     }
-
-    receive() external payable {}
 }

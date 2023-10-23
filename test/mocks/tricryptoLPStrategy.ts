@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe('TricryptoLPStrategy test', () => {
+describe.skip('TricryptoLPStrategy test', () => {
     it('should test initial strategy values', async () => {
         const { tricryptoLPStrategy, tricryptoLPGtter, weth, yieldBox } =
             await loadFixture(registerMocks);

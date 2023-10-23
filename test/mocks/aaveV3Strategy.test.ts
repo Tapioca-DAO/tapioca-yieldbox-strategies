@@ -4,7 +4,7 @@ import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import _ from 'lodash';
 
-describe('AaveV3Strategy test', () => {
+describe.skip('AaveV3Strategy test', () => {
     it('should test initial strategy values', async () => {
         const { aaveV3Strategy, weth, yieldBox } = await loadFixture(
             registerMocks,

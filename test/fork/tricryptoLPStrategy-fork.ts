@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerFork } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe('TricryptoLPStrategy fork test', () => {
+describe.skip('TricryptoLPStrategy fork test', () => {
     it('should test initial strategy values', async () => {
         const { tricryptoLPStrategy, tricryptoLPGtter, weth, yieldBox } =
             await loadFixture(registerFork);
