@@ -54,11 +54,11 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // *** EVENTS *** //
     // ************** //
     event MultiSwapper(address indexed _old, address indexed _new);
-    event DepositThreshold(uint256 _old, uint256 _new);
-    event AmountQueued(uint256 amount);
-    event AmountDeposited(uint256 amount);
-    event AmountWithdrawn(address indexed to, uint256 amount);
-    event ComptrollerUpdated(address indexed _old, address _new);
+    event DepositThreshold(uint256 indexed _old, uint256 indexed _new);
+    event AmountQueued(uint256 indexed amount);
+    event AmountDeposited(uint256 indexed amount);
+    event AmountWithdrawn(address indexed to, uint256 indexed amount);
+    event ComptrollerUpdated(address indexed _old, address indexed _new);
 
     constructor(
         IYieldBox _yieldBox,
@@ -220,7 +220,7 @@ contract CompoundStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 shares = cToken.balanceOf(address(this));
         uint256 pricePerShare = LibCompound.viewExchangeRate(cToken);
-        uint256 invested = (shares * pricePerShare) / (10 ** 18);
+        uint256 invested = (shares * pricePerShare) / 1e18;
         uint256 queued = wrappedNative.balanceOf(address(this));
         return queued + invested;
     }

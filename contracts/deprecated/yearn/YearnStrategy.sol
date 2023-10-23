@@ -47,11 +47,11 @@ contract YearnStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard {
     // ************** //
     // *** EVENTS *** //
     // ************** //
-    event DepositThreshold(uint256 _old, uint256 _new);
-    event AmountQueued(uint256 amount);
-    event AmountDeposited(uint256 amount);
-    event AmountWithdrawn(address indexed to, uint256 amount);
-    event MaxLossSet(uint256 oldVal, uint256 newVal);
+    event DepositThreshold(uint256 indexed _old, uint256 indexed _new);
+    event AmountQueued(uint256 indexed amount);
+    event AmountDeposited(uint256 indexed amount);
+    event AmountWithdrawn(address indexed to, uint256 indexed amount);
+    event MaxLossSet(uint256 indexed oldVal, uint256 indexed newVal);
 
     constructor(
         IYieldBox _yieldBox,

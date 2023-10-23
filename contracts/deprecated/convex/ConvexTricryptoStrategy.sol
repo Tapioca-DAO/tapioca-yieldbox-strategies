@@ -81,11 +81,11 @@ contract ConvexTricryptoStrategy is
     // *** EVENTS *** //
     // ************** //
     event MultiSwapper(address indexed _old, address indexed _new);
-    event DepositThreshold(uint256 _old, uint256 _new);
+    event DepositThreshold(uint256 indexed _old, uint256 indexed _new);
     event LPGetterSet(address indexed _old, address indexed _new);
-    event AmountQueued(uint256 amount);
-    event AmountDeposited(uint256 amount);
-    event AmountWithdrawn(address indexed to, uint256 amount);
+    event AmountQueued(uint256 indexed amount);
+    event AmountDeposited(uint256 indexed amount);
+    event AmountWithdrawn(address indexed to, uint256 indexed amount);
 
     constructor(
         IYieldBox _yieldBox,
@@ -259,7 +259,7 @@ contract ConvexTricryptoStrategy is
         if (data.length == 0) return;
         address[] memory tokens = _executeClaim(data);
 
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i; i < tokens.length; i++) {
             uint256 rewardBalance = IERC20(tokens[i]).balanceOf(address(this));
             if (rewardBalance > 0) {
                 _safeApprove(tokens[i], address(swapper), rewardBalance);
@@ -337,7 +337,7 @@ contract ConvexTricryptoStrategy is
             extrasTempData.options
         );
         uint256[] memory balancesAfter = new uint256[](tempData.tokens.length);
-        for (uint256 i = 0; i < tempData.tokens.length; i++) {
+        for (uint256 i; i < tempData.tokens.length; i++) {
             balancesAfter[i] = IERC20(tempData.tokens[i]).balanceOf(
                 address(this)
             );

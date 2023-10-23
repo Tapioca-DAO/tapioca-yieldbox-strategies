@@ -435,7 +435,7 @@ Transfers ownership to `newOwner`. Either directly or claimable by the new pendi
 ### AddedLiquidity
 
 ```solidity
-event AddedLiquidity(address indexed token, uint256 amount, uint256 obtainedLP)
+event AddedLiquidity(address indexed token, uint256 indexed amount, uint256 indexed obtainedLP)
 ```
 
 event emitted when liquidity was added
@@ -447,8 +447,8 @@ event emitted when liquidity was added
 | Name | Type | Description |
 |---|---|---|
 | token `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-| obtainedLP  | uint256 | undefined |
+| amount `indexed` | uint256 | undefined |
+| obtainedLP `indexed` | uint256 | undefined |
 
 ### OwnershipTransferred
 
@@ -470,7 +470,7 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 ### RemovedLiquidity
 
 ```solidity
-event RemovedLiquidity(address indexed token, uint256 amountLP, uint256 obtainedAssets)
+event RemovedLiquidity(address indexed token, uint256 indexed amountLP, uint256 indexed obtainedAssets)
 ```
 
 event emitted when liquidity was added
@@ -482,8 +482,8 @@ event emitted when liquidity was added
 | Name | Type | Description |
 |---|---|---|
 | token `indexed` | address | undefined |
-| amountLP  | uint256 | undefined |
-| obtainedAssets  | uint256 | undefined |
+| amountLP `indexed` | uint256 | undefined |
+| obtainedAssets `indexed` | uint256 | undefined |
 
 
 

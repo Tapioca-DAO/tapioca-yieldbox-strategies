@@ -61,11 +61,11 @@ contract TricryptoLPStrategy is
     // *** EVENTS *** //
     // ************** //
     event MultiSwapper(address indexed _old, address indexed _new);
-    event DepositThreshold(uint256 _old, uint256 _new);
+    event DepositThreshold(uint256 _old, uint256 indexed _new);
     event LPGetterSet(address indexed _old, address indexed _new);
-    event AmountQueued(uint256 amount);
-    event AmountDeposited(uint256 amount);
-    event AmountWithdrawn(address indexed to, uint256 amount);
+    event AmountQueued(uint256 indexed amount);
+    event AmountDeposited(uint256 indexed amount);
+    event AmountWithdrawn(address indexed to, uint256 indexed amount);
 
     constructor(
         IYieldBox _yieldBox,

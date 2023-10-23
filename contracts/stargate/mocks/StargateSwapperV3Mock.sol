@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract StargateSwapperV3Mock {
     using SafeERC20 for IERC20;
 
-    event PoolFee(uint256 _old, uint256 _new);
+    event PoolFee(uint256 indexed _old, uint256 indexed _new);
 
     constructor() {}
 

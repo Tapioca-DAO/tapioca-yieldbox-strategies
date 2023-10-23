@@ -91,10 +91,10 @@ Is called by YieldBox to signal funds have been added, the strategy may choose t
 ### description
 
 ```solidity
-function description() external view returns (string)
+function description() external pure returns (string description_)
 ```
 
-Returns a description for this strategy
+Returns the description of this strategy
 
 
 
@@ -103,7 +103,7 @@ Returns a description for this strategy
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined |
+| description_ | string | undefined |
 
 ### emergencyWithdraw
 
@@ -221,10 +221,10 @@ function harvestGmx(uint256 priceNum, uint256 priceDenom) external nonpayable
 ### name
 
 ```solidity
-function name() external view returns (string)
+function name() external pure returns (string name_)
 ```
 
-Returns a name for this strategy
+Returns the name of this strategy
 
 
 
@@ -233,7 +233,7 @@ Returns a name for this strategy
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | string | undefined |
+| name_ | string | undefined |
 
 ### owner
 
