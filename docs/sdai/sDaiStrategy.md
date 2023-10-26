@@ -10,6 +10,23 @@
 
 ## Methods
 
+### FEE_BPS
+
+```solidity
+function FEE_BPS() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### cheapWithdrawable
 
 ```solidity
@@ -188,6 +205,40 @@ withdraws everythig from the strategy
 | Name | Type | Description |
 |---|---|---|
 | result | uint256 | undefined |
+
+### feeRecipient
+
+```solidity
+function feeRecipient() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### feesPending
+
+```solidity
+function feesPending() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### name
 
@@ -391,6 +442,22 @@ Is called by the YieldBox to ask the strategy to withdraw to the user When a str
 |---|---|---|
 | to | address | undefined |
 | amount | uint256 | undefined |
+
+### withdrawFees
+
+```solidity
+function withdrawFees(uint256 _amount) external nonpayable
+```
+
+withdraws fees
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | undefined |
 
 ### withdrawable
 

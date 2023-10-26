@@ -54,6 +54,23 @@ function earned(address _user) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### extraRewardsLength
+
+```solidity
+function extraRewardsLength() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### getReward
 
 ```solidity
