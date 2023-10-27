@@ -496,6 +496,8 @@ async function registerSDaiStrategy(yieldBoxAddres: string, staging?: boolean) {
         yieldBoxAddres,
         tDai.address,
         sDai.address,
+        deployer.address,
+        100,
     );
     await sDaiStrategy.deployed();
     log('Deployed sDaiStrategy', staging);
