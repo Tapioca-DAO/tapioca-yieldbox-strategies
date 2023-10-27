@@ -34,6 +34,40 @@ function claimRewards(address[] rewardContracts, address[] extraRewardContracts,
 | spendCvxAmount | uint256 | undefined |
 | options | uint256 | undefined |
 
+### cvx
+
+```solidity
+function cvx() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### cvxRewards
+
+```solidity
+function cvxRewards() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 
 
 

@@ -279,4 +279,66 @@ describe('sDaiStrategy-fork test', () => {
         sDaiStrategyBalanceAfter = await sDai.balanceOf(sDaiStrategy.address);
         expect(sDaiStrategyBalanceAfter.eq(0)).to.be.true;
     });
+
+    it('should handle fees', async () => {
+        const { dai, tDai, sDaiStrategy, deployer, yieldBox, binanceWallet } =
+            await loadFixture(registerFork);
+
+        const sDai = await ethers.getContractAt(
+            'ISavingsDai',
+            await sDaiStrategy.sDai(),
+        );
+
+        await yieldBox.registerAsset(1, tDai.address, sDaiStrategy.address, 0);
+        const sDaiStrategyAssetId = await yieldBox.ids(
+            1,
+            tDai.address,
+            sDaiStrategy.address,
+            0,
+        );
+        const amount = ethers.BigNumber.from((1e18).toString()).mul(10);
+
+        await dai.connect(binanceWallet).transfer(deployer.address, amount);
+        await dai.approve(tDai.address, amount);
+        await tDai.wrap(deployer.address, deployer.address, amount);
+
+        await tDai.approve(yieldBox.address, amount);
+        await yieldBox.depositAsset(
+            sDaiStrategyAssetId,
+            deployer.address,
+            deployer.address,
+            amount,
+            0,
+        );
+
+        await yieldBox.withdraw(
+            sDaiStrategyAssetId,
+            deployer.address,
+            deployer.address,
+            amount,
+            0,
+        );
+
+        const pendingFees = await sDaiStrategy.feesPending();
+        expect(pendingFees).to.be.equal(
+            amount.mul(await sDaiStrategy.FEE_BPS()).div(10000),
+        );
+
+        // "Burn" current holdings
+        const [, _void] = await ethers.getSigners();
+        await tDai.transfer(
+            _void.address,
+            await tDai.balanceOf(deployer.address),
+        );
+        expect(await tDai.balanceOf(deployer.address)).to.be.equal(0);
+
+        expect(await sDaiStrategy.feeRecipient()).to.be.equal(deployer.address);
+        await sDaiStrategy.withdrawFees(pendingFees);
+
+        expect(await sDaiStrategy.feesPending()).to.be.approximately(0, 1);
+        expect(await tDai.balanceOf(deployer.address)).to.be.approximately(
+            pendingFees,
+            1,
+        );
+    });
 });

@@ -34,6 +34,40 @@ function claimRewards(address[], address[], address[], address[], uint256, uint2
 | _7 | uint256 | undefined |
 | _8 | uint256 | undefined |
 
+### cvx
+
+```solidity
+function cvx() external pure returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### cvxRewards
+
+```solidity
+function cvxRewards() external pure returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### reward1
 
 ```solidity

@@ -151,12 +151,13 @@ describe('sDaiStrategy test', () => {
             0,
         );
 
+        const fees = await sDaiStrategy.feesPending();
         sDaiStrategyBalanceAfter = await sDai.balanceOf(sDaiStrategy.address);
         expect(sDaiStrategyBalanceAfter.gt(0)).to.be.true;
-        expect(sDaiStrategyBalanceAfter.lte(amount.div(2))).to.be.true;
+        expect(sDaiStrategyBalanceAfter.sub(fees)).to.be.lte(amount.div(2));
 
         tDaiDeployerBalanceAfter = await tDai.balanceOf(deployer.address);
-        expect(tDaiDeployerBalanceAfter.eq(amount.div(2))).to.be.true;
+        expect(tDaiDeployerBalanceAfter).to.be.equal(amount.div(2).sub(fees));
     });
 
     it('should withdraw from queue', async () => {
