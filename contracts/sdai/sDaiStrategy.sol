@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import "hardhat/console.sol";
-
 //OZ
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
