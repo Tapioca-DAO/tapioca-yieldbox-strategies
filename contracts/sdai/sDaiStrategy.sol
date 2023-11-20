@@ -15,8 +15,8 @@ import "../feeCollector.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 
 //interfaces
+import "tapioca-periph/contracts/interfaces/ISavingsDai.sol";
 import "./interfaces/ITDai.sol";
-import "../../tapioca-periph/contracts/interfaces/ISavingsDai.sol";
 
 //For mainnet
 contract sDaiStrategy is
