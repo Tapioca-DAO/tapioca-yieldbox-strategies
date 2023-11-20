@@ -44,6 +44,14 @@ contract sDaiStrategy is
     event AmountDeposited(uint256 indexed amount);
     event AmountWithdrawn(address indexed to, uint256 indexed amount);
 
+    // ************** //
+    // *** ERRORS *** //
+    // ************** //
+    error TokenNotValid();
+    error TransferFailed();
+    error Paused();
+    error NotEnough();
+
     constructor(
         IYieldBox _yieldBox,
         address _token,
@@ -57,7 +65,7 @@ contract sDaiStrategy is
         owner = msg.sender;
         sDai = _sDai;
         dai = IERC20(ITDai(_token).erc20());
-        require(address(dai) == sDai.dai(), "sDai: invalid token");
+        if (address(dai) != sDai.dai()) revert TokenNotValid();
     }
 
     // ********************** //
@@ -96,7 +104,7 @@ contract sDaiStrategy is
     /// @param to the recipient
     function rescueEth(uint256 amount, address to) external onlyOwner {
         (bool success, ) = to.call{value: amount}("");
-        require(success, "sDaiStrategy: transfer failed.");
+        if (!success) revert TransferFailed();
     }
 
     /// @notice Sets the deposit threshold
@@ -143,7 +151,7 @@ contract sDaiStrategy is
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
     function _deposited(uint256 amount) internal override nonReentrant {
-        require(!paused, "sDai: paused");
+        if (paused) revert Paused();
         // Assume that YieldBox already transferred the tokens to this address
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)) -
             feesPending;
@@ -163,13 +171,12 @@ contract sDaiStrategy is
         uint256 amount
     ) internal override nonReentrant {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
-        require(
+        if (
             IERC20(contractAddress).balanceOf(address(this)) +
                 maxWithdraw -
-                feesPending >=
-                amount,
-            "sDai: not enough"
-        ); // dai <> tDai is 1:1
+                feesPending <
+            amount
+        ) revert NotEnough(); // dai <> tDai is 1:1
 
         (uint256 toWithdraw, uint256 fees) = _processFees(
             maxWithdraw >= amount ? amount : maxWithdraw
