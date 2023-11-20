@@ -15,6 +15,7 @@ import {
     UniswapV3SwapperMock__factory,
     OracleMock__factory,
     TOFTMock__factory,
+    SavingsDaiMock__factory,
 } from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
 import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
 
@@ -486,9 +487,8 @@ async function registerSDaiStrategy(yieldBoxAddres: string, staging?: boolean) {
     const tDai = await TOFTMock.deploy(dai.address);
     log('Deployed tDai', staging);
 
-    const sDaiFactory = await ethers.getContractFactory('SavingsDaiMock');
-    const sDai = await sDaiFactory.deploy(dai.address);
-    await sDai.deployed();
+    const SavingsDaiMock = new SavingsDaiMock__factory(deployer);
+    const sDai = await SavingsDaiMock.deploy(dai.address);
     log('Deployed sDai', staging);
 
     const sDaiStrategyFactory = await ethers.getContractFactory('sDaiStrategy');
