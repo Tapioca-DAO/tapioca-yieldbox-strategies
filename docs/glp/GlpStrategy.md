@@ -557,3 +557,94 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 
 
 
+## Errors
+
+### Failed
+
+```solidity
+error Failed()
+```
+
+
+
+
+
+
+### GlpRewardRouterNotValid
+
+```solidity
+error GlpRewardRouterNotValid()
+```
+
+
+
+
+
+
+### GmxRewardRouterNotValid
+
+```solidity
+error GmxRewardRouterNotValid()
+```
+
+
+
+
+
+
+### NotAuthorized
+
+```solidity
+error NotAuthorized()
+```
+
+
+
+
+
+
+### NotEnough
+
+```solidity
+error NotEnough()
+```
+
+
+
+
+
+
+### NotValid
+
+```solidity
+error NotValid()
+```
+
+
+
+
+
+
+### Paused
+
+```solidity
+error Paused()
+```
+
+
+
+
+
+
+### WethMismatch
+
+```solidity
+error WethMismatch()
+```
+
+
+
+
+
+
+

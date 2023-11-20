@@ -582,3 +582,50 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 
 
 
+## Errors
+
+### NotEnough
+
+```solidity
+error NotEnough()
+```
+
+
+
+
+
+
+### Paused
+
+```solidity
+error Paused()
+```
+
+
+
+
+
+
+### TokenNotValid
+
+```solidity
+error TokenNotValid()
+```
+
+
+
+
+
+
+### TransferFailed
+
+```solidity
+error TransferFailed()
+```
+
+
+
+
+
+
+

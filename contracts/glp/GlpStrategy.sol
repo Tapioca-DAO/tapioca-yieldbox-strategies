@@ -58,6 +58,15 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     uint256 private _slippage = 50;
 
+    error WethMismatch();
+    error GlpRewardRouterNotValid();
+    error GmxRewardRouterNotValid();
+    error NotAuthorized();
+    error NotValid();
+    error NotEnough();
+    error Failed();
+    error Paused();
+
     constructor(
         IYieldBox _yieldBox,
         IGmxRewardRouterV2 _gmxRewardRouter,
@@ -71,13 +80,14 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         bytes memory _gmxGlpOracleData
     ) BaseERC20Strategy(_yieldBox, address(_sGlp)) {
         weth = IERC20(_yieldBox.wrappedNative());
-        require(address(weth) == _gmxRewardRouter.weth(), "WETH mismatch");
+        if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
 
-        require(_glpRewardRouter.gmx() == address(0), "Bad GLP reward router");
+        if (_glpRewardRouter.gmx() != address(0))
+            revert GlpRewardRouterNotValid();
         glpRewardRouter = _glpRewardRouter;
 
         address _gmx = _gmxRewardRouter.gmx();
-        require(_gmx != address(0), "Bad GMX reward router");
+        if (_gmx == address(0)) revert GmxRewardRouterNotValid();
         gmxRewardRouter = _gmxRewardRouter;
         gmx = IERC20(_gmx);
 
@@ -122,7 +132,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         int256 /* amount1Delta */,
         bytes calldata data
     ) external {
-        require(msg.sender == address(gmxWethPool), "Not the pool");
+        if (msg.sender != address(gmxWethPool)) revert NotAuthorized();
         uint256 amount = abi.decode(data, (uint256));
         gmx.safeTransfer(address(gmxWethPool), amount);
     }
@@ -188,14 +198,14 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
         uint256 claimableGmx = glpVester.claimable(address(this));
         (bool success, uint256 gmxPrice) = gmxGlpOracle.peek(gmxGlpOracleData);
-        require(success, "Glp: oracle call failed");
+        if (!success) revert Failed();
         uint256 claimableGlp = (claimableGmx * gmxPrice) / 1e18;
 
         amount += claimableGlp;
     }
 
     function _deposited(uint256 /* amount */) internal override {
-        require(!paused, "Glp: paused");
+        if (paused) revert Paused();
         harvest();
     }
 
@@ -209,7 +219,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             glpVester.withdraw();
         }
         // Call this first; `_vestByGlp()` will lock the GLP again
-        require(amount > 0, "Strategy: amount is 0");
+        if (amount == 0) revert NotValid();
         IERC20(contractAddress).safeTransfer(to, amount);
     }
 
@@ -238,12 +248,12 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             uint256 usdgPrice;
             uint256 glpPrice;
             (success, usdgPrice) = wethUsdgOracle.get(wethUsdgOracleData);
-            require(success, "Glp: oracle call failed");
+            if (!success) revert Failed();
             uint256 amountInUsdg = (wethAmount * usdgPrice) / 1e18;
             amountInUsdg = amountInUsdg - (amountInUsdg * _slippage) / 10_000; //0.5%
 
             (success, glpPrice) = wethGlpOracle.get(wethGlpOracleData);
-            require(success, "Glp: oracle call failed");
+            if (!success) revert Failed();
             uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
             amountInGlp = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
 
@@ -275,6 +285,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         );
         // TODO: Check the cast?
         uint256 amountOut = uint256(-(zeroForOne ? amount1 : amount0));
-        require(amountOut * priceDenom >= gmxAmount * priceNum, "Not enough");
+        if (amountOut * priceDenom < gmxAmount * priceNum) revert NotEnough();
     }
 }
