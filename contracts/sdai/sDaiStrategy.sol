@@ -57,7 +57,8 @@ contract sDaiStrategy is
         address _token,
         ISavingsDai _sDai,
         address _feeRecipient,
-        uint256 _feeBps
+        uint256 _feeBps,
+        address _owner
     )
         BaseERC20Strategy(_yieldBox, _token)
         FeeCollector(_feeRecipient, _feeBps)
@@ -66,6 +67,7 @@ contract sDaiStrategy is
         sDai = _sDai;
         dai = IERC20(ITDai(_token).erc20());
         if (address(dai) != sDai.dai()) revert TokenNotValid();
+        owner = _owner;
     }
 
     // ********************** //
@@ -93,6 +95,12 @@ contract sDaiStrategy is
     // *********************** //
     // *** OWNER FUNCTIONS *** //
     // *********************** //
+    /// @notice updates fee recipient
+    /// @param _val fee address
+    function updateFeeRecipient(address _val) external onlyOwner {
+        feeRecipient = _val;
+    }
+
     /// @notice updates the pause state
     /// @param _val the new state
     function updatePaused(bool _val) external onlyOwner {

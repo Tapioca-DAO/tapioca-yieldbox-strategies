@@ -459,6 +459,7 @@ async function registersDaiStrategyFork(
         sDaiAddress,
         deployer.address,
         100, // 1%
+        deployer.address,
     );
     await sDaiStrategy.deployed();
     log('Deployed sDaiStrategy', staging);
@@ -498,6 +499,7 @@ async function registerSDaiStrategy(yieldBoxAddres: string, staging?: boolean) {
         sDai.address,
         deployer.address,
         100,
+        deployer.address,
     );
     await sDaiStrategy.deployed();
     log('Deployed sDaiStrategy', staging);

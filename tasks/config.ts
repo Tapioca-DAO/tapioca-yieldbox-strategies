@@ -1,0 +1,33 @@
+import { EChainID } from '../gitsub_tapioca-sdk/src/api/config';
+
+const MISC = {
+    [EChainID.ARBITRUM]: {
+        MISC: {
+            SDAI_ADDRESS: '0xFdB631F5EE196F0ed6FAa767959853A9F217697D',
+            GMX_REWARD_ROUTER: '0xA906F338CB21815cBc4Bc87ace9e68c87eF8d8F1',
+            GLP_REWARD_ROUTER: '0xB95DB5B167D75e6d04227CfFFA61069348d271F5',
+            SGLP_ADDRESS: '0x5402B5F40310bDED796c7D0F3FF6683f5C0cFfdf',
+        },
+    },
+
+    //TESTNETS
+    [EChainID.ARBITRUM_GOERLI]: {
+        MISC: {
+            SDAI_ADDRESS: '0xFdB631F5EE196F0ed6FAa767959853A9F217697D',
+            GMX_REWARD_ROUTER: '0xA906F338CB21815cBc4Bc87ace9e68c87eF8d8F1',
+            GLP_REWARD_ROUTER: '0xB95DB5B167D75e6d04227CfFFA61069348d271F5',
+            SGLP_ADDRESS: '0x5402B5F40310bDED796c7D0F3FF6683f5C0cFfdf',
+        },
+    },
+};
+
+export const ARGS_CONFIG = {
+    [EChainID.ARBITRUM]: {
+        ...MISC[EChainID.ARBITRUM],
+    },
+
+    //TESTNET
+    [EChainID.ARBITRUM_GOERLI]: {
+        ...MISC[EChainID.ARBITRUM_GOERLI],
+    },
+};

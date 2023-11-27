@@ -77,7 +77,8 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         IOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         IOracle _gmxGlpOracle,
-        bytes memory _gmxGlpOracleData
+        bytes memory _gmxGlpOracleData,
+        address _owner
     ) BaseERC20Strategy(_yieldBox, address(_sGlp)) {
         weth = IERC20(_yieldBox.wrappedNative());
         if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
@@ -109,6 +110,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         wethGlpOracleData = _wethGlpOracleData;
         gmxGlpOracle = _gmxGlpOracle;
         gmxGlpOracleData = _gmxGlpOracleData;
+        owner = _owner;
     }
 
     /// @notice Returns the name of this strategy

@@ -188,7 +188,7 @@ function decimals() external view returns (uint8)
 
 
 
-*Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the default value returned by this function, unless it&#39;s overridden. NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}.*
+*Returns the number of decimals used to get its user representation. For example, if `decimals` equals `2`, a balance of `505` tokens should be displayed to a user as `5.05` (`505 / 10 ** 2`). Tokens usually opt for a value of 18, imitating the relationship between Ether and Wei. This is the value {ERC20} uses, unless this function is overridden; NOTE: This information is only used for _display_ purposes: it in no way affects any of the arithmetic of the contract, including {IERC20-balanceOf} and {IERC20-transfer}.*
 
 
 #### Returns
@@ -231,29 +231,6 @@ function deposit() external payable
 
 
 
-### eip712Domain
-
-```solidity
-function eip712Domain() external view returns (bytes1 fields, string name, string version, uint256 chainId, address verifyingContract, bytes32 salt, uint256[] extensions)
-```
-
-
-
-*See {EIP-5267}. _Available since v4.9._*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| fields | bytes1 | undefined |
-| name | string | undefined |
-| version | string | undefined |
-| chainId | uint256 | undefined |
-| verifyingContract | address | undefined |
-| salt | bytes32 | undefined |
-| extensions | uint256[] | undefined |
-
 ### exchangeRateStored
 
 ```solidity
@@ -286,23 +263,6 @@ function extractTokens(uint256 _amount) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _amount | uint256 | undefined |
-
-### feeRecipient
-
-```solidity
-function feeRecipient() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### freeMint
 
@@ -574,7 +534,7 @@ function renounceOwnership() external nonpayable
 
 
 
-*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.*
+*Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.*
 
 
 ### reserveFactorMantissa
@@ -593,38 +553,6 @@ function reserveFactorMantissa() external pure returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-
-### setFeeRecipient
-
-```solidity
-function setFeeRecipient(address _feeRecipient) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _feeRecipient | address | undefined |
-
-### setTransferFee
-
-```solidity
-function setTransferFee(uint32 _fee) external nonpayable
-```
-
-Set the transfer fee
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _fee | uint32 | The new transfer fee |
 
 ### symbol
 
@@ -708,19 +636,19 @@ function totalSupply() external view returns (uint256)
 ### transfer
 
 ```solidity
-function transfer(address recipient, uint256 amount) external nonpayable returns (bool)
+function transfer(address to, uint256 amount) external nonpayable returns (bool)
 ```
 
-ERC20 transfer override to include a transfer fee
 
 
+*See {IERC20-transfer}. Requirements: - `to` cannot be the zero address. - the caller must have a balance of at least `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| recipient | address | The address to transfer to |
-| amount | uint256 | The amount to transfer |
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
@@ -728,40 +656,23 @@ ERC20 transfer override to include a transfer fee
 |---|---|---|
 | _0 | bool | undefined |
 
-### transferFee
-
-```solidity
-function transferFee() external view returns (uint32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint32 | undefined |
-
 ### transferFrom
 
 ```solidity
-function transferFrom(address sender, address recipient, uint256 amount) external nonpayable returns (bool)
+function transferFrom(address from, address to, uint256 amount) external nonpayable returns (bool)
 ```
 
-ERC20 transferFrom override to include a transfer fee
 
 
+*See {IERC20-transferFrom}. Emits an {Approval} event indicating the updated allowance. This is not required by the EIP. See the note at the beginning of {ERC20}. NOTE: Does not update the allowance if the current allowance is the maximum `uint256`. Requirements: - `from` and `to` cannot be the zero address. - `from` must have a balance of at least `amount`. - the caller must have allowance for ``from``&#39;s tokens of at least `amount`.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| sender | address | The address to transfer from |
-| recipient | address | The address to transfer to |
-| amount | uint256 | The amount to transfer |
+| from | address | undefined |
+| to | address | undefined |
+| amount | uint256 | undefined |
 
 #### Returns
 
@@ -859,7 +770,7 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 ### Deposit
 
 ```solidity
-event Deposit(address indexed dst, uint256 wad)
+event Deposit(address indexed dst, uint256 indexed wad)
 ```
 
 
@@ -871,18 +782,7 @@ event Deposit(address indexed dst, uint256 wad)
 | Name | Type | Description |
 |---|---|---|
 | dst `indexed` | address | undefined |
-| wad  | uint256 | undefined |
-
-### EIP712DomainChanged
-
-```solidity
-event EIP712DomainChanged()
-```
-
-
-
-*MAY be emitted to signal that the domain could have changed.*
-
+| wad `indexed` | uint256 | undefined |
 
 ### OwnershipTransferred
 
@@ -922,7 +822,7 @@ event Transfer(address indexed from, address indexed to, uint256 value)
 ### Withdrawal
 
 ```solidity
-event Withdrawal(address indexed src, uint256 wad)
+event Withdrawal(address indexed src, uint256 indexed wad)
 ```
 
 
@@ -934,37 +834,7 @@ event Withdrawal(address indexed src, uint256 wad)
 | Name | Type | Description |
 |---|---|---|
 | src `indexed` | address | undefined |
-| wad  | uint256 | undefined |
+| wad `indexed` | uint256 | undefined |
 
-
-
-## Errors
-
-### InvalidShortString
-
-```solidity
-error InvalidShortString()
-```
-
-
-
-
-
-
-### StringTooLong
-
-```solidity
-error StringTooLong(string str)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| str | string | undefined |
 
 
