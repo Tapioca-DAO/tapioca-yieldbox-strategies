@@ -107,10 +107,18 @@ export const deployStrategy__task = async (
             default: '0x',
         });
 
+        const { toftAddress } = await inquirer.prompt({
+            type: 'input',
+            name: 'toftAddress',
+            message: 'tGMX address',
+            default: 0,
+        });
+
         VM.add(
             await buildGlpStrategy(
                 hre,
                 tag,
+                toftAddress,
                 wethUsdgOracleAddress,
                 wethUsdgOracleData,
                 wethGlpOracleAddress,
