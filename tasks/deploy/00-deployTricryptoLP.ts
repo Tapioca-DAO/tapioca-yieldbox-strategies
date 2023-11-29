@@ -6,6 +6,7 @@ import { buildTricryptoLPStrategy } from '../deployBuilds/00-buildTricryptoLPStr
 import { TOKENS_DEPLOYMENTS } from '../../gitsub_tapioca-sdk/src/api/constants';
 import { EChainID } from 'tapioca-sdk/dist/api/config';
 
+//deprecated
 export const deployTricrytoLPStrategy__task = async (
     {},
     hre: HardhatRuntimeEnvironment,

@@ -410,6 +410,22 @@ Transfers ownership to `newOwner`. Either directly or claimable by the new pendi
 | direct | bool | True if `newOwner` should be set immediately. False if `newOwner` needs to use `claimOwnership`. |
 | renounce | bool | Allows the `newOwner` to be `address(0)` if `direct` and `renounce` is True. Has no effect otherwise. |
 
+### updateFeeRecipient
+
+```solidity
+function updateFeeRecipient(address _val) external nonpayable
+```
+
+updates fee recipient
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _val | address | fee address |
+
 ### updatePaused
 
 ```solidity

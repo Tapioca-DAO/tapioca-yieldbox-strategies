@@ -86,6 +86,7 @@
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.3",
     "husky": "^8.0.1",
+    "@types/inquirer": "^9.0.3",
     "inquirer": "^8.2.5",
     "load-json-file": "^7.0.1",
     "lodash": "^4.17.21",

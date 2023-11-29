@@ -233,6 +233,7 @@ describe('GlpStrategy fork test', () => {
             (1e18).toString(),
         );
 
+        const deployer = (await ethers.getSigners())[0];
         const strategy = await (
             await ethers.getContractFactory('GlpStrategy')
         ).deploy(
@@ -246,6 +247,7 @@ describe('GlpStrategy fork test', () => {
             ethers.utils.toUtf8Bytes(''),
             oracle.address,
             ethers.utils.toUtf8Bytes(''),
+            deployer.address,
         );
         await strategy.deployed();
         await strategy.setSlippage(1000);
