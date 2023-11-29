@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { IDeployerVMAdd } from 'tapioca-sdk/dist/ethers/hardhat/DeployerVM';
 import { SDaiStrategy__factory } from '../../typechain';
 import { ARGS_CONFIG } from '../config';
+import { ContractFactory } from 'ethers';
 
 export const buildSDaiStrategy = async (
     hre: HardhatRuntimeEnvironment,
@@ -9,7 +10,7 @@ export const buildSDaiStrategy = async (
     tokenAddress: string,
     feeRecipient: string,
     feeBps: string,
-): Promise<IDeployerVMAdd<SDaiStrategy__factory>> => {
+): Promise<IDeployerVMAdd<ContractFactory>> => {
     const chainInfo = hre.SDK.utils.getChainBy(
         'chainId',
         await hre.getChainId(),
@@ -44,7 +45,15 @@ export const buildSDaiStrategy = async (
         deployer.address,
     ];
 
+    const token = await hre.ethers.getContractAt(
+        'IERC20Metadata',
+        tokenAddress,
+    );
+
     return {
+        meta: {
+            stratFor: await token.name(),
+        },
         contract: await hre.ethers.getContractFactory('sDaiStrategy'),
         deploymentName: 'sDaiStrategy',
         args,

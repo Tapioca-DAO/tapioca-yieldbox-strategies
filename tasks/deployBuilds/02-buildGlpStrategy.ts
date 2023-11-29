@@ -2,17 +2,19 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { IDeployerVMAdd } from 'tapioca-sdk/dist/ethers/hardhat/DeployerVM';
 import { GlpStrategy__factory } from '../../typechain';
 import { ARGS_CONFIG } from '../config';
+import { ContractFactory } from 'ethers';
 
 export const buildGlpStrategy = async (
     hre: HardhatRuntimeEnvironment,
     tag: string,
+    tokenAddress: string,
     wethUsdgOracleAddress: string,
     wethUsdgOracleData: any,
     wethGlpOracleAddress: string,
     wethGlpOracleData: any,
     gmxGlpOracleAddress: string,
     gmxGlpOracleData: any,
-): Promise<IDeployerVMAdd<GlpStrategy__factory>> => {
+): Promise<IDeployerVMAdd<ContractFactory>> => {
     const chainInfo = hre.SDK.utils.getChainBy(
         'chainId',
         await hre.getChainId(),
@@ -58,7 +60,15 @@ export const buildGlpStrategy = async (
         deployer.address,
     ];
 
+    const token = await hre.ethers.getContractAt(
+        'IERC20Metadata',
+        tokenAddress,
+    );
+
     return {
+        meta: {
+            stratFor: await token.name(),
+        },
         contract: await hre.ethers.getContractFactory('GlpStrategy'),
         deploymentName: 'GlpStrategy',
         args,
