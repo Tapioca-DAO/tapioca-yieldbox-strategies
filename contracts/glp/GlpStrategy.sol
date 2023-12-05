@@ -177,13 +177,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     function _currentBalance() internal view override returns (uint256 amount) {
         // This _should_ included both free and "reserved" GLP:
         amount = IERC20(contractAddress).balanceOf(address(this));
-
-        uint256 claimableGmx = glpVester.claimable(address(this));
-        (bool success, uint256 gmxPrice) = gmxGlpOracle.peek(gmxGlpOracleData);
-        if (!success) revert Failed();
-        uint256 claimableGlp = (claimableGmx * gmxPrice) / 1e18;
-
-        amount += claimableGlp;
     }
 
     function _deposited(uint256 /* amount */) internal override {
@@ -207,11 +200,11 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     function _claimRewards() private {
         gmxRewardRouter.handleRewards({
-            _shouldClaimGmx: true,
+            _shouldClaimGmx: false,
             _shouldStakeGmx: false,
             _shouldClaimEsGmx: false,
             _shouldStakeEsGmx: false,
-            _shouldStakeMultiplierPoints: true,
+            _shouldStakeMultiplierPoints: false,
             _shouldClaimWeth: true,
             _shouldConvertWethToEth: false
         });
@@ -243,25 +236,5 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
                 amountInGlp
             );
         }
-    }
-
-    function _sellGmx(uint256 priceNum, uint256 priceDenom) private {
-        uint256 gmxAmount = gmx.balanceOf(address(this));
-        if (gmxAmount == 0) {
-            return;
-        }
-
-        bool zeroForOne = address(gmx) < address(weth);
-
-        (int256 amount0, int256 amount1) = gmxWethPool.swap(
-            address(this),
-            zeroForOne,
-            int256(gmxAmount),
-            (zeroForOne ? UNI_MIN_SQRT_RATIO + 1 : UNI_MAX_SQRT_RATIO - 1),
-            abi.encode(gmxAmount)
-        );
-        // TODO: Check the cast?
-        uint256 amountOut = uint256(-(zeroForOne ? amount1 : amount0));
-        if (amountOut * priceDenom < gmxAmount * priceNum) revert NotEnough();
     }
 }
