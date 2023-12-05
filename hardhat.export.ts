@@ -14,7 +14,7 @@ import 'hardhat-tracer';
 import { TAPIOCA_PROJECTS_NAME } from './gitsub_tapioca-sdk/src/api/config';
 
 dotenv.config({ path: './env/.env' });
-const { NODE_ENV = 'mainnet' } = process.env;
+const { NODE_ENV } = process.env;
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
