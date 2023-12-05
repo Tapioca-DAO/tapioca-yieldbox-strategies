@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.18;
+pragma solidity 0.8.19;
 
 interface ILPStaking {
     function deposit(uint256 _pid, uint256 _amount) external;
