@@ -47,9 +47,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     bool public paused;
 
-    IOracle public wethUsdgOracle;
-    bytes public wethUsdgOracleData;
-
     IOracle public wethGlpOracle;
     bytes public wethGlpOracleData;
 
@@ -72,8 +69,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         IGmxRewardRouterV2 _gmxRewardRouter,
         IGmxRewardRouterV2 _glpRewardRouter,
         IERC20 _sGlp,
-        IOracle _wethUsdgOracle,
-        bytes memory _wethUsdgOracleData,
         IOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         IOracle _gmxGlpOracle,
@@ -104,8 +99,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
         feeRecipient = owner;
 
-        wethUsdgOracle = _wethUsdgOracle;
-        wethUsdgOracleData = _wethUsdgOracleData;
         wethGlpOracle = _wethGlpOracle;
         wethGlpOracleData = _wethGlpOracleData;
         gmxGlpOracle = _gmxGlpOracle;
@@ -247,12 +240,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             wethAmount -= fee;
 
             bool success;
-            uint256 usdgPrice;
             uint256 glpPrice;
-            (success, usdgPrice) = wethUsdgOracle.get(wethUsdgOracleData);
-            if (!success) revert Failed();
-            uint256 amountInUsdg = (wethAmount * usdgPrice) / 1e18;
-            amountInUsdg = amountInUsdg - (amountInUsdg * _slippage) / 10_000; //0.5%
 
             (success, glpPrice) = wethGlpOracle.get(wethGlpOracleData);
             if (!success) revert Failed();
@@ -264,7 +252,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             glpRewardRouter.mintAndStakeGlp(
                 address(weth),
                 wethAmount,
-                amountInUsdg,
+                0,
                 amountInGlp
             );
         }

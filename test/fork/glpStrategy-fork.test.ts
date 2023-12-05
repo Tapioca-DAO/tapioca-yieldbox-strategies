@@ -245,8 +245,6 @@ describe('GlpStrategy fork test', () => {
             ethers.utils.toUtf8Bytes(''),
             oracle.address,
             ethers.utils.toUtf8Bytes(''),
-            oracle.address,
-            ethers.utils.toUtf8Bytes(''),
             deployer.address,
         );
         await strategy.deployed();

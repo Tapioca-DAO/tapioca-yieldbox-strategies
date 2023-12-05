@@ -438,40 +438,6 @@ function wethGlpOracleData() external view returns (bytes)
 |---|---|---|
 | _0 | bytes | undefined |
 
-### wethUsdgOracle
-
-```solidity
-function wethUsdgOracle() external view returns (contract IOracle)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IOracle | undefined |
-
-### wethUsdgOracleData
-
-```solidity
-function wethUsdgOracleData() external view returns (bytes)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
 ### withdraw
 
 ```solidity
