@@ -51,8 +51,6 @@ export const buildGlpStrategy = async (
         ARGS_CONFIG[chainID]?.MISC?.GMX_REWARD_ROUTER,
         ARGS_CONFIG[chainID]?.MISC?.GLP_REWARD_ROUTER,
         ARGS_CONFIG[chainID]?.MISC?.SGLP_ADDRESS,
-        wethUsdgOracleAddress,
-        wethUsdgOracleData,
         wethGlpOracleAddress,
         wethGlpOracleData,
         gmxGlpOracleAddress,
