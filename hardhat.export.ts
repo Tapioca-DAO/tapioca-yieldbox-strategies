@@ -13,26 +13,17 @@ require('@primitivefi/hardhat-dodoc');
 import 'hardhat-tracer';
 import { TAPIOCA_PROJECTS_NAME } from './gitsub_tapioca-sdk/src/api/config';
 
-dotenv.config({ path: './env/.env' });
-const { NODE_ENV } = process.env;
+dotenv.config({ path: '.env' });
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {
         interface ProcessEnv {
             ALCHEMY_API_KEY: string;
-            NODE_ENV: string;
+            NETWORK: string;
         }
     }
 }
-
-if (!NODE_ENV || NODE_ENV === '') {
-    throw `Please specify witch environment file you want to use\n \
-    E.g: NODE_ENV={environmentFileHere} yarn hardhat ${process.argv
-        .slice(2, process.argv.length)
-        .join(' ')}`;
-}
-dotenv.config({ path: `./env/${process.env.NODE_ENV}.env` });
 
 type TNetwork = ReturnType<
     typeof SDK.API.utils.getSupportedChains
