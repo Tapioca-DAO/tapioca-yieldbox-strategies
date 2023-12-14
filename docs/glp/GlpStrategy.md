@@ -105,23 +105,6 @@ Returns the description of this strategy
 |---|---|---|
 | description_ | string | undefined |
 
-### emergencyWithdraw
-
-```solidity
-function emergencyWithdraw() external nonpayable returns (uint256 result)
-```
-
-withdraws everythig from the strategy
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | uint256 | undefined |
-
 ### feeRecipient
 
 ```solidity
@@ -156,67 +139,16 @@ function feesPending() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### gmxGlpOracle
-
-```solidity
-function gmxGlpOracle() external view returns (contract IOracle)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | contract IOracle | undefined |
-
-### gmxGlpOracleData
-
-```solidity
-function gmxGlpOracleData() external view returns (bytes)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
 ### harvest
 
 ```solidity
 function harvest() external nonpayable
 ```
 
+Claim sGLP reward and reinvest
 
 
 
-
-
-### harvestGmx
-
-```solidity
-function harvestGmx(uint256 priceNum, uint256 priceDenom) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| priceNum | uint256 | undefined |
-| priceDenom | uint256 | undefined |
 
 ### name
 
@@ -369,24 +301,6 @@ Transfers ownership to `newOwner`. Either directly or claimable by the new pendi
 | newOwner | address | Address of the new owner. |
 | direct | bool | True if `newOwner` should be set immediately. False if `newOwner` needs to use `claimOwnership`. |
 | renounce | bool | Allows the `newOwner` to be `address(0)` if `direct` and `renounce` is True. Has no effect otherwise. |
-
-### uniswapV3SwapCallback
-
-```solidity
-function uniswapV3SwapCallback(int256, int256, bytes data) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | int256 | undefined |
-| _1 | int256 | undefined |
-| data | bytes | undefined |
 
 ### updatePaused
 

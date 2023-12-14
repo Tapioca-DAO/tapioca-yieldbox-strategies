@@ -1,21 +1,25 @@
-import hre, { ethers } from 'hardhat';
-import { expect } from 'chai';
-import { BN, setBalance } from '../test.utils';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
-import {
-    GlpStrategy,
-    IERC20,
-    IGmxRewardDistributor,
-    IGmxRewardRouterV2,
-    IGmxRewardTracker,
-    IGmxVault,
-    IGlpManager,
-    IWETH,
-    YieldBox,
-    YieldBoxURIBuilder,
-} from '../typechain';
+import { expect } from 'chai';
+import hre, { ethers } from 'hardhat';
 import { OracleMock__factory } from '../../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
+import { BN, loadNetworkFork } from '../test.utils';
+import { GlpStrategy } from '../../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace NodeJS {
+        interface ProcessEnv {
+            FORKING_BLOCK_NUMBER: string;
+            BINANCE_WALLET_ADDRESS: string;
+            WETH_ADDRES: string;
+            GLP_REWARD_ROUTER: string;
+            GMX_REWARD_ROUTER: string;
+            GMX_VAULT: string;
+            STAKED_GLP: string;
+        }
+    }
+}
 
 const { formatUnits, parseEther } = ethers.utils;
 
@@ -23,7 +27,7 @@ function E(n: number | bigint, p: number | bigint = 18) {
     return BN(BigInt(n) * 10n ** BigInt(p));
 }
 
-async function become(address: string): SignerWithAddress {
+async function become(address: string) {
     await hre.network.provider.request({
         method: 'hardhat_impersonateAccount',
         params: [address],
@@ -44,66 +48,61 @@ const BORING_IERC20 =
 
 describe('GlpStrategy fork test', () => {
     before(function () {
-        if (process.env.NODE_ENV != 'arbitrum') {
+        if (process.env.NETWORK != 'arbitrum') {
             this.skip();
         }
+        loadNetworkFork();
     });
 
     async function setUp() {
         const me = await become(BINANCE_WALLET_ADDRESS);
 
         const glpRewardRouter = (
-            await ethers.getContractAt<IGmxRewardRouterV2>(
-                'IGmxRewardRouterV2',
-                GLP_REWARD_ROUTER,
-            )
+            await ethers.getContractAt('IGmxRewardRouterV2', GLP_REWARD_ROUTER)
         ).connect(me);
         const gmxRewardRouter = (
-            await ethers.getContractAt<IGmxRewardRouterV2>(
-                'IGmxRewardRouterV2',
-                GMX_REWARD_ROUTER,
-            )
+            await ethers.getContractAt('IGmxRewardRouterV2', GMX_REWARD_ROUTER)
         ).connect(me);
 
         const gmx = (
-            await ethers.getContractAt<IERC20>(
+            await ethers.getContractAt(
                 BORING_IERC20,
                 await gmxRewardRouter.gmx(),
             )
         ).connect(me);
         const esgmx = (
-            await ethers.getContractAt<IERC20>(
+            await ethers.getContractAt(
                 BORING_IERC20,
                 await gmxRewardRouter.esGmx(),
             )
         ).connect(me);
         const sglp = (
-            await ethers.getContractAt<IERC20>(BORING_IERC20, STAKED_GLP)
+            await ethers.getContractAt(BORING_IERC20, STAKED_GLP)
         ).connect(me);
         const glpManager = (
-            await ethers.getContractAt<IGlpManager>(
+            await ethers.getContractAt(
                 'IGlpManager',
                 await glpRewardRouter.glpManager(),
             )
         ).connect(me);
 
         const feeGlpTracker = (
-            await ethers.getContractAt<IGmxRewardTracker>(
+            await ethers.getContractAt(
                 'IGmxRewardTracker',
                 await glpRewardRouter.feeGlpTracker(),
             )
         ).connect(me);
         const stakedGlpTracker = (
-            await ethers.getContractAt<IGmxRewardTracker>(
+            await ethers.getContractAt(
                 'IGmxRewardTracker',
                 await glpRewardRouter.stakedGlpTracker(),
             )
         ).connect(me);
         const vault = (
-            await ethers.getContractAt<IGmxVault>('IGmxVault', GMX_VAULT)
+            await ethers.getContractAt('IGmxVault', GMX_VAULT)
         ).connect(me);
         const weth = (
-            await ethers.getContractAt<IWETHToken>(
+            await ethers.getContractAt(
                 'IWETHToken',
                 await gmxRewardRouter.weth(),
             )
@@ -112,7 +111,7 @@ describe('GlpStrategy fork test', () => {
         // Test only? GLP is not currently giving out esGMX! But we want to
         // handle the situation anyway:
         await (async () => {
-            const sGlpDist = await ethers.getContractAt<IGmxRewardDistributor>(
+            const sGlpDist = await ethers.getContractAt(
                 'IGmxRewardDistributor',
                 await stakedGlpTracker.distributor(),
             );
@@ -241,8 +240,6 @@ describe('GlpStrategy fork test', () => {
             gmxRewardRouter.address,
             glpRewardRouter.address,
             sglp.address,
-            oracle.address,
-            ethers.utils.toUtf8Bytes(''),
             oracle.address,
             ethers.utils.toUtf8Bytes(''),
             deployer.address,
