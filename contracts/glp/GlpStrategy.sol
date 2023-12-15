@@ -24,6 +24,10 @@ import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     using BoringERC20 for IERC20;
 
+    // *********************************** //
+    /* ============ STATE ============ */
+    // *********************************** //
+
     IERC20 private immutable gmx;
     IERC20 private immutable weth;
 
@@ -48,6 +52,10 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     // Buy or not GLP on deposits/withdrawal
     bool shouldBuyGLP = true;
+
+    // *********************************** //
+    /* ============ ERROR ============ */
+    // *********************************** //
 
     error WethMismatch();
     error GlpRewardRouterNotValid();
@@ -93,6 +101,10 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         owner = _owner;
     }
 
+    // *********************************** //
+    /* ============ VIEW ============ */
+    // *********************************** //
+
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
         return "sGLP";
@@ -127,6 +139,10 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         }
     }
 
+    // *********************************** //
+    /* ============ EXTERNAL ============ */
+    // *********************************** //
+
     /// @notice Claim sGLP reward and reinvest
     function harvest() public {
         _claimRewards();
@@ -134,6 +150,23 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
             _buyGlp();
         }
     }
+
+    /// @notice Withdraws the fees from the strategy
+    function withdrawFees() external {
+        uint256 feeAmount = feesPending;
+        if (feeAmount > 0) {
+            uint256 wethAmount = weth.balanceOf(address(this));
+            if (wethAmount < feeAmount) {
+                feeAmount = wethAmount;
+            }
+            weth.safeTransfer(feeRecipient, feeAmount);
+            feesPending -= feeAmount;
+        }
+    }
+
+    // *********************************** //
+    /* ============ OWNER ============ */
+    // *********************************** //
 
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
@@ -156,18 +189,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         shouldBuyGLP = _val;
     }
 
-    /// @notice Withdraws the fees from the strategy
-    function withdrawFees() external {
-        uint256 feeAmount = feesPending;
-        if (feeAmount > 0) {
-            uint256 wethAmount = weth.balanceOf(address(this));
-            if (wethAmount < feeAmount) {
-                feeAmount = wethAmount;
-            }
-            weth.safeTransfer(feeRecipient, feeAmount);
-            feesPending -= feeAmount;
-        }
-    }
+    // *********************************** //
+    /* ============ INTERNAL ============ */
+    // *********************************** //
 
     /// @notice Returns the amount of sGLP staked in the strategy
     function _currentBalance() internal view override returns (uint256 amount) {
