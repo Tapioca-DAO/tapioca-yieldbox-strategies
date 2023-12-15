@@ -1,9 +1,16 @@
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { registerFork, registerMocks } from '../test.utils';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadNetworkFork, registerFork } from '../test.utils';
 
 describe('sDaiStrategy-fork test', () => {
+    before(function () {
+        if (process.env.NETWORK != 'ethereum') {
+            this.skip();
+        }
+        loadNetworkFork();
+    });
+
     it('should test initial strategy values', async () => {
         const { tDai, sDaiStrategy } = await loadFixture(registerFork);
 

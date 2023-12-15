@@ -24,22 +24,20 @@ import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     using BoringERC20 for IERC20;
 
+    // *********************************** //
+    /* ============ STATE ============ */
+    // *********************************** //
+
     IERC20 private immutable gmx;
     IERC20 private immutable weth;
 
-    IGmxRewardTracker private immutable feeGmxTracker;
+    IGmxRewardTracker private immutable sbfGMX;
     IGlpManager private immutable glpManager;
     IGmxRewardRouterV2 private immutable glpRewardRouter;
     IGmxRewardRouterV2 private immutable gmxRewardRouter;
     IGmxVester private immutable glpVester;
-    IGmxRewardTracker private immutable stakedGlpTracker;
-    IGmxRewardTracker private immutable stakedGmxTracker;
-
-    IUniswapV3Pool private constant gmxWethPool =
-        IUniswapV3Pool(0x80A9ae39310abf666A87C743d6ebBD0E8C42158E);
-    uint160 internal constant UNI_MIN_SQRT_RATIO = 4295128739;
-    uint160 internal constant UNI_MAX_SQRT_RATIO =
-        1461446703485210103287273052203988822378723970342;
+    IGmxRewardTracker private immutable fsGLP;
+    IGmxRewardTracker private immutable sGMX;
 
     uint256 internal constant FEE_BPS = 100;
     address public feeRecipient;
@@ -50,10 +48,14 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     IOracle public wethGlpOracle;
     bytes public wethGlpOracleData;
 
-    IOracle public gmxGlpOracle;
-    bytes public gmxGlpOracleData;
-
     uint256 private _slippage = 50;
+
+    // Buy or not GLP on deposits/withdrawal
+    bool shouldBuyGLP = true;
+
+    // *********************************** //
+    /* ============ ERROR ============ */
+    // *********************************** //
 
     error WethMismatch();
     error GlpRewardRouterNotValid();
@@ -71,8 +73,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         IERC20 _sGlp,
         IOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
-        IOracle _gmxGlpOracle,
-        bytes memory _gmxGlpOracleData,
         address _owner
     ) BaseERC20Strategy(_yieldBox, address(_sGlp)) {
         weth = IERC20(_yieldBox.wrappedNative());
@@ -87,13 +87,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         gmxRewardRouter = _gmxRewardRouter;
         gmx = IERC20(_gmx);
 
-        stakedGlpTracker = IGmxRewardTracker(
-            glpRewardRouter.stakedGlpTracker()
-        );
-        stakedGmxTracker = IGmxRewardTracker(
-            gmxRewardRouter.stakedGmxTracker()
-        );
-        feeGmxTracker = IGmxRewardTracker(gmxRewardRouter.feeGmxTracker());
+        fsGLP = IGmxRewardTracker(glpRewardRouter.stakedGlpTracker());
+        sGMX = IGmxRewardTracker(gmxRewardRouter.stakedGmxTracker());
+        sbfGMX = IGmxRewardTracker(gmxRewardRouter.feeGmxTracker());
         glpManager = IGlpManager(glpRewardRouter.glpManager());
         glpVester = IGmxVester(gmxRewardRouter.glpVester());
 
@@ -101,10 +97,13 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
         wethGlpOracle = _wethGlpOracle;
         wethGlpOracleData = _wethGlpOracleData;
-        gmxGlpOracle = _gmxGlpOracle;
-        gmxGlpOracleData = _gmxGlpOracleData;
+
         owner = _owner;
     }
+
+    // *********************************** //
+    /* ============ VIEW ============ */
+    // *********************************** //
 
     /// @notice Returns the name of this strategy
     function name() external pure override returns (string memory name_) {
@@ -121,21 +120,53 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         return "Holds staked GLP tokens and compounds the rewards";
     }
 
-    // (For the GMX-ETH pool)
-    function uniswapV3SwapCallback(
-        int256 /* amount0Delta */,
-        int256 /* amount1Delta */,
-        bytes calldata data
-    ) external {
-        if (msg.sender != address(gmxWethPool)) revert NotAuthorized();
-        uint256 amount = abi.decode(data, (uint256));
-        gmx.safeTransfer(address(gmxWethPool), amount);
+    /// @notice Returns The estimate the pending GLP.
+    /// @dev Doesn't revert because we want to still check current balance in `_currentBalance()`
+    /// @return amount The amount of GLP that should be received
+    function pendingRewards() public view returns (uint256 amount) {
+        uint256 wethAmount = weth.balanceOf(address(this));
+        uint256 _feesPending = feesPending;
+        if (wethAmount > _feesPending) {
+            wethAmount -= _feesPending;
+            uint256 fee = (wethAmount * FEE_BPS) / 10_000;
+            wethAmount -= fee;
+
+            uint256 glpPrice;
+            (, glpPrice) = wethGlpOracle.peek(wethGlpOracleData);
+
+            uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
+            amount = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
+        }
     }
 
+    // *********************************** //
+    /* ============ EXTERNAL ============ */
+    // *********************************** //
+
+    /// @notice Claim sGLP reward and reinvest
     function harvest() public {
         _claimRewards();
-        _buyGlp();
+        if (shouldBuyGLP) {
+            _buyGlp();
+        }
     }
+
+    /// @notice Withdraws the fees from the strategy
+    function withdrawFees() external {
+        uint256 feeAmount = feesPending;
+        if (feeAmount > 0) {
+            uint256 wethAmount = weth.balanceOf(address(this));
+            if (wethAmount < feeAmount) {
+                feeAmount = wethAmount;
+            }
+            weth.safeTransfer(feeRecipient, feeAmount);
+            feesPending -= feeAmount;
+        }
+    }
+
+    // *********************************** //
+    /* ============ OWNER ============ */
+    // *********************************** //
 
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
@@ -149,34 +180,23 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         paused = _val;
     }
 
-    function harvestGmx(
-        uint256 priceNum,
-        uint256 priceDenom
-    ) external onlyOwner {
-        _claimRewards();
-        _sellGmx(priceNum, priceDenom);
-        _buyGlp();
-    }
-
     function setFeeRecipient(address recipient) external onlyOwner {
         feeRecipient = recipient;
     }
 
-    function withdrawFees() external {
-        uint256 feeAmount = feesPending;
-        if (feeAmount > 0) {
-            uint256 wethAmount = weth.balanceOf(address(this));
-            if (wethAmount < feeAmount) {
-                feeAmount = wethAmount;
-            }
-            weth.safeTransfer(feeRecipient, feeAmount);
-            feesPending -= feeAmount;
-        }
+    /// @notice sets the buyGLP flag
+    function setBuyGLP(bool _val) external onlyOwner {
+        shouldBuyGLP = _val;
     }
 
+    // *********************************** //
+    /* ============ INTERNAL ============ */
+    // *********************************** //
+
+    /// @notice Returns the amount of sGLP staked in the strategy
     function _currentBalance() internal view override returns (uint256 amount) {
-        // This _should_ included both free and "reserved" GLP:
         amount = IERC20(contractAddress).balanceOf(address(this));
+        amount += pendingRewards();
     }
 
     function _deposited(uint256 /* amount */) internal override {
@@ -184,20 +204,17 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         harvest();
     }
 
+    /// @notice Withdraws the specified amount from the strategy
     function _withdraw(address to, uint256 amount) internal override {
-        _claimRewards();
-        _buyGlp();
-        uint256 freeGlp = stakedGlpTracker.balanceOf(address(this));
-        if (freeGlp < amount) {
-            // Reverts if none are vesting, but in that case the whole TX will
-            // revert anyway for withdrawing too much:
-            glpVester.withdraw();
-        }
-        // Call this first; `_vestByGlp()` will lock the GLP again
         if (amount == 0) revert NotValid();
-        IERC20(contractAddress).safeTransfer(to, amount);
+        _claimRewards(); // Claim rewards before withdrawing
+        if (shouldBuyGLP) {
+            _buyGlp(); // Buy GLP with WETH rewards
+        }
+        IERC20(contractAddress).safeTransfer(to, amount); // Transfer the tokens
     }
 
+    /// @notice Claim GMX rewards, only in WETH.
     function _claimRewards() private {
         gmxRewardRouter.handleRewards({
             _shouldClaimGmx: false,
@@ -210,6 +227,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         });
     }
 
+    /// @notice Buy GLP with WETH rewards.
     function _buyGlp() private {
         uint256 wethAmount = weth.balanceOf(address(this));
         uint256 _feesPending = feesPending;

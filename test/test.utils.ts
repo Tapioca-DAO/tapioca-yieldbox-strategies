@@ -2313,3 +2313,15 @@ export async function registerFork() {
 
     return { ...initialSetup, ...utilFuncs, verifyEtherscanQueue };
 }
+
+import * as dotenv from 'dotenv';
+export function loadNetworkFork() {
+    const { NETWORK } = process.env;
+    if (!NETWORK || NETWORK === '') {
+        throw `Please specify witch environment file you want to use\n \
+    E.g: NETWORK={environmentFileHere} yarn hardhat ${process.argv
+        .slice(2, process.argv.length)
+        .join(' ')}`;
+    }
+    dotenv.config({ path: `./env/${process.env.NETWORK}.env` });
+}

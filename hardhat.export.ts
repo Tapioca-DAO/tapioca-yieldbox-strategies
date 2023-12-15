@@ -8,30 +8,23 @@ import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
 import 'hardhat-gas-reporter';
 import SDK from 'tapioca-sdk';
-import { HttpNetworkConfig } from 'hardhat/types';
+import { HttpNetworkConfig, NetworksUserConfig } from 'hardhat/types';
 require('@primitivefi/hardhat-dodoc');
 import 'hardhat-tracer';
 import { TAPIOCA_PROJECTS_NAME } from './gitsub_tapioca-sdk/src/api/config';
 
-dotenv.config({ path: './env/.env' });
-const { NODE_ENV } = process.env;
+dotenv.config({ path: '.env' });
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {
         interface ProcessEnv {
             ALCHEMY_API_KEY: string;
+            NETWORK: string;
+            FROM_BLOCK: string;
         }
     }
 }
-
-if (!NODE_ENV || NODE_ENV === '') {
-    throw `Please specify witch environment file you want to use\n \
-    E.g: NODE_ENV={environmentFileHere} yarn hardhat ${process.argv
-        .slice(2, process.argv.length)
-        .join(' ')}`;
-}
-dotenv.config({ path: `./env/${process.env.NODE_ENV}.env` });
 
 type TNetwork = ReturnType<
     typeof SDK.API.utils.getSupportedChains
@@ -45,13 +38,7 @@ const supportedChains = SDK.API.utils.getSupportedChains().reduce(
                     ? [process.env.PRIVATE_KEY]
                     : [],
             live: true,
-            url:
-                chain.rpc == 'https://api.avax-test.network/ext/bc/C/rpc'
-                    ? 'https://rpc.ankr.com/avalanche_fuji'
-                    : chain.rpc.replace(
-                          '<api_key>',
-                          process.env.ALCHEMY_API_KEY,
-                      ),
+            url: chain.rpc.replace('<api_key>', process.env.ALCHEMY_API_KEY),
             gasMultiplier: chain.tags[0] === 'testnet' ? 2 : 1,
             chainId: Number(chain.chainId),
             tags: [...chain.tags],
@@ -60,7 +47,19 @@ const supportedChains = SDK.API.utils.getSupportedChains().reduce(
     {} as { [key in TNetwork]: HttpNetworkConfig },
 );
 
-const chain = supportedChains[NODE_ENV == 'mainnet' ? 'ethereum' : NODE_ENV];
+const forkNetwork = process.env.NETWORK as TNetwork;
+const forkChainInfo = supportedChains[forkNetwork];
+const forkInfo: NetworksUserConfig['hardhat'] = forkNetwork
+    ? {
+          chainId: forkChainInfo.chainId,
+          forking: {
+              url: forkChainInfo.url,
+              ...(process.env.FROM_BLOCK
+                  ? { blockNumber: Number(process.env.FROM_BLOCK) }
+                  : {}),
+          },
+      }
+    : {};
 
 const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     SDK: { project: TAPIOCA_PROJECTS_NAME.TapiocaStrategies },
@@ -115,21 +114,9 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
     },
 
     networks: {
-        ...supportedChains,
         hardhat: {
             saveDeployments: false,
-            ...(chain?.url && {
-                forking: {
-                    url: chain.url,
-                    ...(process.env.FORKING_BLOCK_NUMBER
-                        ? {
-                              blockNumber: parseInt(
-                                  process.env.FORKING_BLOCK_NUMBER,
-                              ),
-                          }
-                        : null),
-                },
-            }),
+            mining: { auto: true },
             hardfork: 'merge',
             allowUnlimitedContractSize: true,
             accounts: {
@@ -138,12 +125,14 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
                 count: 10,
                 accountsBalance: '1000000000000000000000',
             },
-            tags: ['testnet'],
+            tags: ['local'],
+            ...forkInfo,
         },
+        ...supportedChains,
     },
     dodoc: {
-        runOnCompile: true,
-        freshOutput: true,
+        runOnCompile: false,
+        freshOutput: false,
         exclude: [],
     },
     etherscan: {
