@@ -2,26 +2,28 @@
 pragma solidity 0.8.19;
 pragma experimental ABIEncoderV2;
 
-import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
-import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
-import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
-
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-
-import "tapioca-sdk/dist/contracts/YieldBox/contracts/enums/YieldBoxTokenType.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-
-import "../interfaces/IFeeCollector.sol";
-import "../interfaces/gmx/IGlpManager.sol";
+import "tapioca-sdk/dist/contracts/YieldBox/contracts/enums/YieldBoxTokenType.sol";
+import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
+import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
 import "../interfaces/gmx/IGmxRewardDistributor.sol";
-import "../interfaces/gmx/IGmxRewardRouter.sol";
 import "../interfaces/gmx/IGmxRewardTracker.sol";
+import "../interfaces/gmx/IGmxRewardRouter.sol";
+import "../interfaces/gmx/IGlpManager.sol";
 import "../interfaces/gmx/IGmxVester.sol";
 import "../interfaces/gmx/IGmxVault.sol";
-import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
+import "../feeCollector.sol";
 
 // NOTE: Specific to a UniV3 pool!! This will not work on Avalanche!
-contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
+contract GlpStrategy is
+    BaseERC20Strategy,
+    BoringOwnable,
+    IFeeCollector,
+    FeeCollector
+{
     using BoringERC20 for IERC20;
 
     // *********************************** //
@@ -38,10 +40,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     IGmxVester private immutable glpVester;
     IGmxRewardTracker private immutable fsGLP;
     IGmxRewardTracker private immutable sGMX;
-
-    uint256 internal constant FEE_BPS = 100;
-    address public feeRecipient;
-    uint256 public feesPending;
 
     bool public paused;
 
@@ -74,7 +72,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         IOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         address _owner
-    ) BaseERC20Strategy(_yieldBox, address(_sGlp)) {
+    ) BaseERC20Strategy(_yieldBox, address(_sGlp)) FeeCollector(owner, 100) {
         weth = IERC20(_yieldBox.wrappedNative());
         if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
 
@@ -92,8 +90,6 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         sbfGMX = IGmxRewardTracker(gmxRewardRouter.feeGmxTracker());
         glpManager = IGlpManager(glpRewardRouter.glpManager());
         glpVester = IGmxVester(gmxRewardRouter.glpVester());
-
-        feeRecipient = owner;
 
         wethGlpOracle = _wethGlpOracle;
         wethGlpOracleData = _wethGlpOracleData;
@@ -152,15 +148,15 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     }
 
     /// @notice Withdraws the fees from the strategy
-    function withdrawFees() external {
+    function withdrawFees(uint256 amount) external {
         uint256 feeAmount = feesPending;
         if (feeAmount > 0) {
             uint256 wethAmount = weth.balanceOf(address(this));
-            if (wethAmount < feeAmount) {
-                feeAmount = wethAmount;
+            if (wethAmount < amount) {
+                amount = wethAmount;
             }
-            weth.safeTransfer(feeRecipient, feeAmount);
-            feesPending -= feeAmount;
+            weth.safeTransfer(feeRecipient, amount);
+            feesPending -= amount;
         }
     }
 
@@ -180,7 +176,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
         paused = _val;
     }
 
-    function setFeeRecipient(address recipient) external onlyOwner {
+    function updateFeeRecipient(address recipient) external onlyOwner {
         feeRecipient = recipient;
     }
 
