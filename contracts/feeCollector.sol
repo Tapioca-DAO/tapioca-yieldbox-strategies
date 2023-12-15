@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.19;
 
+interface IFeeCollector {
+    function withdrawFees(uint256 amount) external;
+
+    function updateFeeRecipient(address _val) external;
+}
+
 contract FeeCollector {
     uint256 public immutable FEE_BPS;
     uint256 internal constant FEE_PRECISION = 10_000;

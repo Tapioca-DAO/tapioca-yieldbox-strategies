@@ -23,7 +23,8 @@ contract sDaiStrategy is
     BaseERC20Strategy,
     BoringOwnable,
     ReentrancyGuard,
-    FeeCollector
+    FeeCollector,
+    IFeeCollector
 {
     using BoringERC20 for IERC20;
 
