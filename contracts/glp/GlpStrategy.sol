@@ -46,6 +46,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     uint256 private _slippage = 50;
 
+    // Buy or not GLP on deposits/withdrawal
+    bool shouldBuyGLP = true;
+
     error WethMismatch();
     error GlpRewardRouterNotValid();
     error GmxRewardRouterNotValid();
@@ -127,7 +130,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     /// @notice Claim sGLP reward and reinvest
     function harvest() public {
         _claimRewards();
-        _buyGlp();
+        if (shouldBuyGLP) {
+            _buyGlp();
+        }
     }
 
     /// @notice sets the slippage used in swap operations
@@ -144,6 +149,11 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
 
     function setFeeRecipient(address recipient) external onlyOwner {
         feeRecipient = recipient;
+    }
+
+    /// @notice sets the buyGLP flag
+    function setBuyGLP(bool _val) external onlyOwner {
+        shouldBuyGLP = _val;
     }
 
     /// @notice Withdraws the fees from the strategy
@@ -174,7 +184,9 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable {
     function _withdraw(address to, uint256 amount) internal override {
         if (amount == 0) revert NotValid();
         _claimRewards(); // Claim rewards before withdrawing
-        _buyGlp(); // Buy with the rewards
+        if (shouldBuyGLP) {
+            _buyGlp(); // Buy GLP with WETH rewards
+        }
         IERC20(contractAddress).safeTransfer(to, amount); // Transfer the tokens
     }
 
