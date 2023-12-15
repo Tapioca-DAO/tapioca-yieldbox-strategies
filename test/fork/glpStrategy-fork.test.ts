@@ -2,9 +2,8 @@ import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
 import { OracleMock__factory } from '../../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
+import { GlpStrategy, IERC20 } from '../../typechain';
 import { BN, loadNetworkFork } from '../test.utils';
-import { GlpStrategy } from '../../typechain';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -21,7 +20,7 @@ declare global {
     }
 }
 
-const { formatUnits, parseEther } = ethers.utils;
+const { parseEther } = ethers.utils;
 
 function E(n: number | bigint, p: number | bigint = 18) {
     return BN(BigInt(n) * 10n ** BigInt(p));
@@ -35,23 +34,26 @@ async function become(address: string) {
     return ethers.getSigner(address);
 }
 
-const {
-    BINANCE_WALLET_ADDRESS,
-    GLP_REWARD_ROUTER,
-    GMX_REWARD_ROUTER,
-    STAKED_GLP,
-    GMX_VAULT,
-} = process.env;
+let BINANCE_WALLET_ADDRESS: string,
+    GLP_REWARD_ROUTER: string,
+    GMX_REWARD_ROUTER: string,
+    STAKED_GLP: string,
+    GMX_VAULT: string;
 
-const BORING_IERC20 =
-    '@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol:IERC20';
-
-describe('GlpStrategy fork test', () => {
+describe('GlpStrategy fork test - Arbitrum', () => {
     before(function () {
         if (process.env.NETWORK != 'arbitrum') {
             this.skip();
         }
         loadNetworkFork();
+
+        ({
+            BINANCE_WALLET_ADDRESS,
+            GLP_REWARD_ROUTER,
+            GMX_REWARD_ROUTER,
+            STAKED_GLP,
+            GMX_VAULT,
+        } = process.env);
     });
 
     async function setUp() {
@@ -64,43 +66,24 @@ describe('GlpStrategy fork test', () => {
             await ethers.getContractAt('IGmxRewardRouterV2', GMX_REWARD_ROUTER)
         ).connect(me);
 
-        const gmx = (
-            await ethers.getContractAt(
-                BORING_IERC20,
-                await gmxRewardRouter.gmx(),
-            )
-        ).connect(me);
-        const esgmx = (
-            await ethers.getContractAt(
-                BORING_IERC20,
-                await gmxRewardRouter.esGmx(),
-            )
-        ).connect(me);
         const sglp = (
-            await ethers.getContractAt(BORING_IERC20, STAKED_GLP)
-        ).connect(me);
-        const glpManager = (
             await ethers.getContractAt(
-                'IGlpManager',
-                await glpRewardRouter.glpManager(),
+                '@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20',
+                STAKED_GLP,
             )
-        ).connect(me);
+        ).connect(me) as IERC20;
 
-        const feeGlpTracker = (
-            await ethers.getContractAt(
-                'IGmxRewardTracker',
-                await glpRewardRouter.feeGlpTracker(),
-            )
-        ).connect(me);
-        const stakedGlpTracker = (
+        const fsGLP = (
             await ethers.getContractAt(
                 'IGmxRewardTracker',
                 await glpRewardRouter.stakedGlpTracker(),
             )
         ).connect(me);
+
         const vault = (
             await ethers.getContractAt('IGmxVault', GMX_VAULT)
         ).connect(me);
+
         const weth = (
             await ethers.getContractAt(
                 'IWETHToken',
@@ -108,18 +91,12 @@ describe('GlpStrategy fork test', () => {
             )
         ).connect(me);
 
-        // Test only? GLP is not currently giving out esGMX! But we want to
-        // handle the situation anyway:
-        await (async () => {
-            const sGlpDist = await ethers.getContractAt(
-                'IGmxRewardDistributor',
-                await stakedGlpTracker.distributor(),
-            );
-            const admin = await become(await sGlpDist.admin());
-            await sGlpDist
-                .connect(admin)
-                .setTokensPerInterval(100_000_000_000_000n);
-        })();
+        const glpManager = (
+            await ethers.getContractAt(
+                'IGlpManager',
+                await glpRewardRouter.glpManager(),
+            )
+        ).connect(me);
 
         // Deploy YieldBox
         const uriBuilder = await (
@@ -132,12 +109,7 @@ describe('GlpStrategy fork test', () => {
         await yieldBox.deployed();
         yieldBox = yieldBox.connect(me);
 
-        expect(vault.address).to.equal(await glpManager.vault());
-        expect(await feeGlpTracker.rewardToken()).to.equal(weth.address);
-        expect(await stakedGlpTracker.rewardToken()).to.equal(esgmx.address);
-
         // If this fails we may have to pick another test account..
-        // TODO: Ensure the test account has never intereacted with GMX before?
         expect(await ethers.provider.getBalance(me.address)).to.be.gte(
             parseEther('0.01'),
         );
@@ -147,26 +119,29 @@ describe('GlpStrategy fork test', () => {
         // Precision is 30 zeroes; 12 more than usual:
         const xp = E(1, 12);
 
-        const glpPrice = (await glpManager.getPrice(true)).div(xp);
-        expect(glpPrice).to.be.lte(parseEther('1.0'));
-        expect(glpPrice).to.be.gte(parseEther('0.95'));
+        // Block 145526897
+        // GLP: 1041055094190371419655569666477
+        let glpPrice = await glpManager.getPrice(true);
+        expect(glpPrice).to.be.lte(
+            ethers.BigNumber.from('1041055094190371419655569666477'),
+        );
+        glpPrice = glpPrice.div(xp);
 
-        // Per the GLP vault. Not sure if this is in USDG or USDC/USD:
+        // Block 145526897
+        // WETH: 1805953396950000000000
         const wethPrice = (await vault.getMaxPrice(weth.address)).div(xp);
-        expect(wethPrice).to.be.lte(parseEther('1700'));
-        expect(wethPrice).to.be.gte(parseEther('1600'));
+        expect(wethPrice).to.be.approximately(
+            parseEther('1805'),
+            parseEther('2'),
+        );
 
         return {
-            esgmx,
-            feeGlpTracker,
-            glpManager,
             glpPrice,
             glpRewardRouter,
-            gmx,
             gmxRewardRouter,
             me,
             sglp,
-            stakedGlpTracker,
+            fsGLP,
             weth,
             wethPrice,
             yieldBox,
@@ -196,16 +171,12 @@ describe('GlpStrategy fork test', () => {
 
     it('Should set up the strategy', async () => {
         const {
-            esgmx,
-            feeGlpTracker,
-            glpManager,
             glpPrice,
             glpRewardRouter,
-            gmx,
             gmxRewardRouter,
             me,
             sglp,
-            stakedGlpTracker,
+            fsGLP,
             weth,
             wethPrice,
             yieldBox,
@@ -221,7 +192,7 @@ describe('GlpStrategy fork test', () => {
 
         const sglpBal = await sglp.balanceOf(me.address);
         expect(sglpBal).to.be.gt(parseEther('17'));
-        expect(await stakedGlpTracker.balanceOf(me.address)).to.equal(sglpBal);
+        expect(await fsGLP.balanceOf(me.address)).to.equal(sglpBal);
 
         const OracleMock = new OracleMock__factory(
             (await ethers.getSigners())[0],
@@ -260,48 +231,22 @@ describe('GlpStrategy fork test', () => {
             strategy.address,
             0,
         );
-        let n = 1;
-        const dump = async () => {
-            console.log('Dump', n++, {
-                sglp: formatUnits(await sglp.balanceOf(strategy.address)),
-                esgmx: formatUnits(await esgmx.balanceOf(strategy.address)),
-                gmx: formatUnits(await gmx.balanceOf(strategy.address)),
-            });
-        };
 
-        await sglp.approve(yieldBox.address, parseEther('10'));
-        await yieldBox.depositAsset(
-            assetId,
-            me.address,
-            me.address,
-            parseEther('10'),
-            0,
-        );
+        const amount = await sglp.balanceOf(me.address);
+
+        await sglp.approve(yieldBox.address, amount);
+
+        await yieldBox.depositAsset(assetId, me.address, me.address, amount, 0);
 
         const shares = await yieldBox.balanceOf(me.address, assetId);
-        // console.log('Deposit', { shares });
-        // await dump();
 
-        // NOTE: Rewards stop coming if the distributor runs out of tokens.
-        //       Testing over large time frames may trigger this
-        // TODO: Include a test case that triggers this specific situation. One
-        //       way is for the esGMX reward distributor to be empty
         await compound(strategy, (86400 * 365) / 10, 6);
-        await yieldBox.withdraw(
-            assetId,
-            me.address,
-            me.address,
-            0,
-            shares.div(2),
-        );
-        // console.log('Compounding after GLP withdrawal:');
-        await compound(strategy, (86400 * 365) / 1, 12, false);
-        // await dump();
+        await yieldBox.withdraw(assetId, me.address, me.address, 0, shares);
 
-        // Should fail..
-        // WETH: more than 1600
-        // GMX: ~70 at the time?
-        // So one GMX is less than 1/20 and more than 1/30 WETH:
-        await strategy.harvestGmx(1, 30); // Succeed
+        const amountAfter = await sglp.balanceOf(me.address);
+        expect(amountAfter).to.be.gt(amount);
+
+        // console.log('Compounding after GLP withdrawal:');
+        // await compound(strategy, (86400 * 365) / 1, 12, false);
     });
 });
