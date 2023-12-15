@@ -21,6 +21,7 @@ declare global {
         interface ProcessEnv {
             ALCHEMY_API_KEY: string;
             NETWORK: string;
+            FROM_BLOCK: string;
         }
     }
 }
@@ -130,8 +131,8 @@ const config: HardhatUserConfig & { dodoc?: any; vyper: any } = {
         ...supportedChains,
     },
     dodoc: {
-        runOnCompile: true,
-        freshOutput: true,
+        runOnCompile: false,
+        freshOutput: false,
         exclude: [],
     },
     etherscan: {

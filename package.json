@@ -15,7 +15,7 @@
     "typechain": "npx hardhat typechain",
     "test": "NETWORK=mainnet hardhat test",
     "test:arb": "NETWORK=arbitrum hardhat test",
-    "test:glp": "NETWORK=arbitrum hardhat test test/fork/glpStrategy-fork.test.ts",
+    "test:glp": "NETWORK=arbitrum FROM_BLOCK=145526897 hardhat test test/fork/glpStrategy-fork.test.ts",
     "sdk-gen": "npx hardhat exportSDK",
     "deploy": "npx hardhat deploy",
     "deploy:mainnet": "npx hardhat deploy --network ethereum",
