@@ -40,15 +40,8 @@ describe('sDaiStrategy-fork test', () => {
     });
 
     it('should queue and deposit when threshold is met', async () => {
-        const {
-            dai,
-            tDai,
-            sDaiStrategy,
-            deployer,
-            timeTravel,
-            yieldBox,
-            binanceWallet,
-        } = await loadFixture(registerFork);
+        const { dai, tDai, sDaiStrategy, deployer, yieldBox, binanceWallet } =
+            await loadFixture(registerFork);
 
         const sDai = await ethers.getContractAt(
             'ISavingsDai',
@@ -214,15 +207,8 @@ describe('sDaiStrategy-fork test', () => {
     });
 
     it('should withdraw from queue', async () => {
-        const {
-            dai,
-            tDai,
-            sDaiStrategy,
-            deployer,
-            timeTravel,
-            yieldBox,
-            binanceWallet,
-        } = await loadFixture(registerFork);
+        const { dai, tDai, sDaiStrategy, deployer, yieldBox, binanceWallet } =
+            await loadFixture(registerFork);
 
         const sDai = await ethers.getContractAt(
             'ISavingsDai',
@@ -288,13 +274,15 @@ describe('sDaiStrategy-fork test', () => {
     });
 
     it('should handle fees', async () => {
-        const { dai, tDai, sDaiStrategy, deployer, yieldBox, binanceWallet } =
-            await loadFixture(registerFork);
-
-        const sDai = await ethers.getContractAt(
-            'ISavingsDai',
-            await sDaiStrategy.sDai(),
-        );
+        const {
+            dai,
+            tDai,
+            sDaiStrategy,
+            deployer,
+            yieldBox,
+            binanceWallet,
+            timeTravel,
+        } = await loadFixture(registerFork);
 
         await yieldBox.registerAsset(1, tDai.address, sDaiStrategy.address, 0);
         const sDaiStrategyAssetId = await yieldBox.ids(
@@ -317,6 +305,14 @@ describe('sDaiStrategy-fork test', () => {
             amount,
             0,
         );
+        await timeTravel(100 * 86400); //skip 100 days
+
+        const harvestable = await sDaiStrategy.harvestable();
+        const expectedFees = harvestable.result
+            .mul(await sDaiStrategy.FEE_BPS())
+            .div(10000);
+
+        expect(harvestable.fees).to.be.equal(expectedFees);
 
         await yieldBox.withdraw(
             sDaiStrategyAssetId,
@@ -327,8 +323,9 @@ describe('sDaiStrategy-fork test', () => {
         );
 
         const pendingFees = await sDaiStrategy.feesPending();
-        expect(pendingFees).to.be.equal(
-            amount.mul(await sDaiStrategy.FEE_BPS()).div(10000),
+        expect(pendingFees).to.be.closeTo(
+            expectedFees,
+            expectedFees.mul(1).div(1000), // 0.1% tolerance, because of no atomicity
         );
 
         // "Burn" current holdings
