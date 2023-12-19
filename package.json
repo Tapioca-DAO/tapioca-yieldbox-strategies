@@ -13,7 +13,7 @@
     "coverage": "NETWORK=compile hardhat compile --quiet && hardhat coverage --network hardhat",
     "contracts_size": "yarn compile && NETWORK=hardhat hardhat size-contracts",
     "typechain": "npx hardhat typechain",
-    "test": "NETWORK=mainnet hardhat test",
+    "test": "NETWORK=ethereum hardhat test",
     "test:arb": "NETWORK=arbitrum hardhat test",
     "test:glp": "NETWORK=arbitrum FROM_BLOCK=145526897 hardhat test test/fork/glpStrategy-fork.test.ts",
     "sdk-gen": "npx hardhat exportSDK",
