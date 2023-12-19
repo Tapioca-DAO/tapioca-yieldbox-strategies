@@ -28,7 +28,8 @@ contract sDaiStrategy is
 {
     using BoringERC20 for IERC20;
 
-    bool public paused;
+    /// @notice Keeps track of the total active deposits, goes up when a deposit is made and down when a withdrawal is made
+    uint256 public totalActiveDeposits;
 
     /// @notice Queues tokens up to depositThreshold
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation is performed
@@ -36,6 +37,7 @@ contract sDaiStrategy is
 
     ISavingsDai public immutable sDai;
     IERC20 public immutable dai;
+    bool public paused;
 
     // ************** //
     // *** EVENTS *** //
@@ -123,39 +125,43 @@ contract sDaiStrategy is
         depositThreshold = amount;
     }
 
-    /// @notice withdraws everythig from the strategy
+    /// @notice withdraws everything from the strategy
+    /// @dev Withdraws everything from the strategy and pauses it
     function emergencyWithdraw() external onlyOwner returns (uint256 result) {
-        paused = true;
-        uint256 maxRedeem = sDai.maxRedeem(address(this));
-        result = sDai.withdraw(maxRedeem, address(this), address(this));
-        dai.approve(contractAddress, result);
-        ITDai(contractAddress).wrap(address(this), address(this), result);
+        paused = true; // Pause the strategy
+
+        // Withdraw from the pool, convert to Dai and wrap it into tDai
+        uint256 maxWithdraw = sDai.maxWithdraw(address(this));
+        sDai.withdraw(maxWithdraw, address(this), address(this));
+        dai.approve(contractAddress, maxWithdraw);
+        ITDai(contractAddress).wrap(address(this), address(this), maxWithdraw);
+
+        // Transfer all the currently held tokens to the owner
+        IERC20 _tDai = IERC20(contractAddress);
+        result = _tDai.balanceOf(address(this));
+        _tDai.safeTransfer(owner, result);
     }
 
     /// @notice withdraws fees
+    /// @dev Withdraws the fees from the strategy. Does not withdraw from contract's balance like `_withdraw` does.
+    /// @param _amount Amount to withdraw
     function withdrawFees(uint256 _amount) external onlyOwner {
-        uint256 shares = sDai.convertToShares(_amount);
-        uint256 obtainedDai = sDai.redeem(shares, address(this), address(this));
-        feesPending -= obtainedDai;
+        feesPending -= _amount;
 
-        dai.approve(contractAddress, obtainedDai);
-        ITDai(contractAddress).wrap(address(this), address(this), obtainedDai);
-        IERC20(contractAddress).safeTransfer(feeRecipient, obtainedDai);
+        // Withdraw from the pool, convert to Dai and wrap it into tDai
+        sDai.withdraw(_amount, address(this), address(this));
+        dai.approve(contractAddress, _amount);
+        ITDai(contractAddress).wrap(address(this), address(this), _amount);
+        IERC20(contractAddress).safeTransfer(feeRecipient, _amount);
     }
-
-    // ************************ //
-    // *** PUBLIC FUNCTIONS *** //
-    // ************************ //
-    function compound(bytes memory dexData) external {}
 
     // ************************* //
     // *** PRIVATE FUNCTIONS *** //
     // ************************* //
     function _currentBalance() internal view override returns (uint256 amount) {
-        uint256 maxRedeem = sDai.maxRedeem(address(this));
-        uint256 previewRedeem = sDai.previewRedeem(maxRedeem); //dai
+        uint256 maxWithdraw = sDai.maxWithdraw(address(this));
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)); //tDai
-        return queued + previewRedeem - feesPending; //this operation is valid because dai <> tDai ratio is 1:1
+        return queued + maxWithdraw; //this operation is valid because dai <> tDai ratio is 1:1
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
@@ -168,6 +174,7 @@ contract sDaiStrategy is
             ITDai(contractAddress).unwrap(address(this), queued);
             dai.approve(address(sDai), queued);
             sDai.deposit(queued, address(this));
+            totalActiveDeposits += queued; // Update total deposits
             emit AmountDeposited(queued);
             return;
         }
@@ -179,28 +186,74 @@ contract sDaiStrategy is
         address to,
         uint256 amount
     ) internal override nonReentrant {
-        uint256 maxWithdraw = sDai.maxWithdraw(address(this));
-        if (
-            IERC20(contractAddress).balanceOf(address(this)) +
-                maxWithdraw -
-                feesPending <
-            amount
-        ) revert NotEnough(); // dai <> tDai is 1:1
+        if (paused) revert Paused();
 
-        (uint256 toWithdraw, uint256 fees) = _processFees(
-            maxWithdraw >= amount ? amount : maxWithdraw
+        uint256 maxWithdraw = sDai.maxWithdraw(address(this)); // Total amount of Dai that can be withdrawn from the pool
+        uint256 assetInContract = IERC20(contractAddress).balanceOf(
+            address(this)
         );
-        feesPending += fees;
 
-        uint256 shares = sDai.convertToShares(toWithdraw);
-        uint256 obtainedDai = sDai.redeem(shares, address(this), address(this));
-        dai.approve(contractAddress, obtainedDai);
-        ITDai(contractAddress).wrap(address(this), address(this), obtainedDai);
+        // Can't realistically overflow. Units are in DAI, values are not externally passed.
+        unchecked {
+            if (assetInContract + maxWithdraw < amount) revert NotEnough(); // dai <> tDai is 1:1, units are the same
+        }
 
-        IERC20(contractAddress).safeTransfer(
-            to,
-            obtainedDai + (amount - (toWithdraw + fees)) // redeemed + (requested - withdrawn)
+        uint256 toWithdrawFromPool;
+        // Amount externally passed, but is already checked to be in realistic boundaries.
+        unchecked {
+            toWithdrawFromPool = amount > assetInContract
+                ? amount - assetInContract
+                : 0; // Asset to withdraw from the pool if not enough available in the contract
+        }
+
+        // Compute the fees
+        {
+            uint256 _totalActiveDeposits = totalActiveDeposits; // Cache total deposits
+            uint256 fees = _computePendingFees(
+                _totalActiveDeposits,
+                maxWithdraw
+            ); // Compute pending fees
+            if (fees > 0) {
+                feesPending += fees; // Update pending fees
+            }
+
+            // Act as an invariant, totalActiveDeposits should never be lower than the amount to withdraw from the pool
+            totalActiveDeposits = _totalActiveDeposits - amount; // Update total deposits
+        }
+
+        // If there is nothing to withdraw from the pool, just transfer the tokens and return
+        if (toWithdrawFromPool == 0) {
+            IERC20(contractAddress).safeTransfer(to, amount);
+            emit AmountWithdrawn(to, amount);
+            return;
+        }
+
+        // Withdraw from the pool, convert to Dai and wrap it into tDai
+        sDai.withdraw(toWithdrawFromPool, address(this), address(this));
+        dai.approve(contractAddress, toWithdrawFromPool);
+        ITDai(contractAddress).wrap(
+            address(this),
+            address(this),
+            toWithdrawFromPool
         );
+
+        // Transfer the requested amount
+        IERC20(contractAddress).safeTransfer(to, amount);
+        emit AmountWithdrawn(to, amount);
+    }
+
+    /// @notice Computes the pending fees
+    /// @param _totalDeposited Total amount deposited to this contract, from T0...Tn
+    /// @param _amountInPool Total amount available in the pool
+    /// @return result The amount of fees to be processed
+    function _computePendingFees(
+        uint256 _totalDeposited,
+        uint256 _amountInPool
+    ) internal view returns (uint256 result) {
+        if (_amountInPool > _totalDeposited) {
+            result = _amountInPool - _totalDeposited; // Get the occurred gains amount
+            (, result) = _processFees(result); // Process fees
+        }
     }
 
     receive() external payable {}
