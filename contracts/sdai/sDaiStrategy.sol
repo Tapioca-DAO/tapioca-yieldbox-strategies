@@ -91,8 +91,16 @@ contract sDaiStrategy is
         return "sDai strategy for tDai assets";
     }
 
-    function compoundAmount() external pure returns (uint256 result) {
-        return 0;
+    /// @notice Returns the unharvested token gains
+    function harvestable()
+        external
+        view
+        returns (uint256 result, uint256 fees)
+    {
+        (fees, result) = _computePendingFees(
+            totalActiveDeposits,
+            sDai.maxWithdraw(address(this))
+        );
     }
 
     // *********************** //
@@ -127,7 +135,7 @@ contract sDaiStrategy is
 
     /// @notice withdraws everything from the strategy
     /// @dev Withdraws everything from the strategy and pauses it
-    function emergencyWithdraw() external onlyOwner returns (uint256 result) {
+    function emergencyWithdraw() external onlyOwner {
         paused = true; // Pause the strategy
 
         // Withdraw from the pool, convert to Dai and wrap it into tDai
@@ -135,11 +143,6 @@ contract sDaiStrategy is
         sDai.withdraw(maxWithdraw, address(this), address(this));
         dai.approve(contractAddress, maxWithdraw);
         ITDai(contractAddress).wrap(address(this), address(this), maxWithdraw);
-
-        // Transfer all the currently held tokens to the owner
-        IERC20 _tDai = IERC20(contractAddress);
-        result = _tDai.balanceOf(address(this));
-        _tDai.safeTransfer(owner, result);
     }
 
     /// @notice withdraws fees
@@ -158,23 +161,26 @@ contract sDaiStrategy is
     // ************************* //
     // *** PRIVATE FUNCTIONS *** //
     // ************************* //
+
+    /// @notice Returns the amount of DAI in the pool plus the amount that can be withdrawn from the contract, minus the pending fees
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)); //tDai
-        return queued + maxWithdraw; //this operation is valid because dai <> tDai ratio is 1:1
+        return queued + maxWithdraw - feesPending; //this operation is valid because dai <> tDai ratio is 1:1
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
     function _deposited(uint256 amount) internal override nonReentrant {
         if (paused) revert Paused();
+
         // Assume that YieldBox already transferred the tokens to this address
-        uint256 queued = IERC20(contractAddress).balanceOf(address(this)) -
-            feesPending;
+        uint256 queued = IERC20(contractAddress).balanceOf(address(this));
+        totalActiveDeposits += queued; // Update total deposits
+
         if (queued >= depositThreshold) {
             ITDai(contractAddress).unwrap(address(this), queued);
             dai.approve(address(sDai), queued);
             sDai.deposit(queued, address(this));
-            totalActiveDeposits += queued; // Update total deposits
             emit AmountDeposited(queued);
             return;
         }
@@ -209,7 +215,7 @@ contract sDaiStrategy is
         // Compute the fees
         {
             uint256 _totalActiveDeposits = totalActiveDeposits; // Cache total deposits
-            uint256 fees = _computePendingFees(
+            (uint256 fees, uint256 accumulatedTokens) = _computePendingFees(
                 _totalActiveDeposits,
                 maxWithdraw
             ); // Compute pending fees
@@ -218,7 +224,10 @@ contract sDaiStrategy is
             }
 
             // Act as an invariant, totalActiveDeposits should never be lower than the amount to withdraw from the pool
-            totalActiveDeposits = _totalActiveDeposits - amount; // Update total deposits
+            totalActiveDeposits =
+                _totalActiveDeposits +
+                accumulatedTokens -
+                amount; // Update total deposits
         }
 
         // If there is nothing to withdraw from the pool, just transfer the tokens and return
@@ -246,13 +255,14 @@ contract sDaiStrategy is
     /// @param _totalDeposited Total amount deposited to this contract, from T0...Tn
     /// @param _amountInPool Total amount available in the pool
     /// @return result The amount of fees to be processed
+    /// @return accumulated The amount of new tokens accumulated
     function _computePendingFees(
         uint256 _totalDeposited,
         uint256 _amountInPool
-    ) internal view returns (uint256 result) {
+    ) internal view returns (uint256 result, uint256 accumulated) {
         if (_amountInPool > _totalDeposited) {
-            result = _amountInPool - _totalDeposited; // Get the occurred gains amount
-            (, result) = _processFees(result); // Process fees
+            accumulated = _amountInPool - _totalDeposited; // Get the occurred gains amount
+            (, result) = _processFees(accumulated); // Process fees
         }
     }
 
