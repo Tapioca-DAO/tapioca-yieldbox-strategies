@@ -137,6 +137,7 @@ async function registerUniswapV3Swapper(
         yieldBoxAddress,
         swapRouterAddress,
         swapFactoryAddress,
+        deployer.address,
     );
 
     log(
@@ -186,6 +187,7 @@ async function registerSwapperMockNew(
         __uniRouterAddress,
         __uniFactoryAddress,
         yieldBox.address,
+        deployer.address,
     );
 
     log(
