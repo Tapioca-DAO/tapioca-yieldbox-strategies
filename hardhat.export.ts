@@ -6,14 +6,13 @@ import '@primitivefi/hardhat-dodoc';
 import '@typechain/hardhat';
 import 'hardhat-contract-sizer';
 import 'hardhat-tracer';
-import { HardhatUserConfig, subtask } from 'hardhat/config';
+import { HardhatUserConfig } from 'hardhat/config';
 import {
     HardhatNetworkUserConfig,
     HttpNetworkConfig,
     HttpNetworkUserConfig,
     NetworksUserConfig,
 } from 'hardhat/types';
-import fs from 'fs';
 
 // Utils
 import { TAPIOCA_PROJECTS_NAME } from '@tapioca-sdk/api/config';
@@ -72,7 +71,7 @@ const forkInfo: NetworksUserConfig['hardhat'] = forkNetwork
 
 const config: HardhatUserConfig &
     HardhatNetworkUserConfig & { dodoc?: any; typechain?: any } = {
-    SDK: { project: TAPIOCA_PROJECTS_NAME.TapiocaPeriphery },
+    SDK: { project: TAPIOCA_PROJECTS_NAME.TapiocaStrategies },
     solidity: {
         compilers: [
             {
