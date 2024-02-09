@@ -1,26 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-//OZ
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// External
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-//boringcrypto
-import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
-import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+// Tapioca
+import {ISavingsDai} from "tapioca-periph/interfaces/external/makerdao/ISavingsDai.sol";
+import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
+import {FeeCollector, IFeeCollector} from "../feeCollector.sol";
+import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
+import {ITDai} from "./interfaces/ITDai.sol";
 
-// Utils
-import "../feeCollector.sol";
+/*
+__/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
+ _\///////\\\/////____/\\\\\\\\\\\\\__\/\\\/////////\\\_\/////\\\///______/\\\///\\\________/\\\////////____/\\\\\\\\\\\\\__       
+  _______\/\\\________/\\\/////////\\\_\/\\\_______\/\\\_____\/\\\_______/\\\/__\///\\\____/\\\/____________/\\\/////////\\\_      
+   _______\/\\\_______\/\\\_______\/\\\_\/\\\\\\\\\\\\\/______\/\\\______/\\\______\//\\\__/\\\_____________\/\\\_______\/\\\_     
+    _______\/\\\_______\/\\\\\\\\\\\\\\\_\/\\\/////////________\/\\\_____\/\\\_______\/\\\_\/\\\_____________\/\\\\\\\\\\\\\\\_    
+     _______\/\\\_______\/\\\/////////\\\_\/\\\_________________\/\\\_____\//\\\______/\\\__\//\\\____________\/\\\/////////\\\_   
+      _______\/\\\_______\/\\\_______\/\\\_\/\\\_________________\/\\\______\///\\\__/\\\_____\///\\\__________\/\\\_______\/\\\_  
+       _______\/\\\_______\/\\\_______\/\\\_\/\\\______________/\\\\\\\\\\\____\///\\\\\/________\////\\\\\\\\\_\/\\\_______\/\\\_ 
+        _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
+*/
 
-//SDK
-import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-
-//interfaces
-import "tapioca-periph/contracts/interfaces/ISavingsDai.sol";
-import "./interfaces/ITDai.sol";
-
-//For mainnet
-contract sDaiStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard, FeeCollector, IFeeCollector {
-    using BoringERC20 for IERC20;
+contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollector, IFeeCollector {
+    using SafeERC20 for IERC20;
 
     /// @notice Keeps track of the total active deposits, goes up when a deposit is made and down when a withdrawal is made
     uint256 public totalActiveDeposits;
@@ -57,11 +63,11 @@ contract sDaiStrategy is BaseERC20Strategy, BoringOwnable, ReentrancyGuard, FeeC
         uint256 _feeBps,
         address _owner
     ) BaseERC20Strategy(_yieldBox, _token) FeeCollector(_feeRecipient, _feeBps) {
-        owner = msg.sender;
         sDai = _sDai;
         dai = IERC20(ITDai(_token).erc20());
         if (address(dai) != sDai.dai()) revert TokenNotValid();
-        owner = _owner;
+
+        transferOwnership(_owner);
     }
 
     // ********************** //

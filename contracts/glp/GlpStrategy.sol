@@ -1,24 +1,34 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.22;
 
-import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-import "tapioca-sdk/dist/contracts/YieldBox/contracts/enums/YieldBoxTokenType.sol";
-import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
-import "@boringcrypto/boring-solidity/contracts/interfaces/IERC20.sol";
-import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import "../../tapioca-periph/contracts/interfaces/IOracle.sol";
-import "../interfaces/gmx/IGmxRewardDistributor.sol";
-import "../interfaces/gmx/IGmxRewardTracker.sol";
-import "../interfaces/gmx/IGmxRewardRouter.sol";
-import "../interfaces/gmx/IGlpManager.sol";
-import "../interfaces/gmx/IGmxVester.sol";
-import "../interfaces/gmx/IGmxVault.sol";
-import "../feeCollector.sol";
+// External
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-// NOTE: Specific to a UniV3 pool!! This will not work on Avalanche!
-contract GlpStrategy is BaseERC20Strategy, BoringOwnable, IFeeCollector, FeeCollector {
-    using BoringERC20 for IERC20;
+// Tapioca
+import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
+import {IGmxRewardTracker} from "tapioca-strategies/interfaces/gmx/IGmxRewardTracker.sol";
+import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
+import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
+import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
+import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
+import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
+import {FeeCollector, IFeeCollector} from "../feeCollector.sol";
+
+/*
+__/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
+ _\///////\\\/////____/\\\\\\\\\\\\\__\/\\\/////////\\\_\/////\\\///______/\\\///\\\________/\\\////////____/\\\\\\\\\\\\\__       
+  _______\/\\\________/\\\/////////\\\_\/\\\_______\/\\\_____\/\\\_______/\\\/__\///\\\____/\\\/____________/\\\/////////\\\_      
+   _______\/\\\_______\/\\\_______\/\\\_\/\\\\\\\\\\\\\/______\/\\\______/\\\______\//\\\__/\\\_____________\/\\\_______\/\\\_     
+    _______\/\\\_______\/\\\\\\\\\\\\\\\_\/\\\/////////________\/\\\_____\/\\\_______\/\\\_\/\\\_____________\/\\\\\\\\\\\\\\\_    
+     _______\/\\\_______\/\\\/////////\\\_\/\\\_________________\/\\\_____\//\\\______/\\\__\//\\\____________\/\\\/////////\\\_   
+      _______\/\\\_______\/\\\_______\/\\\_\/\\\_________________\/\\\______\///\\\__/\\\_____\///\\\__________\/\\\_______\/\\\_  
+       _______\/\\\_______\/\\\_______\/\\\_\/\\\______________/\\\\\\\\\\\____\///\\\\\/________\////\\\\\\\\\_\/\\\_______\/\\\_ 
+        _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
+*/
+
+contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector {
+    using SafeERC20 for IERC20;
 
     // *********************************** //
     /* ============ STATE ============ */
@@ -37,7 +47,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable, IFeeCollector, FeeColl
 
     bool public paused;
 
-    IOracle public wethGlpOracle;
+    ITapiocaOracle public wethGlpOracle;
     bytes public wethGlpOracleData;
 
     uint256 private _slippage = 50;
@@ -65,10 +75,10 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable, IFeeCollector, FeeColl
         IGmxRewardRouterV2 _gmxRewardRouter,
         IGmxRewardRouterV2 _glpRewardRouter,
         IERC20 _sGlp,
-        IOracle _wethGlpOracle,
+        ITapiocaOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         address _owner
-    ) BaseERC20Strategy(_yieldBox, address(_sGlp)) FeeCollector(owner, 100) {
+    ) BaseERC20Strategy(_yieldBox, address(_sGlp)) FeeCollector(_owner, 100) {
         weth = IERC20(_yieldBox.wrappedNative());
         if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
 
@@ -91,7 +101,7 @@ contract GlpStrategy is BaseERC20Strategy, BoringOwnable, IFeeCollector, FeeColl
         wethGlpOracle = _wethGlpOracle;
         wethGlpOracleData = _wethGlpOracleData;
 
-        owner = _owner;
+        transferOwnership(_owner);
     }
 
     // *********************************** //
