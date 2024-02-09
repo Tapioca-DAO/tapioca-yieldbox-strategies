@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
 interface IGlpManager {
     function getPrice(bool _maximise) external view returns (uint256);

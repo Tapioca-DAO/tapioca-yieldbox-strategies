@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.22;
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/enums/YieldBoxTokenType.sol";
@@ -17,12 +17,7 @@ import "../interfaces/gmx/IGmxVault.sol";
 import "../feeCollector.sol";
 
 // NOTE: Specific to a UniV3 pool!! This will not work on Avalanche!
-contract GlpStrategy is
-    BaseERC20Strategy,
-    BoringOwnable,
-    IFeeCollector,
-    FeeCollector
-{
+contract GlpStrategy is BaseERC20Strategy, BoringOwnable, IFeeCollector, FeeCollector {
     using BoringERC20 for IERC20;
 
     // *********************************** //
@@ -77,8 +72,9 @@ contract GlpStrategy is
         weth = IERC20(_yieldBox.wrappedNative());
         if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
 
-        if (_glpRewardRouter.gmx() != address(0))
+        if (_glpRewardRouter.gmx() != address(0)) {
             revert GlpRewardRouterNotValid();
+        }
         glpRewardRouter = _glpRewardRouter;
 
         address _gmx = _gmxRewardRouter.gmx();
@@ -108,12 +104,7 @@ contract GlpStrategy is
     }
 
     /// @notice Returns the description of this strategy
-    function description()
-        external
-        pure
-        override
-        returns (string memory description_)
-    {
+    function description() external pure override returns (string memory description_) {
         return "Holds staked GLP tokens and compounds the rewards";
     }
 
@@ -198,7 +189,7 @@ contract GlpStrategy is
         amount += pendingRewards();
     }
 
-    function _deposited(uint256 /* amount */) internal override {
+    function _deposited(uint256 /* amount */ ) internal override {
         if (paused) revert Paused();
         harvest();
     }
@@ -245,12 +236,7 @@ contract GlpStrategy is
             amountInGlp = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
 
             _safeApprove(address(weth), address(glpManager), wethAmount);
-            glpRewardRouter.mintAndStakeGlp(
-                address(weth),
-                wethAmount,
-                0,
-                amountInGlp
-            );
+            glpRewardRouter.mintAndStakeGlp(address(weth), wethAmount, 0, amountInGlp);
         }
     }
 
@@ -259,17 +245,9 @@ contract GlpStrategy is
         bool success;
         bytes memory data;
         (success, data) = token.call(abi.encodeCall(IERC20.approve, (to, 0)));
-        require(
-            success && (data.length == 0 || abi.decode(data, (bool))),
-            "GlpStrategy::safeApprove: approve failed"
-        );
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "GlpStrategy::safeApprove: approve failed");
 
-        (success, data) = token.call(
-            abi.encodeCall(IERC20.approve, (to, value))
-        );
-        require(
-            success && (data.length == 0 || abi.decode(data, (bool))),
-            "GlpStrategy::safeApprove: approve failed"
-        );
+        (success, data) = token.call(abi.encodeCall(IERC20.approve, (to, value)));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), "GlpStrategy::safeApprove: approve failed");
     }
 }

@@ -1,29 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
 interface IGmxVester {
     function balances(address _account) external view returns (uint256);
 
     function claimable(address _account) external view returns (uint256);
 
-    function getMaxVestableAmount(
-        address _account
-    ) external view returns (uint256);
+    function getMaxVestableAmount(address _account) external view returns (uint256);
 
-    function cumulativeClaimAmounts(
-        address _account
-    ) external view returns (uint256);
+    function cumulativeClaimAmounts(address _account) external view returns (uint256);
 
-    function getCombinedAverageStakedAmount(
-        address _account
-    ) external view returns (uint256);
+    function getCombinedAverageStakedAmount(address _account) external view returns (uint256);
 
     function pairAmounts(address _account) external view returns (uint256);
 
-    function getPairAmount(
-        address _account,
-        uint256 _esAmount
-    ) external view returns (uint256);
+    function getPairAmount(address _account, uint256 _esAmount) external view returns (uint256);
 
     function claim() external returns (uint256);
 

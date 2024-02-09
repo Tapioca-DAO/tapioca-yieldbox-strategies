@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
 interface IFeeCollector {
     function withdrawFees(uint256 amount) external;
@@ -22,9 +22,7 @@ contract FeeCollector {
     /// @param _amount Amount to process fees on
     /// @return netAmount Amount after fees
     /// @return fee Amount of fees
-    function _processFees(
-        uint256 _amount
-    ) internal view returns (uint256 netAmount, uint256 fee) {
+    function _processFees(uint256 _amount) internal view returns (uint256 netAmount, uint256 fee) {
         fee = (_amount * FEE_BPS) / FEE_PRECISION;
         netAmount = _amount - fee;
     }

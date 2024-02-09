@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
 interface IGmxRewardRouterV2 {
     function glpManager() external view returns (address);
@@ -22,17 +22,11 @@ interface IGmxRewardRouterV2 {
 
     function stakedGmxTracker() external view returns (address);
 
-    function mintAndStakeGlp(
-        address _token,
-        uint256 _amount,
-        uint256 _minUsdg,
-        uint256 _minGlp
-    ) external returns (uint256);
+    function mintAndStakeGlp(address _token, uint256 _amount, uint256 _minUsdg, uint256 _minGlp)
+        external
+        returns (uint256);
 
-    function mintAndStakeGlpETH(
-        uint256 _minUsdg,
-        uint256 _minGlp
-    ) external payable returns (uint256);
+    function mintAndStakeGlpETH(uint256 _minUsdg, uint256 _minGlp) external payable returns (uint256);
 
     function handleRewards(
         bool _shouldClaimGmx,
