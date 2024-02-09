@@ -1,4 +1,4 @@
-import { EChainID } from '../gitsub_tapioca-sdk/src/api/config';
+import { EChainID } from '@tapioca-sdk/api/config';
 
 const MISC = {
     [EChainID.ARBITRUM]: {

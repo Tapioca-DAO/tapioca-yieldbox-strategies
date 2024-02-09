@@ -7,3 +7,15 @@
 [submodule "tapioca-mocks"]
 	path = tapioca-mocks
 	url = https://github.com/Tapioca-DAO/tapioca-mocks.git
+[submodule "gitmodule/tapioca-sdk"]
+	path = gitmodule/tapioca-sdk
+	url = https://github.com/Tapioca-DAO/tapioca-sdk
+[submodule "gitmodule/tapioca-periph"]
+	path = gitmodule/tapioca-periph
+	url = https://github.com/Tapioca-DAO/tapioca-periph.git
+[submodule "gitmodule/tapioca-mocks"]
+	path = gitmodule/tapioca-mocks
+	url = https://github.com/Tapioca-DAO/tapioca-mocks
+[submodule "gitmodule/tap-yieldbox"]
+	path = gitmodule/tap-yieldbox
+	url = https://github.com/Tapioca-DAO/tap-yieldbox

@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
 interface ITDai {
-    function wrap(
-        address _fromAddress,
-        address _toAddress,
-        uint256 _amount
-    ) external payable;
+    function wrap(address _fromAddress, address _toAddress, uint256 _amount) external payable;
 
     function unwrap(address _toAddress, uint256 _amount) external;
 

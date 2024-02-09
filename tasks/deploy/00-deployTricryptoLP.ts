@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import { loadVM } from '../utils';
 import SDK from 'tapioca-sdk';
 import { buildTricryptoLPStrategy } from '../deployBuilds/00-buildTricryptoLPStrategy';
-import { TOKENS_DEPLOYMENTS } from '../../gitsub_tapioca-sdk/src/api/constants';
+import { TOKENS_DEPLOYMENTS } from '@tapioca-sdk/api/constants';
 import { EChainID } from 'tapioca-sdk/dist/api/config';
 
 //deprecated
@@ -41,7 +41,8 @@ export const deployTricrytoLPStrategy__task = async (
     const [tricryptoLPGetter, tricryptoLPStrategy] =
         await buildTricryptoLPStrategy(
             hre,
-            CURVE_DEPLOYMENTS[chainInfo.chainId as EChainID].tricryptoLiquidityPool,
+            CURVE_DEPLOYMENTS[chainInfo.chainId as EChainID]
+                .tricryptoLiquidityPool,
             TOKENS_DEPLOYMENTS[chainInfo.chainId as EChainID].usdt,
             TOKENS_DEPLOYMENTS[chainInfo.chainId as EChainID].wbtc,
             TOKENS_DEPLOYMENTS[chainInfo.chainId as EChainID].weth,

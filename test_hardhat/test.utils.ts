@@ -4,7 +4,7 @@ import hre, { ethers, network } from 'hardhat';
 import {
     UniswapV2Swapper__factory,
     UniswapV3Swapper__factory,
-} from '../gitsub_tapioca-sdk/src/typechain/tapioca-periphery';
+} from '@tapioca-sdk/typechain/tapioca-periphery';
 import {
     ERC20Mock__factory,
     UniswapV2RouterMock__factory,
@@ -16,8 +16,8 @@ import {
     OracleMock__factory,
     TOFTMock__factory,
     SavingsDaiMock__factory,
-} from '../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
-import { ERC20WithoutStrategy__factory } from '../gitsub_tapioca-sdk/src/typechain/YieldBox';
+} from '@tapioca-sdk/typechain/tapioca-mocks';
+import { ERC20WithoutStrategy__factory } from '@tapioca-sdk/typechain/YieldBox';
 
 ethers.utils.Logger.setLogLevel(ethers.utils.Logger.levels.ERROR);
 

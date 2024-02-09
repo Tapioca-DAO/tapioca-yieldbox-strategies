@@ -1,0 +1,22 @@
+[profile.default]
+src = 'contracts'
+out = 'gen/out'
+libs = ['node_modules', 'lib']
+cache_path  = 'gen/cache_forge'
+broadcast = 'gen/broadcast'
+
+solc_version='0.8.22'
+evm_version='paris'
+optimizer = true
+optimizer_runs = 9999
+
+remappings = [
+    "tapioca-strategies/=contracts/",
+	"tapioca-sdk/=gitmodule/tapioca-sdk/contracts/",
+    "tapioca-periph/=gitmodule/tapioca-periph/contracts/",
+    "tap-yieldbox/=gitmodule/tap-yieldbox/contracts/",
+]
+
+
+[etherscan]
+arbitrum-sepolia = { key = "${ARBITRUM_SEPOLIA_API_KEY}", url = "https://api-sepolia.arbiscan.io/api"}

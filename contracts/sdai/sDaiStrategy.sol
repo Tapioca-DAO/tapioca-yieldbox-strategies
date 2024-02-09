@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
-//OZ
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// External
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-//boringcrypto
-import "@boringcrypto/boring-solidity/contracts/libraries/BoringERC20.sol";
-import "@boringcrypto/boring-solidity/contracts/BoringOwnable.sol";
+// Tapioca
+import {ISavingsDai} from "tapioca-periph/interfaces/external/makerdao/ISavingsDai.sol";
+import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
+import {FeeCollector, IFeeCollector} from "../feeCollector.sol";
+import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
+import {ITDai} from "./interfaces/ITDai.sol";
 
-// Utils
-import "../feeCollector.sol";
+/*
+__/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
+ _\///////\\\/////____/\\\\\\\\\\\\\__\/\\\/////////\\\_\/////\\\///______/\\\///\\\________/\\\////////____/\\\\\\\\\\\\\__       
+  _______\/\\\________/\\\/////////\\\_\/\\\_______\/\\\_____\/\\\_______/\\\/__\///\\\____/\\\/____________/\\\/////////\\\_      
+   _______\/\\\_______\/\\\_______\/\\\_\/\\\\\\\\\\\\\/______\/\\\______/\\\______\//\\\__/\\\_____________\/\\\_______\/\\\_     
+    _______\/\\\_______\/\\\\\\\\\\\\\\\_\/\\\/////////________\/\\\_____\/\\\_______\/\\\_\/\\\_____________\/\\\\\\\\\\\\\\\_    
+     _______\/\\\_______\/\\\/////////\\\_\/\\\_________________\/\\\_____\//\\\______/\\\__\//\\\____________\/\\\/////////\\\_   
+      _______\/\\\_______\/\\\_______\/\\\_\/\\\_________________\/\\\______\///\\\__/\\\_____\///\\\__________\/\\\_______\/\\\_  
+       _______\/\\\_______\/\\\_______\/\\\_\/\\\______________/\\\\\\\\\\\____\///\\\\\/________\////\\\\\\\\\_\/\\\_______\/\\\_ 
+        _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
+*/
 
-//SDK
-import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
-
-//interfaces
-import "tapioca-periph/contracts/interfaces/ISavingsDai.sol";
-import "./interfaces/ITDai.sol";
-
-//For mainnet
-contract sDaiStrategy is
-    BaseERC20Strategy,
-    BoringOwnable,
-    ReentrancyGuard,
-    FeeCollector,
-    IFeeCollector
-{
-    using BoringERC20 for IERC20;
+contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollector, IFeeCollector {
+    using SafeERC20 for IERC20;
 
     /// @notice Keeps track of the total active deposits, goes up when a deposit is made and down when a withdrawal is made
     uint256 public totalActiveDeposits;
@@ -62,15 +62,12 @@ contract sDaiStrategy is
         address _feeRecipient,
         uint256 _feeBps,
         address _owner
-    )
-        BaseERC20Strategy(_yieldBox, _token)
-        FeeCollector(_feeRecipient, _feeBps)
-    {
-        owner = msg.sender;
+    ) BaseERC20Strategy(_yieldBox, _token) FeeCollector(_feeRecipient, _feeBps) {
         sDai = _sDai;
         dai = IERC20(ITDai(_token).erc20());
         if (address(dai) != sDai.dai()) revert TokenNotValid();
-        owner = _owner;
+
+        transferOwnership(_owner);
     }
 
     // ********************** //
@@ -82,25 +79,13 @@ contract sDaiStrategy is
     }
 
     /// @notice Returns the description of this strategy
-    function description()
-        external
-        pure
-        override
-        returns (string memory description_)
-    {
+    function description() external pure override returns (string memory description_) {
         return "sDai strategy for tDai assets";
     }
 
     /// @notice Returns the unharvested token gains
-    function harvestable()
-        external
-        view
-        returns (uint256 result, uint256 fees)
-    {
-        (fees, result) = _computePendingFees(
-            totalActiveDeposits,
-            sDai.maxWithdraw(address(this))
-        );
+    function harvestable() external view returns (uint256 result, uint256 fees) {
+        (fees, result) = _computePendingFees(totalActiveDeposits, sDai.maxWithdraw(address(this)));
     }
 
     // *********************** //
@@ -122,7 +107,7 @@ contract sDaiStrategy is
     /// @param amount the amount to rescue
     /// @param to the recipient
     function rescueEth(uint256 amount, address to) external onlyOwner {
-        (bool success, ) = to.call{value: amount}("");
+        (bool success,) = to.call{value: amount}("");
         if (!success) revert TransferFailed();
     }
 
@@ -188,16 +173,11 @@ contract sDaiStrategy is
     }
 
     /// @dev burns sDai in exchange of Dai and wraps it into tDai
-    function _withdraw(
-        address to,
-        uint256 amount
-    ) internal override nonReentrant {
+    function _withdraw(address to, uint256 amount) internal override nonReentrant {
         if (paused) revert Paused();
 
         uint256 maxWithdraw = sDai.maxWithdraw(address(this)); // Total amount of Dai that can be withdrawn from the pool
-        uint256 assetInContract = IERC20(contractAddress).balanceOf(
-            address(this)
-        );
+        uint256 assetInContract = IERC20(contractAddress).balanceOf(address(this));
 
         // Can't realistically overflow. Units are in DAI, values are not externally passed.
         unchecked {
@@ -207,27 +187,19 @@ contract sDaiStrategy is
         uint256 toWithdrawFromPool;
         // Amount externally passed, but is already checked to be in realistic boundaries.
         unchecked {
-            toWithdrawFromPool = amount > assetInContract
-                ? amount - assetInContract
-                : 0; // Asset to withdraw from the pool if not enough available in the contract
+            toWithdrawFromPool = amount > assetInContract ? amount - assetInContract : 0; // Asset to withdraw from the pool if not enough available in the contract
         }
 
         // Compute the fees
         {
             uint256 _totalActiveDeposits = totalActiveDeposits; // Cache total deposits
-            (uint256 fees, uint256 accumulatedTokens) = _computePendingFees(
-                _totalActiveDeposits,
-                maxWithdraw
-            ); // Compute pending fees
+            (uint256 fees, uint256 accumulatedTokens) = _computePendingFees(_totalActiveDeposits, maxWithdraw); // Compute pending fees
             if (fees > 0) {
                 feesPending += fees; // Update pending fees
             }
 
             // Act as an invariant, totalActiveDeposits should never be lower than the amount to withdraw from the pool
-            totalActiveDeposits =
-                _totalActiveDeposits +
-                accumulatedTokens -
-                amount; // Update total deposits
+            totalActiveDeposits = _totalActiveDeposits + accumulatedTokens - amount; // Update total deposits
         }
 
         // If there is nothing to withdraw from the pool, just transfer the tokens and return
@@ -240,11 +212,7 @@ contract sDaiStrategy is
         // Withdraw from the pool, convert to Dai and wrap it into tDai
         sDai.withdraw(toWithdrawFromPool, address(this), address(this));
         dai.approve(contractAddress, toWithdrawFromPool);
-        ITDai(contractAddress).wrap(
-            address(this),
-            address(this),
-            toWithdrawFromPool
-        );
+        ITDai(contractAddress).wrap(address(this), address(this), toWithdrawFromPool);
 
         // Transfer the requested amount
         IERC20(contractAddress).safeTransfer(to, amount);
@@ -256,10 +224,11 @@ contract sDaiStrategy is
     /// @param _amountInPool Total amount available in the pool
     /// @return result The amount of fees to be processed
     /// @return accumulated The amount of new tokens accumulated
-    function _computePendingFees(
-        uint256 _totalDeposited,
-        uint256 _amountInPool
-    ) internal view returns (uint256 result, uint256 accumulated) {
+    function _computePendingFees(uint256 _totalDeposited, uint256 _amountInPool)
+        internal
+        view
+        returns (uint256 result, uint256 accumulated)
+    {
         if (_amountInPool > _totalDeposited) {
             accumulated = _amountInPool - _totalDeposited; // Get the occurred gains amount
             (, result) = _processFees(accumulated); // Process fees
