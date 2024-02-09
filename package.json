@@ -47,7 +47,7 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "ethers": "^5.7.0",
-    "hardhat": "2.13.0",
+    "hardhat": "^2.19.5",
     "hardhat-contract-sizer": "^2.5.1",
     "hardhat-deploy": "^0.9.6",
     "hardhat-gas-reporter": "^1.0.8",
@@ -76,6 +76,7 @@
     "inquirer": "^8.2.5",
     "load-json-file": "^7.0.1",
     "lodash": "^4.17.21",
-    "tapioca-sdk": "1.6.11"
+    "tapioca-sdk": "1.6.13",
+    "tsconfig-paths": "^4.2.0"
   }
 }
