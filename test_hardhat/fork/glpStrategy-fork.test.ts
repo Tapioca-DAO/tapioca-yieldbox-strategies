@@ -1,7 +1,7 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
-import { OracleMock__factory } from '../../gitsub_tapioca-sdk/src/typechain/tapioca-mocks';
+import { OracleMock__factory } from '@tapioca-sdk/typechain/tapioca-mocks';
 import { GlpStrategy, IERC20 } from '../../typechain';
 import { BN, loadNetworkFork } from '../test.utils';
 
