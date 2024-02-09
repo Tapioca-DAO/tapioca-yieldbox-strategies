@@ -8,6 +8,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 // Tapioca
 import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
 import {IGmxRewardTracker} from "tapioca-strategies/interfaces/gmx/IGmxRewardTracker.sol";
+import {ITapiocaOFTBase} from "tapioca-periph/interfaces/tap-token/ITapiocaOFT.sol";
 import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
@@ -34,16 +35,17 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /* ============ STATE ============ */
     // *********************************** //
 
+    IERC20 private immutable sGLP;
     IERC20 private immutable gmx;
     IERC20 private immutable weth;
 
-    IGmxRewardTracker private immutable sbfGMX;
-    IGlpManager private immutable glpManager;
     IGmxRewardRouterV2 private immutable glpRewardRouter;
     IGmxRewardRouterV2 private immutable gmxRewardRouter;
-    IGmxVester private immutable glpVester;
+    IGmxRewardTracker private immutable sbfGMX;
     IGmxRewardTracker private immutable fsGLP;
     IGmxRewardTracker private immutable sGMX;
+    IGlpManager private immutable glpManager;
+    IGmxVester private immutable glpVester;
 
     bool public paused;
 
@@ -74,30 +76,30 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         IYieldBox _yieldBox,
         IGmxRewardRouterV2 _gmxRewardRouter,
         IGmxRewardRouterV2 _glpRewardRouter,
-        IERC20 _sGlp,
+        ITapiocaOFTBase _tsGlp,
         ITapiocaOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         address _owner
-    ) BaseERC20Strategy(_yieldBox, address(_sGlp)) FeeCollector(_owner, 100) {
+    ) BaseERC20Strategy(_yieldBox, address(_tsGlp)) FeeCollector(_owner, 100) {
         weth = IERC20(_yieldBox.wrappedNative());
         if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
 
-        if (_glpRewardRouter.gmx() != address(0)) {
-            revert GlpRewardRouterNotValid();
-        }
-        glpRewardRouter = _glpRewardRouter;
-
+        // Check if the GMX reward router is valid and set it
         address _gmx = _gmxRewardRouter.gmx();
         if (_gmx == address(0)) revert GmxRewardRouterNotValid();
         gmxRewardRouter = _gmxRewardRouter;
         gmx = IERC20(_gmx);
 
+        // Get GMX vars
         fsGLP = IGmxRewardTracker(glpRewardRouter.stakedGlpTracker());
         sGMX = IGmxRewardTracker(gmxRewardRouter.stakedGmxTracker());
         sbfGMX = IGmxRewardTracker(gmxRewardRouter.feeGmxTracker());
         glpManager = IGlpManager(glpRewardRouter.glpManager());
         glpVester = IGmxVester(gmxRewardRouter.glpVester());
 
+        sGLP = IERC20(ITapiocaOFTBase(contractAddress).erc20()); // We cache the sGLP token
+
+        // Load the oracle
         wethGlpOracle = _wethGlpOracle;
         wethGlpOracleData = _wethGlpOracleData;
 
@@ -195,23 +197,33 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
 
     /// @notice Returns the amount of sGLP staked in the strategy
     function _currentBalance() internal view override returns (uint256 amount) {
-        amount = IERC20(contractAddress).balanceOf(address(this));
+        amount = sGLP.balanceOf(address(this));
         amount += pendingRewards();
     }
 
-    function _deposited(uint256 /* amount */ ) internal override {
+    /**
+     * @notice Deposits the specified amount into the strategy
+     * @dev Since the contract strategy is for tsGLP, we need to unwrap it to sGLP
+     */
+    function _deposited(uint256 amount) internal override {
         if (paused) revert Paused();
+        ITapiocaOFTBase(contractAddress).unwrap(address(this), address(this), amount); // unwrap the tsGLP to sGLP to this contract
         harvest();
     }
 
-    /// @notice Withdraws the specified amount from the strategy
+    /**
+     * @notice Withdraws the specified amount from the strategy
+     * @dev We wrap back the sGLP to tsGLP and transfer it to the recipient
+     */
     function _withdraw(address to, uint256 amount) internal override {
         if (amount == 0) revert NotValid();
         _claimRewards(); // Claim rewards before withdrawing
         if (shouldBuyGLP) {
             _buyGlp(); // Buy GLP with WETH rewards
         }
-        IERC20(contractAddress).safeTransfer(to, amount); // Transfer the tokens
+        sGLP.safeApprove(to, amount);
+        ITapiocaOFTBase(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
+        sGLP.safeApprove(to, 0);
     }
 
     /// @notice Claim GMX rewards, only in WETH.
