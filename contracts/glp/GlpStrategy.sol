@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
-pragma experimental ABIEncoderV2;
 
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/strategies/BaseStrategy.sol";
 import "tapioca-sdk/dist/contracts/YieldBox/contracts/enums/YieldBoxTokenType.sol";
@@ -47,9 +46,12 @@ contract GlpStrategy is
     bytes public wethGlpOracleData;
 
     uint256 private _slippage = 50;
+    uint256 private constant _MAX_SLIPPAGE = 10000;
 
     // Buy or not GLP on deposits/withdrawal
     bool shouldBuyGLP = true;
+
+    event SlippageUpdated(uint256 indexed oldVal, uint256 indexed newVal);
 
     // *********************************** //
     /* ============ ERROR ============ */
@@ -60,7 +62,6 @@ contract GlpStrategy is
     error GmxRewardRouterNotValid();
     error NotAuthorized();
     error NotValid();
-    error NotEnough();
     error Failed();
     error Paused();
 
@@ -167,6 +168,8 @@ contract GlpStrategy is
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
+        if (_val > _MAX_SLIPPAGE) revert NotValid();
+        emit SlippageUpdated(_slippage, _val);
         _slippage = _val;
     }
 
@@ -241,8 +244,7 @@ contract GlpStrategy is
             uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
             amountInGlp = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
 
-            weth.approve(address(glpManager), 0);
-            weth.approve(address(glpManager), wethAmount);
+            _safeApprove(address(weth), address(glpManager), wethAmount);
             glpRewardRouter.mintAndStakeGlp(
                 address(weth),
                 wethAmount,
@@ -250,5 +252,24 @@ contract GlpStrategy is
                 amountInGlp
             );
         }
+    }
+
+    function _safeApprove(address token, address to, uint256 value) internal {
+        require(token.code.length > 0, "GlpStrategy::safeApprove: no contract");
+        bool success;
+        bytes memory data;
+        (success, data) = token.call(abi.encodeCall(IERC20.approve, (to, 0)));
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "GlpStrategy::safeApprove: approve failed"
+        );
+
+        (success, data) = token.call(
+            abi.encodeCall(IERC20.approve, (to, value))
+        );
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "GlpStrategy::safeApprove: approve failed"
+        );
     }
 }
