@@ -207,7 +207,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
      */
     function _deposited(uint256 amount) internal override {
         if (paused) revert Paused();
-        ITapiocaOFTBase(contractAddress).unwrap(address(this), address(this), amount); // unwrap the tsGLP to sGLP to this contract
+        ITapiocaOFTBase(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
         harvest();
     }
 
