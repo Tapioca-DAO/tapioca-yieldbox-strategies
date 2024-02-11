@@ -1,12 +1,3 @@
-[submodule "tapioca-periph"]
-	path = tapioca-periph
-	url = https://github.com/Tapioca-DAO/tapioca-periph.git
-[submodule "gitsub_tapioca-sdk"]
-	path = gitsub_tapioca-sdk
-	url = https://github.com/Tapioca-DAO/tapioca-sdk
-[submodule "tapioca-mocks"]
-	path = tapioca-mocks
-	url = https://github.com/Tapioca-DAO/tapioca-mocks.git
 [submodule "gitmodule/tapioca-sdk"]
 	path = gitmodule/tapioca-sdk
 	url = https://github.com/Tapioca-DAO/tapioca-sdk
@@ -19,3 +10,6 @@
 [submodule "gitmodule/tap-yieldbox"]
 	path = gitmodule/tap-yieldbox
 	url = https://github.com/Tapioca-DAO/tap-yieldbox
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

@@ -15,8 +15,10 @@ remappings = [
 	"tapioca-sdk/=gitmodule/tapioca-sdk/contracts/",
     "tapioca-periph/=gitmodule/tapioca-periph/contracts/",
     "tap-yieldbox/=gitmodule/tap-yieldbox/contracts/",
+    "tapioca-mocks/=gitmodule/tapioca-mocks/contracts/",
 ]
 
 
 [etherscan]
-arbitrum-sepolia = { key = "${ARBITRUM_SEPOLIA_API_KEY}", url = "https://api-sepolia.arbiscan.io/api"}
+arbitrum = { key = "${ETHERSCAN_API_KEY}", url = "https://api.arbiscan.io/api"}
+arbitrum-sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.arbiscan.io/api"}
