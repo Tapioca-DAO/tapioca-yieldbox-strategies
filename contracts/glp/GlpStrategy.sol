@@ -88,6 +88,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         address _gmx = _gmxRewardRouter.gmx();
         if (_gmx == address(0)) revert GmxRewardRouterNotValid();
         gmxRewardRouter = _gmxRewardRouter;
+        glpRewardRouter = _glpRewardRouter;
         gmx = IERC20(_gmx);
 
         // Get GMX vars
@@ -221,9 +222,9 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         if (shouldBuyGLP) {
             _buyGlp(); // Buy GLP with WETH rewards
         }
-        sGLP.safeApprove(to, amount);
+        sGLP.safeApprove(contractAddress, amount);
         ITapiocaOFTBase(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
-        sGLP.safeApprove(to, 0);
+        sGLP.safeApprove(contractAddress, 0);
     }
 
     /// @notice Claim GMX rewards, only in WETH.
