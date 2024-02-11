@@ -2,8 +2,8 @@ import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import hre, { ethers } from 'hardhat';
 import { OracleMock__factory } from '@tapioca-sdk/typechain/tapioca-mocks';
-import { GlpStrategy, IERC20 } from '../../typechain';
 import { BN, loadNetworkFork } from '../test.utils';
+import { GlpStrategy, IERC20 } from '@typechain/index';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -60,10 +60,16 @@ describe('GlpStrategy fork test - Arbitrum', () => {
         const me = await become(BINANCE_WALLET_ADDRESS);
 
         const glpRewardRouter = (
-            await ethers.getContractAt('IGmxRewardRouterV2', GLP_REWARD_ROUTER)
+            await ethers.getContractAt(
+                'tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol:IGmxRewardRouterV2',
+                GLP_REWARD_ROUTER,
+            )
         ).connect(me);
         const gmxRewardRouter = (
-            await ethers.getContractAt('IGmxRewardRouterV2', GMX_REWARD_ROUTER)
+            await ethers.getContractAt(
+                'tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol:IGmxRewardRouterV2',
+                GMX_REWARD_ROUTER,
+            )
         ).connect(me);
 
         const sglp = (
@@ -75,7 +81,7 @@ describe('GlpStrategy fork test - Arbitrum', () => {
 
         const fsGLP = (
             await ethers.getContractAt(
-                'IGmxRewardTracker',
+                'tapioca-strategies/interfaces/gmx/IGmxRewardTracker.sol:IGmxRewardTracker',
                 await glpRewardRouter.stakedGlpTracker(),
             )
         ).connect(me);
@@ -93,10 +99,16 @@ describe('GlpStrategy fork test - Arbitrum', () => {
 
         const glpManager = (
             await ethers.getContractAt(
-                'IGlpManager',
+                'tapioca-strategies/interfaces/gmx/IGlpManager.sol:IGlpManager',
                 await glpRewardRouter.glpManager(),
             )
         ).connect(me);
+
+        // Deploy tsGLP
+        const tsGLP = await (
+            await ethers.getContractFactory('ToftMock')
+        ).deploy(sglp.address, 'tsGLP', 'tsGLP');
+        await tsGLP.deployed();
 
         // Deploy YieldBox
         const uriBuilder = await (
@@ -145,6 +157,7 @@ describe('GlpStrategy fork test - Arbitrum', () => {
             weth,
             wethPrice,
             yieldBox,
+            tsGLP,
         };
     }
 
@@ -176,6 +189,7 @@ describe('GlpStrategy fork test - Arbitrum', () => {
             gmxRewardRouter,
             me,
             sglp,
+            tsGLP,
             fsGLP,
             weth,
             wethPrice,
@@ -204,15 +218,16 @@ describe('GlpStrategy fork test - Arbitrum', () => {
         );
 
         const deployer = (await ethers.getSigners())[0];
+        // This reverts for some reason in Hardhat EVM
         const strategy = await (
             await ethers.getContractFactory('GlpStrategy')
         ).deploy(
             yieldBox.address,
             gmxRewardRouter.address,
             glpRewardRouter.address,
-            sglp.address,
+            tsGLP.address,
             oracle.address,
-            ethers.utils.toUtf8Bytes(''),
+            '0x',
             deployer.address,
         );
         await strategy.deployed();
@@ -221,29 +236,32 @@ describe('GlpStrategy fork test - Arbitrum', () => {
         const TOKEN_TYPE_ERC20 = 1;
         await yieldBox.registerAsset(
             TOKEN_TYPE_ERC20,
-            sglp.address,
+            tsGLP.address,
             strategy.address,
             0,
         );
         const assetId = await yieldBox.ids(
             TOKEN_TYPE_ERC20,
-            sglp.address,
+            tsGLP.address,
             strategy.address,
             0,
         );
 
+        // Wrap sGLP
         const amount = await sglp.balanceOf(me.address);
+        await sglp.approve(tsGLP.address, amount);
+        await tsGLP.wrap(me.address, me.address, amount);
 
-        await sglp.approve(yieldBox.address, amount);
-
+        // Deposit tsGLP
+        await tsGLP.approve(yieldBox.address, amount);
         await yieldBox.depositAsset(assetId, me.address, me.address, amount, 0);
 
+        // Compound and withdraw
         const shares = await yieldBox.balanceOf(me.address, assetId);
-
         await compound(strategy, (86400 * 365) / 10, 6);
         await yieldBox.withdraw(assetId, me.address, me.address, 0, shares);
 
-        const amountAfter = await sglp.balanceOf(me.address);
+        const amountAfter = await tsGLP.balanceOf(me.address);
         expect(amountAfter).to.be.gt(amount);
 
         // console.log('Compounding after GLP withdrawal:');
