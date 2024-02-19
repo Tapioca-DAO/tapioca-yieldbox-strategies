@@ -56,9 +56,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     uint256 private constant _MAX_SLIPPAGE = 10000;
     uint256 private constant _MIN_SLIPPAGE = 10;
 
-    // Buy or not GLP on deposits/withdrawal
-    bool shouldBuyGLP = true;
-
     event SlippageUpdated(uint256 indexed oldVal, uint256 indexed newVal);
 
     // *********************************** //
@@ -148,9 +145,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @notice Claim sGLP reward and reinvest
     function harvest() public {
         _claimRewards();
-        if (shouldBuyGLP) {
-            _buyGlp();
-        }
+        _buyGlp();
     }
 
     /// @notice Withdraws the fees from the strategy
@@ -189,11 +184,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         feeRecipient = recipient;
     }
 
-    /// @notice sets the buyGLP flag
-    function setBuyGLP(bool _val) external onlyOwner {
-        shouldBuyGLP = _val;
-    }
-
     // *********************************** //
     /* ============ INTERNAL ============ */
     // *********************************** //
@@ -221,9 +211,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     function _withdraw(address to, uint256 amount) internal override {
         if (amount == 0) revert NotValid();
         _claimRewards(); // Claim rewards before withdrawing
-        if (shouldBuyGLP) {
-            _buyGlp(); // Buy GLP with WETH rewards
-        }
+        _buyGlp(); // Buy GLP with WETH rewards
         sGLP.safeApprove(contractAddress, amount);
         ITapiocaOFTBase(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
         sGLP.safeApprove(contractAddress, 0);
