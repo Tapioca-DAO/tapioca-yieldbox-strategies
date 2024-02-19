@@ -172,9 +172,9 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
 
         // Assume that YieldBox already transferred the tokens to this address
         uint256 queued = IERC20(contractAddress).balanceOf(address(this));
-        totalActiveDeposits += queued; // Update total deposits
 
         if (queued >= depositThreshold) {
+            totalActiveDeposits += queued; // Update total deposits
             ITDai(contractAddress).unwrap(address(this), queued);
             dai.approve(address(sDai), queued);
             sDai.deposit(queued, address(this));
