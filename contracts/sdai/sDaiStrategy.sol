@@ -162,7 +162,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)); //tDai
-        return queued + maxWithdraw - feesPending; //this operation is valid because dai <> tDai ratio is 1:1
+        return feesPending > queued + maxWithdraw ? 0 : queued + maxWithdraw - feesPending; 
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
