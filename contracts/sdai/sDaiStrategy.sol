@@ -186,8 +186,6 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
 
     /// @dev burns sDai in exchange of Dai and wraps it into tDai
     function _withdraw(address to, uint256 amount) internal override nonReentrant {
-        if (paused) revert Paused();
-
         uint256 maxWithdraw = sDai.maxWithdraw(address(this)); // Total amount of Dai that can be withdrawn from the pool
         uint256 assetInContract = IERC20(contractAddress).balanceOf(address(this));
 
