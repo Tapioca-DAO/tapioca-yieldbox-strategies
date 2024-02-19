@@ -54,6 +54,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
 
     uint256 private _slippage = 50;
     uint256 private constant _MAX_SLIPPAGE = 10000;
+    uint256 private constant _MIN_SLIPPAGE = 10;
 
     // Buy or not GLP on deposits/withdrawal
     bool shouldBuyGLP = true;
@@ -173,6 +174,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
         if (_val > _MAX_SLIPPAGE) revert NotValid();
+        if (_val < _MIN_SLIPPAGE) revert NotValid();
         emit SlippageUpdated(_slippage, _val);
         _slippage = _val;
     }
