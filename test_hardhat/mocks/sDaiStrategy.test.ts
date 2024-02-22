@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe('sDaiStrategy test', () => {
+describe.only('sDaiStrategy test', () => {
     it('should test initial strategy values', async () => {
         const { dai, tDai, sDai, sDaiStrategy, deployer } = await loadFixture(
             registerMocks,
@@ -206,7 +206,6 @@ describe('sDaiStrategy test', () => {
 
         const queuedBefore = await tDai.balanceOf(sDaiStrategy.address);
         expect(queuedBefore.eq(amount)).to.be.true;
-
         await yieldBox.withdraw(
             sDaiStrategyAssetId,
             deployer.address,

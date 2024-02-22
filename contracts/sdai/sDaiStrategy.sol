@@ -147,8 +147,12 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
     /// @notice Returns the amount of DAI in the pool plus the amount that can be withdrawn from the contract, minus the pending fees
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
+        
+        uint256 _totalActiveDeposits = totalActiveDeposits;
+        (, uint256 accumulatedTokens) = _computePendingFees(_totalActiveDeposits, maxWithdraw);
+
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)); //tDai
-        return queued + maxWithdraw - feesPending; //this operation is valid because dai <> tDai ratio is 1:1
+        return _totalActiveDeposits + accumulatedTokens + queued;
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
@@ -157,9 +161,9 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
 
         // Assume that YieldBox already transferred the tokens to this address
         uint256 queued = IERC20(contractAddress).balanceOf(address(this));
-        totalActiveDeposits += queued; // Update total deposits
 
         if (queued >= depositThreshold) {
+            totalActiveDeposits += queued; // Update total deposits
             ITDai(contractAddress).unwrap(address(this), queued);
             dai.approve(address(sDai), queued);
             sDai.deposit(queued, address(this));
@@ -188,17 +192,16 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
         }
 
         // Compute the fees
-        {
+        if (totalActiveDeposits > 0) {
             uint256 _totalActiveDeposits = totalActiveDeposits; // Cache total deposits
             (uint256 fees, uint256 accumulatedTokens) = _computePendingFees(_totalActiveDeposits, maxWithdraw); // Compute pending fees
             if (fees > 0) {
                 feesPending += fees; // Update pending fees
             }
-
+        
             // Act as an invariant, totalActiveDeposits should never be lower than the amount to withdraw from the pool
             totalActiveDeposits = _totalActiveDeposits + accumulatedTokens - amount; // Update total deposits
         }
-
         // If there is nothing to withdraw from the pool, just transfer the tokens and return
         if (toWithdrawFromPool == 0) {
             IERC20(contractAddress).safeTransfer(to, amount);
