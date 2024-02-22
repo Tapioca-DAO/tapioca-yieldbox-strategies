@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { registerMocks } from '../test.utils';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
-describe.only('sDaiStrategy test', () => {
+describe('sDaiStrategy test', () => {
     it('should test initial strategy values', async () => {
         const { dai, tDai, sDai, sDaiStrategy, deployer } = await loadFixture(
             registerMocks,
