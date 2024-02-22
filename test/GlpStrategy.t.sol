@@ -9,7 +9,7 @@ import {
     IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy
 } from "tap-yieldbox/YieldBox.sol";
 import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
-import {ITapiocaOFTBase} from "tapioca-periph/interfaces/tap-token/ITapiocaOFT.sol";
+import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
 import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVault} from "tapioca-strategies/interfaces/gmx/IGmxVault.sol";
@@ -105,7 +105,7 @@ contract GlpStrategyTest is Test {
             IYieldBox(address(yieldBox)),
             gmxRewardRouter,
             glpRewardRouter,
-            ITapiocaOFTBase(address(tsGLP)),
+            ITOFT(address(tsGLP)),
             ITapiocaOracle(address(wethOracleMock)),
             "0x",
             address(this)
@@ -159,7 +159,7 @@ contract GlpStrategyTest is Test {
             compound((86400 * 365) / 10, 6); // Compound 6 times in 1 year (lol)
             yieldBox.withdraw(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, 0, shares);
             uint256 glpBalAfter = tsGLP.balanceOf(binanceWalletAddr);
-            assertGe(glpBalAfter, glpBefore, "GLP compound out");
+            assertGt(glpBalAfter, glpBefore, "GLP compound out");
         }
     }
 
