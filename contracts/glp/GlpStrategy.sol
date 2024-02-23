@@ -13,7 +13,6 @@ import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
 import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
 import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
-import {FeeCollector, IFeeCollector} from "../feeCollector.sol";
 import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
 
 /*
@@ -25,7 +24,7 @@ import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
    ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝
 */
 
-contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector {
+contract GlpStrategy is BaseERC20Strategy, Ownable {
     using SafeERC20 for IERC20;
 
     // *********************************** //
@@ -77,7 +76,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         ITapiocaOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         address _owner
-    ) BaseERC20Strategy(_yieldBox, address(_tsGlp)) FeeCollector(_owner, 100) {
+    ) BaseERC20Strategy(_yieldBox, address(_tsGlp)) {
         weth = IERC20(_yieldBox.wrappedNative());
         if (address(weth) != _gmxRewardRouter.weth()) revert WethMismatch();
 
@@ -128,18 +127,10 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         amount += fGLP.claimable(address(this));
 
         // Add WETH pending rewards, if not swapped yet
-        uint256 _feesPending = feesPending;
-        if (wethAmount > _feesPending) {
-            wethAmount -= _feesPending;
-            uint256 fee = (wethAmount * FEE_BPS) / 10_000;
-            wethAmount -= fee;
+        (, uint256 glpPrice) = wethGlpOracle.peek(wethGlpOracleData);
 
-            uint256 glpPrice;
-            (, glpPrice) = wethGlpOracle.peek(wethGlpOracleData);
-
-            uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
-            amount = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
-        }
+        uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
+        amount = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
     }
 
     // *********************************** //
@@ -151,19 +142,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         _claimRewards();
         if (shouldBuyGLP) {
             _buyGlp();
-        }
-    }
-
-    /// @notice Withdraws the fees from the strategy
-    function withdrawFees(uint256 amount) external {
-        uint256 feeAmount = feesPending;
-        if (feeAmount > 0) {
-            uint256 wethAmount = weth.balanceOf(address(this));
-            if (wethAmount < amount) {
-                amount = wethAmount;
-            }
-            weth.safeTransfer(feeRecipient, amount);
-            feesPending -= amount;
         }
     }
 
@@ -183,10 +161,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @param _val the new state
     function updatePaused(bool _val) external onlyOwner {
         paused = _val;
-    }
-
-    function updateFeeRecipient(address recipient) external onlyOwner {
-        feeRecipient = recipient;
     }
 
     /// @notice sets the buyGLP flag
@@ -245,13 +219,8 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @notice Buy GLP with WETH rewards.
     function _buyGlp() private {
         uint256 wethAmount = weth.balanceOf(address(this));
-        uint256 _feesPending = feesPending;
-        if (wethAmount > _feesPending) {
-            wethAmount -= _feesPending;
-            uint256 fee = (wethAmount * FEE_BPS) / 10_000;
-            feesPending = _feesPending + fee;
-            wethAmount -= fee;
 
+        if (wethAmount > 0) {
             bool success;
             uint256 glpPrice;
 
