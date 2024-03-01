@@ -25,8 +25,12 @@ contract FeeCollector {
     address public feeRecipient;
     uint256 public feesPending;
 
+    error NotValid();
+
     constructor(address _feeRecipient, uint256 feeBps) {
         feeRecipient = _feeRecipient;
+
+        if (feeBps > FEE_PRECISION) revert NotValid();
         FEE_BPS = feeBps;
     }
 

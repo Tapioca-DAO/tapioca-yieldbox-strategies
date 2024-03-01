@@ -38,6 +38,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
     ISavingsDai public immutable sDai;
     IERC20 public immutable dai;
     bool public paused;
+    bool public emergencyState;
 
     // ************** //
     // *** EVENTS *** //
@@ -46,6 +47,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
     event AmountQueued(uint256 indexed amount);
     event AmountDeposited(uint256 indexed amount);
     event AmountWithdrawn(address indexed to, uint256 indexed amount);
+    event EmergencyStateReset();
 
     // ************** //
     // *** ERRORS *** //
@@ -54,6 +56,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
     error TransferFailed();
     error Paused();
     error NotEnough();
+    error NotAllowed();
 
     constructor(
         IYieldBox _yieldBox,
@@ -118,10 +121,18 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
         depositThreshold = amount;
     }
 
+    /// @notice Resets `emergencyState` to false
+    function disableEmergencyState() external onlyOwner {
+        emit EmergencyStateReset();
+        emergencyState = false;
+    }
+
+
     /// @notice withdraws everything from the strategy
     /// @dev Withdraws everything from the strategy and pauses it
     function emergencyWithdraw() external onlyOwner {
         paused = true; // Pause the strategy
+        emergencyState = true; // Disable deposits
 
         // Withdraw from the pool, convert to Dai and wrap it into tDai
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
@@ -151,18 +162,19 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)); //tDai
-        return queued + maxWithdraw - feesPending; //this operation is valid because dai <> tDai ratio is 1:1
+        return feesPending > queued + maxWithdraw ? 0 : queued + maxWithdraw - feesPending; 
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
     function _deposited(uint256 amount) internal override nonReentrant {
         if (paused) revert Paused();
+        if (emergencyState) revert NotAllowed();
 
         // Assume that YieldBox already transferred the tokens to this address
         uint256 queued = IERC20(contractAddress).balanceOf(address(this));
-        totalActiveDeposits += queued; // Update total deposits
 
         if (queued >= depositThreshold) {
+            totalActiveDeposits += queued; // Update total deposits
             ITDai(contractAddress).unwrap(address(this), queued);
             dai.approve(address(sDai), queued);
             sDai.deposit(queued, address(this));
@@ -174,8 +186,6 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, FeeCollect
 
     /// @dev burns sDai in exchange of Dai and wraps it into tDai
     function _withdraw(address to, uint256 amount) internal override nonReentrant {
-        if (paused) revert Paused();
-
         uint256 maxWithdraw = sDai.maxWithdraw(address(this)); // Total amount of Dai that can be withdrawn from the pool
         uint256 assetInContract = IERC20(contractAddress).balanceOf(address(this));
 

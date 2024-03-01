@@ -54,9 +54,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
 
     uint256 private _slippage = 50;
     uint256 private constant _MAX_SLIPPAGE = 10000;
-
-    // Buy or not GLP on deposits/withdrawal
-    bool shouldBuyGLP = true;
+    uint256 private constant _MIN_SLIPPAGE = 10;
 
     event SlippageUpdated(uint256 indexed oldVal, uint256 indexed newVal);
 
@@ -147,9 +145,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @notice Claim sGLP reward and reinvest
     function harvest() public {
         _claimRewards();
-        if (shouldBuyGLP) {
-            _buyGlp();
-        }
+        _buyGlp();
     }
 
     /// @notice Withdraws the fees from the strategy
@@ -173,6 +169,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @param _val the new slippage amount
     function setSlippage(uint256 _val) external onlyOwner {
         if (_val > _MAX_SLIPPAGE) revert NotValid();
+        if (_val < _MIN_SLIPPAGE) revert NotValid();
         emit SlippageUpdated(_slippage, _val);
         _slippage = _val;
     }
@@ -185,11 +182,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
 
     function updateFeeRecipient(address recipient) external onlyOwner {
         feeRecipient = recipient;
-    }
-
-    /// @notice sets the buyGLP flag
-    function setBuyGLP(bool _val) external onlyOwner {
-        shouldBuyGLP = _val;
     }
 
     // *********************************** //
@@ -219,9 +211,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     function _withdraw(address to, uint256 amount) internal override {
         if (amount == 0) revert NotValid();
         _claimRewards(); // Claim rewards before withdrawing
-        if (shouldBuyGLP) {
-            _buyGlp(); // Buy GLP with WETH rewards
-        }
+        _buyGlp(); // Buy GLP with WETH rewards
         sGLP.safeApprove(contractAddress, amount);
         ITapiocaOFTBase(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
         sGLP.safeApprove(contractAddress, 0);
