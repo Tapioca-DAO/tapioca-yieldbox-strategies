@@ -24,9 +24,6 @@ import {ITDai} from "./interfaces/ITDai.sol";
 contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    /// @notice Keeps track of the total active deposits, goes up when a deposit is made and down when a withdrawal is made
-    uint256 public totalActiveDeposits;
-
     /// @notice Queues tokens up to depositThreshold
     /// @dev When the amount of tokens is greater than the threshold, a deposit operation is performed
     uint256 public depositThreshold;
@@ -123,12 +120,8 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     /// @notice Returns the amount of DAI in the pool plus the amount that can be withdrawn from the contract
     function _currentBalance() internal view override returns (uint256 amount) {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
-        
-        uint256 _totalActiveDeposits = totalActiveDeposits;
-        uint256 accumulatedTokens = maxWithdraw - _totalActiveDeposits;
-
         uint256 queued = IERC20(contractAddress).balanceOf(address(this)); //tDai
-        return _totalActiveDeposits + accumulatedTokens + queued;
+        return maxWithdraw + queued;
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
@@ -139,7 +132,6 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         uint256 queued = IERC20(contractAddress).balanceOf(address(this));
 
         if (queued >= depositThreshold) {
-            totalActiveDeposits += queued; // Update total deposits
             ITDai(contractAddress).unwrap(address(this), queued);
             dai.approve(address(sDai), queued);
             sDai.deposit(queued, address(this));
@@ -167,15 +159,6 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
             toWithdrawFromPool = amount > assetInContract ? amount - assetInContract : 0; // Asset to withdraw from the pool if not enough available in the contract
         }
 
-        {
-            uint256 _totalActiveDeposits = totalActiveDeposits; // Save the current total deposits
-            uint256 accumulatedTokens;
-            if (maxWithdraw > _totalActiveDeposits) {
-                accumulatedTokens = maxWithdraw - _totalActiveDeposits;
-            }
-            // Act as an invariant, totalActiveDeposits should never be lower than the amount to withdraw from the pool
-            totalActiveDeposits = _totalActiveDeposits + accumulatedTokens - amount; // Update total deposits
-        }
         // If there is nothing to withdraw from the pool, just transfer the tokens and return
         if (toWithdrawFromPool == 0) {
             IERC20(contractAddress).safeTransfer(to, amount);
