@@ -206,7 +206,6 @@ describe('sDaiStrategy test', () => {
 
         const queuedBefore = await tDai.balanceOf(sDaiStrategy.address);
         expect(queuedBefore.eq(amount)).to.be.true;
-
         await yieldBox.withdraw(
             sDaiStrategyAssetId,
             deployer.address,

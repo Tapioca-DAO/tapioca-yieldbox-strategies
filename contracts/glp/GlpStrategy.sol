@@ -8,24 +8,21 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 // Tapioca
 import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
 import {IGmxRewardTracker} from "tapioca-strategies/interfaces/gmx/IGmxRewardTracker.sol";
-import {ITapiocaOFTBase} from "tapioca-periph/interfaces/tap-token/ITapiocaOFT.sol";
 import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
 import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
 import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
 import {FeeCollector, IFeeCollector} from "../feeCollector.sol";
+import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
 
 /*
-__/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\\\\\\\\\\____/\\\\\\\\\\\_______/\\\\\_____________/\\\\\\\\\_____/\\\\\\\\\____        
- _\///////\\\/////____/\\\\\\\\\\\\\__\/\\\/////////\\\_\/////\\\///______/\\\///\\\________/\\\////////____/\\\\\\\\\\\\\__       
-  _______\/\\\________/\\\/////////\\\_\/\\\_______\/\\\_____\/\\\_______/\\\/__\///\\\____/\\\/____________/\\\/////////\\\_      
-   _______\/\\\_______\/\\\_______\/\\\_\/\\\\\\\\\\\\\/______\/\\\______/\\\______\//\\\__/\\\_____________\/\\\_______\/\\\_     
-    _______\/\\\_______\/\\\\\\\\\\\\\\\_\/\\\/////////________\/\\\_____\/\\\_______\/\\\_\/\\\_____________\/\\\\\\\\\\\\\\\_    
-     _______\/\\\_______\/\\\/////////\\\_\/\\\_________________\/\\\_____\//\\\______/\\\__\//\\\____________\/\\\/////////\\\_   
-      _______\/\\\_______\/\\\_______\/\\\_\/\\\_________________\/\\\______\///\\\__/\\\_____\///\\\__________\/\\\_______\/\\\_  
-       _______\/\\\_______\/\\\_______\/\\\_\/\\\______________/\\\\\\\\\\\____\///\\\\\/________\////\\\\\\\\\_\/\\\_______\/\\\_ 
-        _______\///________\///________\///__\///______________\///////////_______\/////_____________\/////////__\///________\///__
+████████╗ █████╗ ██████╗ ██╗ ██████╗  ██████╗ █████╗ 
+╚══██╔══╝██╔══██╗██╔══██╗██║██╔═══██╗██╔════╝██╔══██╗
+   ██║   ███████║██████╔╝██║██║   ██║██║     ███████║
+   ██║   ██╔══██║██╔═══╝ ██║██║   ██║██║     ██╔══██║
+   ██║   ██║  ██║██║     ██║╚██████╔╝╚██████╗██║  ██║
+   ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝
 */
 
 contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector {
@@ -42,7 +39,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     IGmxRewardRouterV2 private immutable glpRewardRouter;
     IGmxRewardRouterV2 private immutable gmxRewardRouter;
     IGmxRewardTracker private immutable sbfGMX;
-    IGmxRewardTracker private immutable fsGLP;
+    IGmxRewardTracker private immutable fGLP;
     IGmxRewardTracker private immutable sGMX;
     IGlpManager private immutable glpManager;
     IGmxVester private immutable glpVester;
@@ -76,7 +73,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         IYieldBox _yieldBox,
         IGmxRewardRouterV2 _gmxRewardRouter,
         IGmxRewardRouterV2 _glpRewardRouter,
-        ITapiocaOFTBase _tsGlp,
+        ITOFT _tsGlp,
         ITapiocaOracle _wethGlpOracle,
         bytes memory _wethGlpOracleData,
         address _owner
@@ -92,13 +89,12 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
         gmx = IERC20(_gmx);
 
         // Get GMX vars
-        fsGLP = IGmxRewardTracker(glpRewardRouter.stakedGlpTracker());
-        sGMX = IGmxRewardTracker(gmxRewardRouter.stakedGmxTracker());
         sbfGMX = IGmxRewardTracker(gmxRewardRouter.feeGmxTracker());
+        fGLP = IGmxRewardTracker(glpRewardRouter.feeGlpTracker());
         glpManager = IGlpManager(glpRewardRouter.glpManager());
         glpVester = IGmxVester(gmxRewardRouter.glpVester());
 
-        sGLP = IERC20(ITapiocaOFTBase(contractAddress).erc20()); // We cache the sGLP token
+        sGLP = IERC20(ITOFT(contractAddress).erc20()); // We cache the sGLP token
 
         // Load the oracle
         wethGlpOracle = _wethGlpOracle;
@@ -126,6 +122,12 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
     /// @return amount The amount of GLP that should be received
     function pendingRewards() public view returns (uint256 amount) {
         uint256 wethAmount = weth.balanceOf(address(this));
+
+        // Add GMX pending fees
+        amount += sbfGMX.claimable(address(this));
+        amount += fGLP.claimable(address(this));
+
+        // Add WETH pending rewards, if not swapped yet
         uint256 _feesPending = feesPending;
         if (wethAmount > _feesPending) {
             wethAmount -= _feesPending;
@@ -208,7 +210,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
      */
     function _deposited(uint256 amount) internal override {
         if (paused) revert Paused();
-        ITapiocaOFTBase(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
+        ITOFT(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
         harvest();
     }
 
@@ -223,7 +225,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, IFeeCollector, FeeCollector 
             _buyGlp(); // Buy GLP with WETH rewards
         }
         sGLP.safeApprove(contractAddress, amount);
-        ITapiocaOFTBase(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
+        ITOFT(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
         sGLP.safeApprove(contractAddress, 0);
     }
 
