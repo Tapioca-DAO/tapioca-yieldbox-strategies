@@ -120,17 +120,9 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
     /// @dev Doesn't revert because we want to still check current balance in `_currentBalance()`
     /// @return amount The amount of GLP that should be received
     function pendingRewards() public view returns (uint256 amount) {
-        uint256 wethAmount = weth.balanceOf(address(this));
-
         // Add GMX pending fees
         amount += sbfGMX.claimable(address(this));
         amount += fGLP.claimable(address(this));
-
-        // Add WETH pending rewards, if not swapped yet
-        (, uint256 glpPrice) = wethGlpOracle.peek(wethGlpOracleData);
-
-        uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
-        amount = amountInGlp - (amountInGlp * _slippage) / 10_000; //0.5%
     }
 
     // *********************************** //
