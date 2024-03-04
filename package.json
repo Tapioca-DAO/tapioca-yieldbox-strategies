@@ -16,7 +16,6 @@
     "test:simple": "npx hardhat test",
     "test": "NETWORK=ethereum hardhat test",
     "test:hh:arb": "NETWORK=arbitrum hardhat test",
-    "test:hh:glp": "NETWORK=arbitrum FROM_BLOCK=145526897 hardhat test test_hardhat/fork/glpStrategy-fork.test.ts",
     "test:glp": "source .env/arbitrum.env && forge test -vv",
     "sdk-gen": "npx hardhat exportSDK",
     "deploy": "npx hardhat deploy",
@@ -67,6 +66,8 @@
     "write-json-file": "4.3.0"
   },
   "dependencies": {
+    "@layerzerolabs/lz-evm-oapp-v2": "^2.0.25",
+    "@layerzerolabs/lz-evm-protocol-v2": "^2.0.25",
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomiclabs/hardhat-vyper": "^3.0.1",
     "@rari-capital/solmate": "^6.4.0",
