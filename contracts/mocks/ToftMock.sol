@@ -22,6 +22,7 @@ contract ToftMock is ERC20 {
     function wrap(address from, address to, uint256 amount) external payable returns (uint256 minted) {
         IERC20(erc20).transferFrom(from, address(this), amount);
         _mint(to, amount);
+        return amount;
     }
 
     function unwrap(address to, uint256 amount) external {
