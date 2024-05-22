@@ -28,8 +28,8 @@ contract GlpStrategyTest is Test {
     string constant ENV_GMX_REWARD_ROUTER = "GMX_REWARD_ROUTER";
     string constant ENV_STAKED_GLP = "STAKED_GLP";
     string constant ENV_GMX_VAULT = "GMX_VAULT";
-    string constant RPC_URL = "RPC_URL";
-    string constant FORKING_BLOCK_NUMBER = "FORKING_BLOCK_NUMBER";
+    string constant RPC_URL = "ARBITRUM_RPC_URL";
+    string constant FORKING_BLOCK_NUMBER = "FORKING_ARBITRUM_BLOCK_NUMBER";
     uint256 ARB_FORK;
 
     /**
@@ -450,8 +450,9 @@ contract GlpStrategyTest is Test {
         _buyGLPAndStake(ethBuyin);
 
         uint256 userGlpBefore = sGLP.balanceOf(binanceWalletAddr);
-        // Deposit into strategy
+        // Deposit sGLP directly into strategy
         tsGLP.approve(address(yieldBox), userGlpBefore);
+        sGLP.transfer(address(glpStrategy), userGlpBefore);
 
         vm.expectRevert("BoringERC20: TransferFrom failed");
         yieldBox.depositAsset(
