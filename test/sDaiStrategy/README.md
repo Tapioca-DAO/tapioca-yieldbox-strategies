@@ -52,15 +52,3 @@ Recommendation: Return result from the `harvestable` function
 2. Informational - comments for `emergencyWithdraw` incorrect
 
 Description: comments for `emergencyWithdraw` state that it "withdraws everything from the strategy" but it actually withdraws everything from sDai to the strategy.
-
-3. Informational - unreachable statement 
-
-Description: The NotEnough revert in `_withdraw`:
-
-```solidity
-unchecked {
-            if (assetInContract + maxWithdraw < amount) revert NotEnough(); // dai <> tDai is 1:1, units are the same
-        }
-```
-
-would never be reached in the case where the strategy doesn't have sufficient DAI to fulfill the withdrawal, it reverts earlier in `YieldBox::withdraw`. This is demonstrated in `test_revert_when_strategy_balance_insufficient`. This is branch 9 in the above description of possible branches.

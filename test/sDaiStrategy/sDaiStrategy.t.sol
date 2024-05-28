@@ -167,10 +167,6 @@ contract SDaiStrategyTest is Test {
         test_user_can_only_withdraw_their_amount(10_000, 10_000);
     }
 
-    function test_revert_when_strategy_balance_insufficient_wrapper() public {
-        test_revert_when_strategy_balance_insufficient(10_000);
-    }
-
     function test_user_balances_disjoint_no_accumulation_wrapper() public {
         test_user_balances_disjoint_no_accumulation(10_000, 10_000);
     }
@@ -252,11 +248,6 @@ contract SDaiStrategyTest is Test {
         // NOTE: total amount transferred can't be greater than the upperBound because DAI needs to be transferred from whale 
         vm.assume(initialStartingBalance1 + initialStartingBalance2 <= upperBound);
         test_user_can_only_withdraw_their_amount(initialStartingBalance1, initialStartingBalance2);
-    }
-
-    function testFuzz_revert_when_strategy_balance_insufficient(uint256 depositAmount) public {
-        depositAmount = bound(depositAmount, lowerBound, upperBound);
-        test_revert_when_strategy_balance_insufficient(depositAmount);
     }
 
     // NOTE: lowerBounds here include + 1 to make up for the rounding error that causes user to lose 1 DAI when withdrawing
@@ -598,34 +589,6 @@ contract SDaiStrategyTest is Test {
         // user tries to wihtdraw when paused, tx reverts
         vm.expectRevert(sDaiStrategy.Paused.selector);
         _withdrawFromStrategy(binanceWalletAddr, initialUserBalance - 1);
-        vm.stopPrank();
-    }
-
-    // @audit see finding Informational - 3
-    function test_revert_when_strategy_balance_insufficient(uint256 depositAmount)
-        internal
-        isMainnetFork
-    {
-        // user gets dealt initial DAI amount
-        _transferDaiToAddress(depositAmount, binanceWalletAddr);
-
-        uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
-
-        // user deposits
-        vm.startPrank(binanceWalletAddr);
-        _approveWrapAndDeposit(binanceWalletAddr, initialUserBalance);
-        vm.stopPrank();
-
-        // simulate an event that causes contract to leak value
-        vm.startPrank(address(sDaiStrat));
-        // burn majority of user balance by sending it to a random address
-        sDai.transfer(address(0x1), sDai.balanceOf(address(sDaiStrat)) - 50);
-        vm.stopPrank();
-
-        vm.startPrank(binanceWalletAddr);
-        // user tries to withdraw their initial amount - dust, should revert in the call to sDaiStrategy::_withdraw
-        vm.expectRevert(sDaiStrategy.NotEnough.selector);
-        _withdrawFromStrategy(binanceWalletAddr, 55);
         vm.stopPrank();
     }
 
