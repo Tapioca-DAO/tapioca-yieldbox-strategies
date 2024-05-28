@@ -12,8 +12,8 @@ import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
 import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
 import "forge-std/console2.sol";
 
-// NOTE: this contract is used to wrap the GlpStrategy with extra functionality for testing internal functions
-// NOTE: this should be targeted during testing to achieve full coverage
+/// @notice This contract is used to wrap the GlpStrategy with extra functionality for testing internal functions,
+///         and is what's targeted during testing 
 contract GlpStrategyWrapper is GlpStrategy {
     constructor(
         IYieldBox _yieldBox,
@@ -41,42 +41,4 @@ contract GlpStrategyWrapper is GlpStrategy {
     function setWethGlpOracle(ITapiocaOracle _wethGlpOracle) public {
         wethGlpOracle = _wethGlpOracle;
     }
-
-    // @audit adding in for testing comparison
-    // function _calculate_glp_mint(uint256 _amount) internal {
-    //      // calculate aum before buyUSDG
-    //      uint256 aumInUsdg = getAumInUsdg(true);
-    //      uint256 glpSupply = IERC20(glp).totalSupply();
-
-    //     //  IERC20(_token).safeTransferFrom(_fundingAccount, address(vault), _amount);
-    //     //  uint256 usdgAmount = vault.buyUSDG(_token, address(this));
-    //     //  require(usdgAmount >= _minUsdg, "GlpManager: insufficient USDG output");
-
-    //     // getting usdgAmount from GMX
-
-    //     // usdgAmount is the amount of USDG purchased
-    //      uint256 mintAmount = aumInUsdg == 0 ? usdgAmount : usdgAmount.mul(glpSupply).div(aumInUsdg);
-    //      require(mintAmount >= _minGlp, "GlpManager: insufficient GLP output");
-
-    //     //  IMintable(glp).mint(_account, mintAmount);
-    // }
-
-    // function _getGLPPriceFromGMX() private returns (uint256 price) {
-    //     // requires calling GLPManager directly
-    //     price = glpManager.getPrice(true);
-    // }
-
-    // @audit added for testing
-    // function newPendingCalculation() public {
-    //     uint256 glpPrice = _getGLPPriceFromGMX();
-
-    //     uint256 wethAmount = sbfGMX.claimable(address(this));
-    //     wethAmount += fGLP.claimable(address(this));
-
-    //     uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
-    //     uint256 amount = amountInGlp - (amountInGlp * _slippage) / 10_000;
-
-    //     // console2.log("new amount: %e", amount);
-    //     // console2.log("amountInGlp: %e", amountInGlp);
-    // }
 }
