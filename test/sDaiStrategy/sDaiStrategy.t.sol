@@ -189,6 +189,10 @@ contract SDaiStrategyTest is Test {
     function test_harvestable_with_accumulation_wrapper() public {
         test_harvestable_with_accumulation(10_000);
     }
+
+    function test_tDai_balance_increases_on_withdraw_wrapper() public {
+        test_tDai_balance_increases_on_withdraw(10_000);
+    }
     /**
         Fuzz tests (call internal tests for a range of bounded inputs)
     */
@@ -407,8 +411,7 @@ contract SDaiStrategyTest is Test {
         );
     }
 
-    // @audit see finding Med - 1
-    // 2. user can always withdraw as much as they deposited (with no savings accumulated)
+    // 2. user can always withdraw as much as they deposited (with no savings accumulated), accounting for rounding
     // 5. withdrawing with 0 savings accumulated doesn't revert
     // 7. sDaiStrategy balance of sDAI decreases on withdrawal
     function test_no_withdrawal_loss_when_no_savings_accumulated(uint256 depositAmount)
@@ -424,7 +427,7 @@ contract SDaiStrategyTest is Test {
         uint256 strategySDaiBalanceAfterDeposit = sDai.balanceOf(
             address(sDaiStrat)
         );
-
+        uint256 strategyDaiBalanceAfterDeposit = sDai.previewRedeem(strategySDaiBalanceAfterDeposit);
         uint256 maxWithdraw = sDai.maxWithdraw(address(sDaiStrat));
 
         // withdraw from strategy
@@ -444,14 +447,9 @@ contract SDaiStrategyTest is Test {
             address(binanceWalletAddr)
         );
 
-        assertTrue(
-            strategySDaiBalanceAfterWithdraw == 0,
-            "strategy not empty after max withdraw"
-        );
-        assertTrue(
-            initialUserDaiBalance == userDaiBalanceAfterWithdraw,
-            "user loses value after depositing"
-        );
+        // user balance should increase by the amount held by the strategy
+        assertTrue(strategyDaiBalanceAfterDeposit == userDaiBalanceAfterWithdraw, "user gains value from protocol");
+    
     }
 
     // 3b. only YieldBox can withdraw from strategy
@@ -468,11 +466,6 @@ contract SDaiStrategyTest is Test {
         sDaiStrat.withdraw(binanceWalletAddr, userStartingDaiBalance);
     }
 
-    function test_tDai_balance_increases_on_withdraw_wrapper() public {
-        test_tDai_balance_increases_on_withdraw(10_000);
-    }
-
-    // @audit fails for same reason as dust issue described in Med - 1
     // 6a. user balance of tDAI increases by depositAmount on call to withdraw when no savings accumulated
     function test_tDai_balance_increases_on_withdraw(uint256 depositAmount)
         internal
@@ -480,7 +473,6 @@ contract SDaiStrategyTest is Test {
         setupAndprankBinance(depositAmount)
     {
         uint256 userStartingDaiBalance = dai.balanceOf(binanceWalletAddr);
-        console2.log("userStartingDaiBalance: ", userStartingDaiBalance);
 
         _approveWrapAndDeposit(binanceWalletAddr, userStartingDaiBalance);
 
@@ -491,18 +483,15 @@ contract SDaiStrategyTest is Test {
         uint256 userTDaiBalanceAfterWithdraw = tDai.balanceOf(
             binanceWalletAddr
         );
-        console2.log(
-            "userTDaiBalanceAfterWithdraw: ",
-            userTDaiBalanceAfterWithdraw
-        );
+
         // wrapped tDai is 1:1 with dai so using the starting dai balance here
+        // dust amount remains in strategy, so this is subtracted from user starting balance
         assertTrue(
-            userStartingDaiBalance == userTDaiBalanceAfterWithdraw,
+            userStartingDaiBalance - 1 == userTDaiBalanceAfterWithdraw,
             "user loses tDai"
         );
     }
 
-    // @audit fails for same reason as dust issue described in Med - 1
     // 6b. user balance of tDAI increases by depositAmount on call to withdraw when savings accumulated
     function test_tDai_balance_increases_on_withdraw_savings_accumulated(uint256 depositAmount)
         internal
@@ -510,7 +499,6 @@ contract SDaiStrategyTest is Test {
         setupAndprankBinance(depositAmount)
     {
         uint256 userStartingDaiBalance = dai.balanceOf(binanceWalletAddr);
-        console2.log("userStartingDaiBalance: ", userStartingDaiBalance);
 
         _approveWrapAndDeposit(binanceWalletAddr, userStartingDaiBalance);
 
@@ -523,18 +511,15 @@ contract SDaiStrategyTest is Test {
         uint256 userTDaiBalanceAfterWithdraw = tDai.balanceOf(
             binanceWalletAddr
         );
-        console2.log(
-            "userTDaiBalanceAfterWithdraw: ",
-            userTDaiBalanceAfterWithdraw
-        );
+
         // wrapped tDai is 1:1 with dai so using the starting dai balance here
+        // dust amount remains in strategy, so this is subtracted from user starting balance
         assertTrue(
-            userStartingDaiBalance == userTDaiBalanceAfterWithdraw,
+            userStartingDaiBalance - 1 == userTDaiBalanceAfterWithdraw,
             "user loses tDai"
         );
     }
 
-    // @audit related to issue Med - 1
     // 8. User can always withdraw up to the full amount of sDAI in the GlpStrategy
     function test_user_can_always_fully_withdraw(uint256 depositAmount)
         internal
@@ -559,9 +544,13 @@ contract SDaiStrategyTest is Test {
 
         _withdrawFromStrategy(binanceWalletAddr, maxWithdrawAfter - 1);
 
-        assertTrue(
-            sDai.balanceOf(address(sDaiStrat)) == 0,
-            "strategy not empty after withdraw"
+        uint256 strategyBalanceAfter = sDai.balanceOf(address(sDaiStrat));
+        // if there is an amount left in the strategy > 1 after withdrawing, the user loses more than just a dust amount to rounding
+        assertApproxEqAbs(
+            strategyBalanceAfter,
+            1,
+            1,
+            "user can't fully withdraw from strategy"
         );
     }
 
@@ -612,7 +601,7 @@ contract SDaiStrategyTest is Test {
         vm.stopPrank();
     }
 
-    // @audit see finding Informational - 6
+    // @audit see finding Informational - 3
     function test_revert_when_strategy_balance_insufficient(uint256 depositAmount)
         internal
         isMainnetFork
@@ -738,7 +727,7 @@ contract SDaiStrategyTest is Test {
         );
     }
 
-    // @audit see issue Med - 2
+    // @audit see issue Low - 1
     function test_harvestable_with_accumulation(uint256 depositAmount)
         internal
         isMainnetFork

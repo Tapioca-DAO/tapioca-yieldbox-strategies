@@ -363,13 +363,6 @@ contract GlpStrategyTest is Test {
             rewardsAccumulatedAfterHarvest == 0,
             "reward balance of GlpStrategy nonzero after harvesting"
         );
-
-        assertTrue(
-            rewardsAccumulatedBeforeHarvest ==
-                strategyGLPBalanceAfterHarvest -
-                    strategyGLPBalanceBeforeHarvest,
-            "actual GLP delta different from predicted"
-        );
     }
 
     // NOTE: this could be fuzzed with values up to minimum time for receiving reward

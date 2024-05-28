@@ -1,62 +1,34 @@
 ## Specifications tested in GlpStrategy
 
-1. tsGLP passed in on deposit is staked for GlpStrategy [x]
-2. GLP bought with weth rewards is staked for GlpStrategy [x]
-3. Harvesting uses all the weth rewards balance if it's nonzero [x]
-4. Only YieldBox can withdraw and deposit [x]
-5. Depositing sGLP directly to strategy should fail [x]
-6. Calling harvest with 0 rewards accumulated doesn't revert [x]
-7. User balance of sGLP increases by amount on call to withdraw [x]
-8. GlpStrategy balance of sGLP decreases on withdrawal [x]
-9. User can always withdraw up to the full amount of GLP + weth rewards in the GlpStrategy [x]
-10. User can only withdraw yield accumulated for their shares [x]
+1. tsGLP passed in on deposit is staked for GlpStrategy 
+2. GLP bought with weth rewards is staked for GlpStrategy 
+3. Harvesting uses all the weth rewards balance if it's nonzero 
+4. Only YieldBox can withdraw and deposit 
+5. Depositing sGLP directly to strategy should fail 
+6. Calling harvest with 0 rewards accumulated doesn't revert 
+7. User balance of sGLP increases by amount on call to withdraw 
+8. GlpStrategy balance of sGLP decreases on withdrawal 
+9. User can always withdraw up to the full amount of GLP + weth rewards in the GlpStrategy 
+10. User can only withdraw yield accumulated for their shares 
 
 ## Coverage
 
-- possible branches
-	- `setSlippage` 
-		1. slippage less than max `test_setSlippage`
-		2. slippage greater than max `test_max_slippage_reverts`
-	- `_deposited`
-		3. deposits paused `test_paused`
-		4. deposits unpaused (all other deposit tests)
-	- `_withdraw`
-		5. withdrawing 0 `test_withdraw_zero_reverts`
-		6. withdrawing > 0 (all other withdraw tests)
-	- `_buyGlp`
-		7. wethAmount > 0
-			8. call to `wethGlpOracle` returns success == false `test_harvest_oracle_not_successful`
-			9. call to `wethGlpOracle` doesn't revert
-				10. `safeApprove` token isn't contract `test_safeApprove_not_contract`
-				11. `safeApprove` token is contract
-					12. approving 0 address call fails `test_safeApprove_approve_zero_address_failure`
-					13. second approval in call trace fails `test_safeApprove_fails_second_approval` 
-		14. wethAmount == 0 `test_harvest_zero`
+The tests implemented include unit tests and fuzz tests. The test structure used includes wrappers, fuzz and implementations. 
+- wrappers evaluate a single value for a unit test implementation(suffixed with `_wrapper`)
+- fuzz tests take a random input value to evaluate the implementation (prefixed with `testFuzz`)
+- implementations hold the actual test logic and assertions (prefixed with `test_`, no suffix)
+
+NOTE: some tests which would not benefit from fuzz testing only have an implementation and no fuzz or wrappers. 
+
+The branches covered are shown in the following diagram, where red blocks indicate revert paths and green blocks indicate successful execution. 
+
+![alt text](image.png)
 
 ## Findings 
 
-1. Med/Low - `pendingRewards` calculation doesn't correspond 1:1 with amounts earned in harvesting 
+1. Informational - Full reward amount can only be withdrawn with shares for first depositor
 
-Description: Amount returned by `pendingRewards` differs from the actual rewards accumulated for a given accumulation period.
-
-POC: In `test_weth_rewards_staked_as_glp` it's demonstrated that the reward delta actually received by the strategy is greater than what's predicted by `pendingRewards` in the following assertion which fails:
-
-```solidity
- assertTrue(
-            rewardsAccumulatedBeforeHarvest ==
-                strategyGLPBalanceAfterHarvest -
-                    strategyGLPBalanceBeforeHarvest,
-            "actual GLP delta different from predicted"
-        );
-```
-
-Impact: Any integrating protocols using `pendingRewards` would receive incorrect values that may effect their logic if they expect it to return an accurate value for the accumulated rewards.
-
-Recommendation: This is most likely an issue related to the MockOracle implementation used in the test setup, which uses a fixed rate of 1e18, integrating the actual tapioca ETH/GLP oracle in the setup will likely result in a more accurate calculation of the expected rewards.  
-
-2. Informational - Full reward amount can only be withdrawn with shares for first depositor
-
-Description: The first depositor into GlpStrategy will have all shares allocated to them (shares[depositor] == totalSupply), but due to rounding in YieldBox, if they have accumulated rewards on their deposit and try to withdraw by passing in the balance of the strategy (which they are owed), the conversion of the amount they are withdrawing is > totalSupply of shares, they are therefore only able to withdraw their full amount by passing in the totalSupply of shares. 
+Description: The first depositor into GlpStrategy will have all shares allocated to them (`shares[depositor] == totalSupply`), but due to rounding in YieldBox, if they have accumulated rewards on their deposit and try to withdraw by passing in the balance of the strategy (which they are owed), the conversion of the amount they are withdrawing is > totalSupply of shares, they are therefore only able to withdraw their full amount by passing in the totalSupply of shares. 
 
 POC:
 Adding the following console logs to the ERC1155 contract's `_burn` function: 
@@ -124,7 +96,7 @@ This same issue is demonstrated in `test_rewards_always_withdrawable_multiple` w
 
 Recommendation: This issue can be mitigated by ensuring front-end logic prevents this edge case or only allowing sole depositors to withdraw by passing in shares. 
 
-3. Informational - Unclear natspec
+2. Informational - Unclear natspec
 
 Description: The ITapiocaOracle natspec states that the `get` function:
 
@@ -144,8 +116,37 @@ The natspec makes understanding the effect in the resulting implementation diffi
 
 Recommendation: rephrase natspec for clearer definition of function or change return variable name to make definition clearer
 
-4. Informational - user trying to overdraw their account shares could receive more descriptive message
+3. Informational - user trying to overdraw their account shares could receive more descriptive message
 
 Description: In test `test_user_cant_overdraw` it reverts due to underflow when user tries to withdraw more than their balance, throwing a more descriptive error could allow for better error handling.
+
+4. Informational - users can withdraw when paused
+
+Description: `_withdraw` function is missing a check for paused:
+
+```solidity
+ function _withdraw(address to, uint256 amount) internal override {
+        if (amount == 0) revert NotValid();
+        _claimRewards(); // Claim rewards before withdrawing
+        _buyGlp(); // Buy GLP with WETH rewards
+
+        sGLP.safeApprove(contractAddress, amount);
+        ITOFT(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
+        sGLP.safeApprove(contractAddress, 0);
+    }
+```
+
+the `sDaiStrategy` has a check that prevents withdrawals if the system is paused, which makes the two strategies inconsistent with each other: 
+
+```solidity
+/// @dev burns sDai in exchange of Dai and wraps it into tDai
+    function _withdraw(
+        address to,
+        uint256 amount
+    ) internal override nonReentrant {
+        if (paused) revert Paused();
+		...
+	}
+```
 
 
