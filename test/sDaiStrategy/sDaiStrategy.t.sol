@@ -757,6 +757,8 @@ contract SDaiStrategyTest is Test {
         console2.log("maxWithdrawAfter: ", maxWithdrawAfter);
         console2.log("sDai addr in test: ", address(sDai));
 
+        assertTrue(harvestableBeforeWithdraw == maxWithdrawAfter, "harvestableBeforeWithdraw == maxWithdrawAfter");
+
         // user withdraws their deposit after savings accumulate
         _withdrawFromStrategy(binanceWalletAddr, initialUserBalance - 1);
 
