@@ -39,6 +39,12 @@ contract SDaiStrategyTest is Test {
     uint256 sDaiStratAssetId;
 
     /**
+        Bounding for fuzz tests
+    */
+    uint256 internal lowerBound = 1;
+    uint256 internal upperBound = 1e26; //balance of whale from which dai is transferred
+
+    /**
      * Modifiers
      */
 
@@ -69,9 +75,6 @@ contract SDaiStrategyTest is Test {
         _;
     }
 
-    /**
-     * Setup
-     */
     function setUp() public {
         string memory rpcUrl = vm.envString(RPC_URL);
         // uint256 forkingBlockNumber = vm.envUint(FORKING_MAINNET_BLOCK_NUMBER);
@@ -129,13 +132,165 @@ contract SDaiStrategyTest is Test {
     }
 
     /**
-        Deposits
-    **/
+        Wrappers (call internal test for a given input)    
+    */
+
+    function test_deposit_accounted_for_wrapper() public {
+        test_deposit_accounted_for(10_000);
+    }
+
+    function test_deposit_directly_to_strategy_wrapper() public {
+        test_deposit_directly_to_strategy(10_000);
+    }
+
+    function test_tokens_added_to_queue_wrapper() public {
+        test_tokens_added_to_queue(20_000, 10_000);
+    }
+
+    function test_queue_fully_deposited_wrapper() public {
+        test_queue_fully_deposited(10_000, 10_000);
+    }
+
+    function test_no_withdrawal_loss_when_no_savings_accumulated_wrapper() public {
+        test_no_withdrawal_loss_when_no_savings_accumulated(10_000);
+    }
+
+    function test_tDai_balance_increases_on_withdraw_savings_accumulated_wrapper() public {
+        test_tDai_balance_increases_on_withdraw_savings_accumulated(10_000);
+    }
+
+    function test_user_can_always_fully_withdraw_wrapper() public {
+        test_user_can_always_fully_withdraw(10_000);
+    }
+
+    function test_user_can_only_withdraw_their_amount_wrapper() public {
+        test_user_can_only_withdraw_their_amount(10_000, 10_000);
+    }
+
+    function test_revert_when_strategy_balance_insufficient_wrapper() public {
+        test_revert_when_strategy_balance_insufficient(10_000);
+    }
+
+    function test_user_balances_disjoint_no_accumulation_wrapper() public {
+        test_user_balances_disjoint_no_accumulation(10_000, 10_000);
+    }
+
+    function test_user_balances_disjoint_with_accumulation_wrapper() public {
+        test_user_balances_disjoint_with_accumulation(10_000, 10_000);
+
+        // @audit test case that fails for difference of dust amount
+        // testFuzz_user_balances_disjoint_with_accumulation(220, 23186);
+    }
+
+    function test_withdraw_assets_in_queue_wrapper() public {
+        test_withdraw_assets_in_queue(20_000, 10_000);
+    }
+
+    function test_harvestable_with_accumulation_wrapper() public {
+        test_harvestable_with_accumulation(10_000);
+    }
+    /**
+        Fuzz tests (call internal tests for a range of bounded inputs)
+    */
+
+    function testFuzz_test_deposit_accounted_for(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_deposit_accounted_for(depositAmount);
+    }
+
+    function testFuzz_deposit_directly_to_strategy(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_deposit_directly_to_strategy(depositAmount);
+    }
+
+    function testFuzz_tokens_added_to_queue(uint256 depositThreshold, uint256 depositAmount) public {
+        // NOTE: this uses a lower bound for the depositThreshold of 10 as a realistic value, 
+        // using a lower bound of 1 with a depositAmount = 1 causes a revert
+        depositThreshold = bound(depositThreshold, 10, upperBound);
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        vm.assume(depositAmount <= depositThreshold);
+
+        test_tokens_added_to_queue(depositThreshold, depositAmount);
+    }
+
+    function testFuzz_queue_fully_deposited(uint256 depositThreshold, uint256 depositAmount) public {
+        depositThreshold = bound(depositThreshold, lowerBound, upperBound);
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        vm.assume(depositAmount >= depositThreshold);
+
+        test_queue_fully_deposited(depositThreshold, depositAmount);
+    }
+
+    function testFuzz_no_withdrawal_loss_when_no_savings_accumulated(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_no_withdrawal_loss_when_no_savings_accumulated(depositAmount);
+    }
+
+    function testFuzz_tDai_balance_increases_on_withdraw(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_tDai_balance_increases_on_withdraw(depositAmount);
+    }
+
+    function testFuzz_tDai_balance_increases_on_withdraw_savings_accumulated(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_tDai_balance_increases_on_withdraw_savings_accumulated(depositAmount);
+    }
+
+    function testFuzz_user_can_always_fully_withdraw(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_user_can_always_fully_withdraw(depositAmount);
+    }
+
+    function testFuzz_user_can_only_withdraw_their_amount(uint256 initialStartingBalance1, uint256 initialStartingBalance2) public {
+        initialStartingBalance1 = bound(initialStartingBalance1, lowerBound, upperBound);
+        initialStartingBalance2 = bound(initialStartingBalance2, lowerBound, upperBound);
+        
+        // NOTE: total amount transferred can't be greater than the upperBound because DAI needs to be transferred from whale 
+        vm.assume(initialStartingBalance1 + initialStartingBalance2 <= upperBound);
+        test_user_can_only_withdraw_their_amount(initialStartingBalance1, initialStartingBalance2);
+    }
+
+    function testFuzz_revert_when_strategy_balance_insufficient(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_revert_when_strategy_balance_insufficient(depositAmount);
+    }
+
+    // NOTE: lowerBounds here include + 1 to make up for the rounding error that causes user to lose 1 DAI when withdrawing
+    function testFuzz_user_balances_disjoint_no_accumulation(uint256 depositAmount1, uint256 depositAmount2) public {
+        depositAmount1 = bound(depositAmount1, lowerBound + 1, upperBound);
+        depositAmount2 = bound(depositAmount2, lowerBound + 1, upperBound);
+        vm.assume(depositAmount1 + depositAmount2 <= upperBound);
+        test_user_balances_disjoint_no_accumulation(depositAmount1, depositAmount2);
+    }
+
+    function testFuzz_user_balances_disjoint_with_accumulation(uint256 depositAmount1, uint256 depositAmount2) public {
+        depositAmount1 = bound(depositAmount1, lowerBound + 1, upperBound);
+        depositAmount2 = bound(depositAmount2, lowerBound + 1, upperBound);
+        vm.assume(depositAmount1 + depositAmount2 <= upperBound);
+        test_user_balances_disjoint_with_accumulation(depositAmount1, depositAmount2);
+    }
+
+    function testFuzz_withdraw_assets_in_queue_wrapper(uint256 depositThreshold, uint256 depositAmount) public {
+        depositThreshold = bound(depositThreshold, lowerBound + 1, upperBound);
+        depositAmount = bound(depositAmount, lowerBound + 1, upperBound);
+        vm.assume(depositAmount < depositThreshold);
+
+        test_withdraw_assets_in_queue(depositThreshold, depositAmount);
+    }
+
+    function testFuzz_harvestable_with_accumulation_wrapper(uint256 depositAmount) public {
+        depositAmount = bound(depositAmount, lowerBound, upperBound);
+        test_harvestable_with_accumulation(depositAmount);
+    }
+
+    /**
+        Test implementations (internal ones are used by wrappers/fuzz, others are tested as is)
+    */
     // 1. tDAI passed in on deposit is deposited for sDaiStrategy
-    function test_deposit_accounted_for()
-        public
+    function test_deposit_accounted_for(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         _approveAllContracts();
 
@@ -175,10 +330,10 @@ contract SDaiStrategyTest is Test {
     }
 
     // 4. depositing sDAI directly to strategy should fail
-    function test_deposit_directly_to_strategy()
-        public
+    function test_deposit_directly_to_strategy(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         uint256 userStartingDaiBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -194,7 +349,7 @@ contract SDaiStrategyTest is Test {
     }
 
     function test_cant_deposit_when_paused() public isMainnetFork {
-        // user gets dealt initial DAI amount
+        // user gets dealt initial DAI depositAmount
         _transferDaiToAddress(10_000, binanceWalletAddr);
 
         uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
@@ -214,11 +369,11 @@ contract SDaiStrategyTest is Test {
     }
 
     // 11. Tokens are added to deposit queue if threshold isn't met when depositing
-    function test_tokens_added_to_queue()
-        public
+    function test_tokens_added_to_queue(uint256 depositThreshold, uint256 depositAmount)
+        internal
         isMainnetFork
-        setDepositThreshold(20_000)
-        setupAndprankBinance(10_000)
+        setDepositThreshold(depositThreshold)
+        setupAndprankBinance(depositAmount)
     {
         uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -234,11 +389,11 @@ contract SDaiStrategyTest is Test {
     }
 
     // 12. Deposit queue gets fully deposited, no dust remains
-    function test_queue_fully_deposited()
-        public
+    function test_queue_fully_deposited(uint256 depositThreshold, uint256 depositAmount)
+        internal
         isMainnetFork
-        setDepositThreshold(10_000)
-        setupAndprankBinance(10_000)
+        setDepositThreshold(depositThreshold)
+        setupAndprankBinance(depositAmount)
     {
         uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -252,18 +407,14 @@ contract SDaiStrategyTest is Test {
         );
     }
 
-    /**
-        Withdrawals
-    **/
-
     // @audit see finding Med - 1
     // 2. user can always withdraw as much as they deposited (with no savings accumulated)
     // 5. withdrawing with 0 savings accumulated doesn't revert
     // 7. sDaiStrategy balance of sDAI decreases on withdrawal
-    function test_no_withdrawal_loss_when_no_savings_accumulated()
-        public
+    function test_no_withdrawal_loss_when_no_savings_accumulated(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         uint256 initialUserDaiBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -317,12 +468,16 @@ contract SDaiStrategyTest is Test {
         sDaiStrat.withdraw(binanceWalletAddr, userStartingDaiBalance);
     }
 
+    function test_tDai_balance_increases_on_withdraw_wrapper() public {
+        test_tDai_balance_increases_on_withdraw(10_000);
+    }
+
     // @audit fails for same reason as dust issue described in Med - 1
-    // 6a. user balance of tDAI increases by amount on call to withdraw when no savings accumulated
-    function test_tDai_balance_increases_on_withdraw()
-        public
+    // 6a. user balance of tDAI increases by depositAmount on call to withdraw when no savings accumulated
+    function test_tDai_balance_increases_on_withdraw(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         uint256 userStartingDaiBalance = dai.balanceOf(binanceWalletAddr);
         console2.log("userStartingDaiBalance: ", userStartingDaiBalance);
@@ -348,11 +503,11 @@ contract SDaiStrategyTest is Test {
     }
 
     // @audit fails for same reason as dust issue described in Med - 1
-    // 6b. user balance of tDAI increases by amount on call to withdraw when savings accumulated
-    function test_tDai_balance_increases_on_withdraw_savings_accumulated()
-        public
+    // 6b. user balance of tDAI increases by depositAmount on call to withdraw when savings accumulated
+    function test_tDai_balance_increases_on_withdraw_savings_accumulated(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         uint256 userStartingDaiBalance = dai.balanceOf(binanceWalletAddr);
         console2.log("userStartingDaiBalance: ", userStartingDaiBalance);
@@ -381,10 +536,10 @@ contract SDaiStrategyTest is Test {
 
     // @audit related to issue Med - 1
     // 8. User can always withdraw up to the full amount of sDAI in the GlpStrategy
-    function test_user_can_always_fully_withdraw()
-        public
+    function test_user_can_always_fully_withdraw(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         uint256 userStartingDaiBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -411,29 +566,28 @@ contract SDaiStrategyTest is Test {
     }
 
     // 9. User can only withdraw share + yield accumulated for their shares
-    function test_user_can_only_withdraw_their_amount() public isMainnetFork {
+    function test_user_can_only_withdraw_their_amount(uint256 initialStartingBalance1, uint256 initialStartingBalance2) internal isMainnetFork {
         address alice = address(0x1);
         address bob = address(0x2);
 
         // load accounts with dai
-        uint256 initialStartingBalance = 10_000;
-        _transferDaiToAddress(initialStartingBalance, alice);
-        _transferDaiToAddress(initialStartingBalance, bob);
+        _transferDaiToAddress(initialStartingBalance1, alice);
+        _transferDaiToAddress(initialStartingBalance2, bob);
 
         // Alice deposits
         vm.startPrank(alice);
-        _approveWrapAndDeposit(alice, initialStartingBalance);
+        _approveWrapAndDeposit(alice, initialStartingBalance1);
         vm.stopPrank();
 
         // Bob deposits
         vm.startPrank(bob);
-        _approveWrapAndDeposit(bob, initialStartingBalance);
+        _approveWrapAndDeposit(bob, initialStartingBalance2);
         vm.stopPrank();
 
         // Alice tries to withdraw her deposit + Bob's
         vm.startPrank(alice);
         vm.expectRevert(stdError.arithmeticError);
-        _withdrawFromStrategy(alice, initialStartingBalance * 2);
+        _withdrawFromStrategy(alice, initialStartingBalance1 + initialStartingBalance2);
         vm.stopPrank();
     }
 
@@ -459,12 +613,12 @@ contract SDaiStrategyTest is Test {
     }
 
     // @audit see finding Informational - 6
-    function test_revert_when_strategy_balance_insufficient()
-        public
+    function test_revert_when_strategy_balance_insufficient(uint256 depositAmount)
+        internal
         isMainnetFork
     {
         // user gets dealt initial DAI amount
-        _transferDaiToAddress(10_000, binanceWalletAddr);
+        _transferDaiToAddress(depositAmount, binanceWalletAddr);
 
         uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -487,39 +641,38 @@ contract SDaiStrategyTest is Test {
     }
 
     // 10a. user withdrawing their share doesn't affect other's ability to withdraw when no savings accumulated
-    function test_user_balances_disjoint_no_accumulation()
-        public
+    function test_user_balances_disjoint_no_accumulation(uint256 depositAmount1, uint256 depositAmount2)
+        internal
         isMainnetFork
     {
         address alice = address(0x1);
         address bob = address(0x2);
 
         // load accounts with dai
-        uint256 initialStartingBalance = 10_000;
-        _transferWrapAndDepositMultiple(initialStartingBalance, alice, bob);
+        _transferWrapAndDepositMultiple(depositAmount1, depositAmount2, alice, bob);
 
         // Alice withdraws her deposit
         vm.startPrank(alice);
-        _withdrawFromStrategy(alice, initialStartingBalance - 1);
+        _withdrawFromStrategy(alice, depositAmount1 - 1);
         vm.stopPrank();
 
         // Bob withdraws his deposit
         vm.startPrank(bob);
-        _withdrawFromStrategy(bob, initialStartingBalance - 1);
+        _withdrawFromStrategy(bob, depositAmount2 - 1);
         vm.stopPrank();
     }
-
+        
     // 10b. user withdrawing their share doesn't affect other's ability to withdraw when savings accumulated
-    function test_user_balances_disjoint_with_accumulation()
-        public
+    // @audit user loses dust amount in fuzz test for this
+    function test_user_balances_disjoint_with_accumulation(uint256 depositAmount1, uint256 depositAmount2)
+        internal
         isMainnetFork
     {
         address alice = address(0x1);
         address bob = address(0x2);
 
         // load accounts with dai
-        uint256 initialStartingBalance = 10_000;
-        _transferWrapAndDepositMultiple(initialStartingBalance, alice, bob);
+        _transferWrapAndDepositMultiple(depositAmount1, depositAmount2, alice, bob);
 
         // savings accumulate over a given amount of time
         vm.warp(block.timestamp + 5 days);
@@ -527,21 +680,21 @@ contract SDaiStrategyTest is Test {
         // NOTE: on withdrawal using initialStartingBalance - 1 because of dust amount issue
         // Alice withdraws her deposit
         vm.startPrank(alice);
-        _withdrawFromStrategy(alice, initialStartingBalance - 1);
+        _withdrawFromStrategy(alice, depositAmount1 - 1);
         vm.stopPrank();
 
         // Bob withdraws his deposit
         vm.startPrank(bob);
-        _withdrawFromStrategy(bob, initialStartingBalance - 1);
+        _withdrawFromStrategy(bob, depositAmount2 - 1);
         vm.stopPrank();
     }
-
+        
     // 13. User can withdraw if their assets remain in queue
-    function test_withdraw_assets_in_queue()
-        public
+    function test_withdraw_assets_in_queue(uint256 depositThreshold, uint256 depositAmount)
+        internal
         isMainnetFork
-        setDepositThreshold(20_000)
-        setupAndprankBinance(10_000)
+        setDepositThreshold(depositThreshold)
+        setupAndprankBinance(depositAmount)
     {
         uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -563,7 +716,7 @@ contract SDaiStrategyTest is Test {
 
     /** 
      Savings Accumulation
-    **/
+    **/ 
     function test_harvestable_no_accumulation()
         public
         isMainnetFork
@@ -586,10 +739,10 @@ contract SDaiStrategyTest is Test {
     }
 
     // @audit see issue Med - 2
-    function test_harvestable_with_accumulation()
-        public
+    function test_harvestable_with_accumulation(uint256 depositAmount)
+        internal
         isMainnetFork
-        setupAndprankBinance(10_000)
+        setupAndprankBinance(depositAmount)
     {
         uint256 initialUserBalance = dai.balanceOf(binanceWalletAddr);
 
@@ -774,21 +927,22 @@ contract SDaiStrategyTest is Test {
     }
 
     function _transferWrapAndDepositMultiple(
-        uint256 amount,
+        uint256 amount1,
+        uint256 amount2,
         address depositor1,
         address depositor2
     ) internal {
-        _transferDaiToAddress(amount, depositor1);
-        _transferDaiToAddress(amount, depositor2);
+        _transferDaiToAddress(amount1, depositor1);
+        _transferDaiToAddress(amount2, depositor2);
 
         // first user deposits
         vm.startPrank(depositor1);
-        _approveWrapAndDeposit(depositor1, amount);
+        _approveWrapAndDeposit(depositor1, amount1);
         vm.stopPrank();
 
         // second user deposits
         vm.startPrank(depositor2);
-        _approveWrapAndDeposit(depositor2, amount);
+        _approveWrapAndDeposit(depositor2, amount2);
         vm.stopPrank();
     }
 }
