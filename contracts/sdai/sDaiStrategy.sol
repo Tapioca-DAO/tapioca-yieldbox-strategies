@@ -4,11 +4,13 @@ pragma solidity 0.8.22;
 // External
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Tapioca
 import {ISavingsDai} from "tapioca-periph/interfaces/external/makerdao/ISavingsDai.sol";
 import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
+import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
 import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
 import {ITDai} from "./interfaces/ITDai.sol";
 
@@ -21,7 +23,7 @@ import {ITDai} from "./interfaces/ITDai.sol";
    ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝
 */
 
-contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
+contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     /// @notice Queues tokens up to depositThreshold
@@ -30,7 +32,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
 
     ISavingsDai public immutable sDai;
     IERC20 public immutable dai;
-    bool public paused;
+    ICluster internal cluster;
 
     // ************** //
     // *** EVENTS *** //
@@ -39,14 +41,16 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     event AmountQueued(uint256 indexed amount);
     event AmountDeposited(uint256 indexed amount);
     event AmountWithdrawn(address indexed to, uint256 indexed amount);
+    event ClusterUpdated(ICluster indexed oldCluster, ICluster indexed newCluster);
 
     // ************** //
     // *** ERRORS *** //
     // ************** //
     error TokenNotValid();
     error TransferFailed();
-    error Paused();
     error NotEnough();
+    error PauserNotAuthorized();
+    error EmptyAddress();
 
     constructor(IYieldBox _yieldBox, address _token, ISavingsDai _sDai, address _owner)
         BaseERC20Strategy(_yieldBox, _token)
@@ -80,12 +84,6 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     // *** OWNER FUNCTIONS *** //
     // *********************** //
 
-    /// @notice updates the pause state
-    /// @param _val the new state
-    function updatePaused(bool _val) external onlyOwner {
-        paused = _val;
-    }
-
     /// @notice rescues unused ETH from the contract
     /// @param amount the amount to rescue
     /// @param to the recipient
@@ -104,13 +102,37 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     /// @notice withdraws everything from the strategy
     /// @dev Withdraws everything from the strategy and pauses it
     function emergencyWithdraw() external onlyOwner {
-        paused = true; // Pause the strategy
+        _pause();
 
         // Withdraw from the pool, convert to Dai and wrap it into tDai
         uint256 maxWithdraw = sDai.maxWithdraw(address(this));
         sDai.withdraw(maxWithdraw, address(this), address(this));
         dai.approve(contractAddress, maxWithdraw);
         ITDai(contractAddress).wrap(address(this), address(this), maxWithdraw);
+    }
+
+    /**
+     * @notice Un/Pauses this contract.
+    */
+    function setPause(bool _pauseState) external {
+        if (!cluster.hasRole(msg.sender, keccak256("PAUSABLE")) && msg.sender != owner()) revert PauserNotAuthorized();
+        if (_pauseState) {
+            _pause();
+        } else {
+            _unpause();
+        }
+    }
+
+
+    /**
+     * @notice updates the Cluster address.
+     * @dev can only be called by the owner.
+     * @param _cluster the new address.
+     */
+    function setCluster(ICluster _cluster) external onlyOwner {
+        if (address(_cluster) == address(0)) revert EmptyAddress();
+        emit ClusterUpdated(cluster, _cluster);
+        cluster = _cluster;
     }
 
     // ************************* //
@@ -125,9 +147,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     }
 
     /// @dev deposits to SavingsDai or queues tokens if the 'depositThreshold' has not been met yet
-    function _deposited(uint256 amount) internal override nonReentrant {
-        if (paused) revert Paused();
-
+    function _deposited(uint256 amount) internal override whenNotPaused nonReentrant {
         // Assume that YieldBox already transferred the tokens to this address
         uint256 queued = IERC20(contractAddress).balanceOf(address(this));
 
@@ -142,9 +162,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     }
 
     /// @dev burns sDai in exchange of Dai and wraps it into tDai
-    function _withdraw(address to, uint256 amount) internal override nonReentrant {
-        if (paused) revert Paused();
-
+    function _withdraw(address to, uint256 amount) internal whenNotPaused override nonReentrant {
         uint256 maxWithdraw = sDai.maxWithdraw(address(this)); // Total amount of Dai that can be withdrawn from the pool
         uint256 assetInContract = IERC20(contractAddress).balanceOf(address(this));
 
