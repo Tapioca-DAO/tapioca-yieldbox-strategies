@@ -154,7 +154,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         }
     }
 
-
+ 
     /**
      * @notice updates the Cluster address.
      * @dev can only be called by the owner.

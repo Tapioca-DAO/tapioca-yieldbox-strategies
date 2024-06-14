@@ -123,7 +123,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard, Pausable {
         }
     }
 
-
+ 
     /**
      * @notice updates the Cluster address.
      * @dev can only be called by the owner.
