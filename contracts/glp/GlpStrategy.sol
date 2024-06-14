@@ -12,10 +12,10 @@ import {IGmxRewardTracker} from "tapioca-strategies/interfaces/gmx/IGmxRewardTra
 import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
-import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
+import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
 import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
-import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
 import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
+import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 
 /*
 ████████╗ █████╗ ██████╗ ██╗ ██████╗  ██████╗ █████╗ 
