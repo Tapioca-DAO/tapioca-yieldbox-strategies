@@ -205,7 +205,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         uint256 wrapped = ITOFT(contractAddress).wrap(address(this), address(this), amount); // wrap the sGLP to tsGLP first
         sGLP.safeApprove(contractAddress, 0);
 
-        safeTransfer(contractAddress, to, wrapped); // transfer the tsGLP to the recipient
+        IERC20(contractAddress).safeTransfer(to, wrapped); // transfer the tsGLP to the recipient
     }
 
     /// @notice Claim GMX rewards, only in WETH.
