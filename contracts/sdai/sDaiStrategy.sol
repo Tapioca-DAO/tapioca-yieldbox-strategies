@@ -73,7 +73,7 @@ contract sDaiStrategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
 
     /// @notice Returns the unharvested token gains
     function harvestable() external view returns (uint256 result) {
-        sDai.maxWithdraw(address(this));
+        return sDai.maxWithdraw(address(this));
     }
 
     // *********************** //

@@ -123,8 +123,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
 
         // Convert WETH to GLP
         (, uint256 glpPrice) = wethGlpOracle.peek(wethGlpOracleData);
-        uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
-        amount = amountInGlp - (amountInGlp * _slippage) / 10_000;
+        amount = (wethAmount * glpPrice) / 1e18;
     }
 
     // *********************************** //
