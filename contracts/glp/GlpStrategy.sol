@@ -144,7 +144,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
     // *********************************** //
     /**
      * @notice Un/Pauses this contract.
-    */
+     */
     function setPause(bool _pauseState) external {
         if (!cluster.hasRole(msg.sender, keccak256("PAUSABLE")) && msg.sender != owner()) revert PauserNotAuthorized();
         if (_pauseState) {
@@ -154,7 +154,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         }
     }
 
- 
     /**
      * @notice updates the Cluster address.
      * @dev can only be called by the owner.
@@ -174,7 +173,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         _slippage = _val;
     }
 
-
     // *********************************** //
     /* ============ INTERNAL ============ */
     // *********************************** //
@@ -189,7 +187,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
      * @notice Deposits the specified amount into the strategy
      * @dev Since the contract strategy is for tsGLP, we need to unwrap it to sGLP
      */
-    function _deposited(uint256 amount) internal whenNotPaused override {
+    function _deposited(uint256 amount) internal override whenNotPaused {
         ITOFT(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
         harvest();
     }
@@ -204,8 +202,10 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         _buyGlp(); // Buy GLP with WETH rewards
 
         sGLP.safeApprove(contractAddress, amount);
-        ITOFT(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
+        uint256 wrapped = ITOFT(contractAddress).wrap(address(this), address(this), amount); // wrap the sGLP to tsGLP first
         sGLP.safeApprove(contractAddress, 0);
+
+        safeTransfer(contractAddress, to, wrapped); // transfer the tsGLP to the recipient
     }
 
     /// @notice Claim GMX rewards, only in WETH.
