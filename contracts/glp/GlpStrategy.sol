@@ -192,7 +192,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
      */
     function _deposited(uint256 amount) internal override whenNotPaused {
         ITOFT(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
-        harvest();
     }
 
     /**
@@ -201,8 +200,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
      */
     function _withdraw(address to, uint256 amount) internal override {
         if (amount == 0) revert NotValid();
-        _claimRewards(); // Claim rewards before withdrawing
-        _buyGlp(); // Buy GLP with WETH rewards
 
         ITOFT toft = ITOFT(contractAddress);
         IPearlmit pearlmit = toft.pearlmit();
