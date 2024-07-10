@@ -5,7 +5,7 @@ pragma solidity 0.8.22;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Tapioca
-import {IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "tap-yieldbox/YieldBox.sol";
+import {IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "yieldbox/YieldBox.sol";
 import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
 import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
 import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
@@ -16,6 +16,7 @@ import {GlpStrategyWrapper} from "./GlpStrategyWrapper.sol";
 import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
 import {OracleMock} from "tapioca-mocks/OracleMock.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
+import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
 
 import "forge-std/Test.sol";
 
@@ -43,6 +44,7 @@ contract GlpStrategyTest is Test {
     IGmxVault gmxVault;
     ToftMock tsGLP;
     IERC20 sGLP;
+    Pearlmit pearlmit;
 
     /**
      * Vars
@@ -52,8 +54,8 @@ contract GlpStrategyTest is Test {
     address public weth;
 
     /**
-        Bounding for fuzz tests
-    */
+     * Bounding for fuzz tests
+     */
     uint256 internal lowerBound = 0.5 ether;
     uint256 internal upperBound = 5_000 ether;
 
@@ -97,19 +99,20 @@ contract GlpStrategyTest is Test {
 
         // Get GMX contracts
         glpRewardRouter = IGmxRewardRouterV2(glpRewardRouterAddr);
-        IGmxRewardRouterV2 gmxRewardRouter = IGmxRewardRouterV2(
-            gmxRewardRouterAddr
-        );
+        IGmxRewardRouterV2 gmxRewardRouter = IGmxRewardRouterV2(gmxRewardRouterAddr);
         sGLP = IERC20(stakedGlpAddr);
         gmxVault = IGmxVault(gmxVaultAddr);
         weth = address(gmxRewardRouter.weth());
         glpManager = IGlpManager(glpRewardRouter.glpManager());
         vm.label(address(glpManager), "glpManager");
 
+        // Periphery contracts
+        pearlmit = new Pearlmit("Pearlmit", "1", address(this), 0);
+
         // Deploy contracts
         tsGLP = new ToftMock(address(sGLP), "Toft", "TOFT");
         vm.label(address(tsGLP), "tsGLP");
-        yieldBox = new YieldBox(IWrappedNative(weth), new YieldBoxURIBuilder());
+        yieldBox = new YieldBox(IWrappedNative(weth), new YieldBoxURIBuilder(), pearlmit, address(this));
         vm.label(address(yieldBox), "yieldBox");
         wethOracleMock = new OracleMock("wethOracleMock", "WOM", 1e18);
 
@@ -124,39 +127,19 @@ contract GlpStrategyTest is Test {
             address(this)
         );
         vm.label(address(glpStrategy), "glpStrategy");
-        yieldBox.registerAsset(
-            TokenType.ERC20,
-            address(tsGLP),
-            IStrategy(address(glpStrategy)),
-            0
-        );
-        glpStratAssetId = yieldBox.ids(
-            TokenType.ERC20,
-            address(tsGLP),
-            IStrategy(address(glpStrategy)),
-            0
-        );
+        yieldBox.registerAsset(TokenType.ERC20, address(tsGLP), IStrategy(address(glpStrategy)), 0);
+        glpStratAssetId = yieldBox.ids(TokenType.ERC20, address(tsGLP), IStrategy(address(glpStrategy)), 0);
     }
 
     /**
      * Tests
      */
-
     function test_constructor() public isArbFork {
         uint256 glpPrice = glpManager.getPrice(true);
-        assertLe(
-            glpPrice,
-            1041055094190371419655569666477,
-            "glpPrice not within bounds"
-        );
+        assertLe(glpPrice, 1041055094190371419655569666477, "glpPrice not within bounds");
 
         uint256 wethPrice = gmxVault.getMaxPrice(weth) / 1e12;
-        assertApproxEqAbs(
-            wethPrice,
-            1805 * 1e18,
-            2 * 1e18,
-            "weth price not within bounds"
-        );
+        assertApproxEqAbs(wethPrice, 1805 * 1e18, 2 * 1e18, "weth price not within bounds");
     }
 
     function test_compound_harvest() public isArbFork prankBinance {
@@ -168,10 +151,7 @@ contract GlpStrategyTest is Test {
             uint256 ethBuyin = 1 ether;
             uint256 minUsdg = (((wethPrice * ethBuyin) / 1e18) * 99) / 100; // 1% slippage
             uint256 minGlp = (minUsdg * 1e18) / glpPrice;
-            glpRewardRouter.mintAndStakeGlpETH{value: ethBuyin}(
-                minUsdg,
-                minGlp
-            );
+            glpRewardRouter.mintAndStakeGlpETH{value: ethBuyin}(minUsdg, minGlp);
 
             uint256 glpBal = sGLP.balanceOf(address(binanceWalletAddr));
             assertGe(glpBal, minGlp, "GLP out");
@@ -186,29 +166,14 @@ contract GlpStrategyTest is Test {
 
             // Deposit into YieldBox
             tsGLP.approve(address(yieldBox), glpBefore);
-            yieldBox.depositAsset(
-                glpStratAssetId,
-                binanceWalletAddr,
-                binanceWalletAddr,
-                glpBefore,
-                0
-            );
+            yieldBox.depositAsset(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, glpBefore, 0);
         }
 
         // Compound and withdraw
         {
-            uint256 shares = yieldBox.balanceOf(
-                binanceWalletAddr,
-                glpStratAssetId
-            );
+            uint256 shares = yieldBox.balanceOf(binanceWalletAddr, glpStratAssetId);
             _compound((86400 * 365) / 10, 6); // Compound 6 times in 1 year
-            yieldBox.withdraw(
-                glpStratAssetId,
-                binanceWalletAddr,
-                binanceWalletAddr,
-                0,
-                shares
-            );
+            yieldBox.withdraw(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, 0, shares);
             uint256 glpBalAfter = tsGLP.balanceOf(binanceWalletAddr);
             assertGt(glpBalAfter, glpBefore, "GLP compound out");
         }
@@ -217,8 +182,8 @@ contract GlpStrategyTest is Test {
     // ------------ new tests --------------------
 
     /**
-        Wrappers (call internal test for a given input)    
-    */
+     * Wrappers (call internal test for a given input)
+     */
     function test_deposit_wrapper() public {
         test_deposit(1 ether);
     }
@@ -248,9 +213,8 @@ contract GlpStrategyTest is Test {
     }
 
     /**
-        Fuzz tests (call internal test for a range of bounded inputs)
-    */
-
+     * Fuzz tests (call internal test for a range of bounded inputs)
+     */
     function testFuzz_deposit(uint256 amount) public {
         amount = bound(amount, lowerBound, upperBound);
         test_deposit(amount);
@@ -288,31 +252,25 @@ contract GlpStrategyTest is Test {
     }
 
     /**
-        Test implementations (internal ones are used by wrappers/fuzz, others are tested as is)
-    */
+     * Test implementations (internal ones are used by wrappers/fuzz, others are tested as is)
+     */
 
-     // 1a. tsGLP passed in on deposit is staked for GlpStrategy
+    // 1a. tsGLP passed in on deposit is staked for GlpStrategy
     function test_deposit(uint256 ethBuyin) internal isArbFork prankBinance {
         uint256 strategyGlpBefore = sGLP.balanceOf(address(glpStrategy));
 
-        uint256 userGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         // GlpStrategy's balance of sGLP should be increased by userGlpBefore
         uint256 strategyGlpAfter = sGLP.balanceOf(address(glpStrategy));
-        assertTrue(
-            strategyGlpBefore + userGlpBefore == strategyGlpAfter,
-            "strategy GLP balance doesn't increase"
-        );
+        assertTrue(strategyGlpBefore + userGlpBefore == strategyGlpAfter, "strategy GLP balance doesn't increase");
     }
 
     // 1b. depositing when paused reverts
     function test_deposit_paused_reverts() public isArbFork {
         uint256 ethBuyin = 1 ether;
 
-        glpStrategy.updatePaused(true);
+        glpStrategy.setPause(true);
 
         vm.startPrank(binanceWalletAddr);
         uint256 strategyGlpBefore = sGLP.balanceOf(address(glpStrategy));
@@ -323,23 +281,14 @@ contract GlpStrategyTest is Test {
         tsGLP.approve(address(yieldBox), userGlpBefore);
 
         // explicitly include deposit logic here to expect revert on it
-        vm.expectRevert(GlpStrategy.Paused.selector);
-        yieldBox.depositAsset(
-            glpStratAssetId,
-            binanceWalletAddr,
-            binanceWalletAddr,
-            userGlpBefore,
-            0
-        );
+        vm.expectRevert("Pausable: paused");
+        yieldBox.depositAsset(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, userGlpBefore, 0);
         vm.stopPrank();
     }
 
     // 2a. GLP bought with weth rewards is staked for GlpStrategy
     function test_weth_rewards_staked_as_glp(uint256 ethBuyin) internal isArbFork prankBinance {
-        uint256 userGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         // warps time forward then harvests the rewards
         uint256 interval = 525600; // using the interval from compound harvest test
@@ -347,38 +296,24 @@ contract GlpStrategyTest is Test {
 
         // this returns the reward amount in GLP
         uint256 rewardsAccumulatedBeforeHarvest = glpStrategy.pendingRewards();
-        uint256 strategyGLPBalanceBeforeHarvest = sGLP.balanceOf(
-            address(glpStrategy)
-        );
+        uint256 strategyGLPBalanceBeforeHarvest = sGLP.balanceOf(address(glpStrategy));
 
         glpStrategy.harvest();
 
         uint256 rewardsAccumulatedAfterHarvest = glpStrategy.pendingRewards();
-        uint256 strategyGLPBalanceAfterHarvest = sGLP.balanceOf(
-            address(glpStrategy)
-        );
+        uint256 strategyGLPBalanceAfterHarvest = sGLP.balanceOf(address(glpStrategy));
 
         // 3. harvesting uses all the weth rewards balance if it's nonzero
-        assertTrue(
-            rewardsAccumulatedAfterHarvest == 0,
-            "reward balance of GlpStrategy nonzero after harvesting"
-        );
+        assertTrue(rewardsAccumulatedAfterHarvest == 0, "reward balance of GlpStrategy nonzero after harvesting");
     }
 
     // NOTE: this could be fuzzed with values up to minimum time for receiving reward
     // 2b. no GLP is bought if the protocol accumulates 0 weth rewards
-    function test_no_glp_bought_for_zero_rewards()
-        public
-        isArbFork
-        prankBinance
-    {
+    function test_no_glp_bought_for_zero_rewards() public isArbFork prankBinance {
         // buy sGLP
         uint256 ethBuyin = 1 ether;
 
-        uint256 userGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         uint256 strategyGLPBeforeHarvest = sGLP.balanceOf(address(glpStrategy));
 
@@ -387,10 +322,7 @@ contract GlpStrategyTest is Test {
         uint256 strategyGLPAfterHarvest = sGLP.balanceOf(address(glpStrategy));
 
         // no time has passed so no rewards should be accumulated
-        assertTrue(
-            strategyGLPAfterHarvest == strategyGLPAfterHarvest,
-            "GLP is bought with 0 rewards accumulated"
-        );
+        assertTrue(strategyGLPAfterHarvest == strategyGLPAfterHarvest, "GLP is bought with 0 rewards accumulated");
     }
 
     // 4. only YieldBox can withdraw and deposit
@@ -407,10 +339,7 @@ contract GlpStrategyTest is Test {
     function test_only_yieldBox_withdraw() public isArbFork prankBinance {
         uint256 ethBuyin = 1 ether;
 
-        uint256 userGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         // withdraw directly from strategy
         vm.expectRevert("Not YieldBox");
@@ -427,21 +356,12 @@ contract GlpStrategyTest is Test {
         sGLP.transfer(address(glpStrategy), userGlpBefore);
 
         vm.expectRevert("BoringERC20: TransferFrom failed");
-        yieldBox.depositAsset(
-            glpStratAssetId,
-            binanceWalletAddr,
-            binanceWalletAddr,
-            userGlpBefore,
-            0
-        );
+        yieldBox.depositAsset(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, userGlpBefore, 0);
     }
 
     // 6. calling harvest with 0 rewards accumulated doesn't revert
     function test_harvest_zero(uint256 ethBuyin) internal isArbFork prankBinance {
-        uint256 userGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         // assert that rewards accumulated by the strategy = 0
         assertTrue(glpStrategy.pendingRewards() == 0);
@@ -452,10 +372,7 @@ contract GlpStrategyTest is Test {
     // 7. user balance of sGLP increases by amount on call to withdraw
     // 8. GlpStrategy balance of sGLP decreases on withdrawal
     function test_user_balance_increases(uint256 ethBuyin) internal isArbFork prankBinance {
-        uint256 userGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         _compound((86400 * 365) / 10, 6); // Compound 6 times in 1 year
 
@@ -467,63 +384,36 @@ contract GlpStrategyTest is Test {
         _withdrawFromStrategy(userGlpBefore);
 
         // unwraps received tsGLP from
-        tsGLP.unwrap(
-            binanceWalletAddr,
-            tsGLP.balanceOf(address(binanceWalletAddr))
-        );
+        tsGLP.unwrap(binanceWalletAddr, tsGLP.balanceOf(address(binanceWalletAddr)));
         uint256 userGlpAfter = sGLP.balanceOf(address(binanceWalletAddr));
         uint256 strategyBalanceAfter = sGLP.balanceOf(address(glpStrategy));
 
-        assertTrue(
-            userGlpBefore <= userGlpAfter,
-            "user loses sGLP on withdraw"
-        );
+        assertTrue(userGlpBefore <= userGlpAfter, "user loses sGLP on withdraw");
 
         // if this is false, strategy gains sGLP from user
-        assertTrue(
-            strategyBalanceBefore - strategyBalanceAfter == userGlpBefore,
-            "strategy gains sGLP"
-        );
+        assertTrue(strategyBalanceBefore - strategyBalanceAfter == userGlpBefore, "strategy gains sGLP");
     }
 
     // 9a. User can always withdraw up to the full amount of GLP + weth rewards in the GlpStrategy
     function test_rewards_always_withdrawable(uint256 ethBuyin) internal isArbFork prankBinance {
-        uint256 userSGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userSGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
-        uint256 strategyBalanceBeforeHarvest = sGLP.balanceOf(
-            address(glpStrategy)
-        );
+        uint256 strategyBalanceBeforeHarvest = sGLP.balanceOf(address(glpStrategy));
 
         _compound((86400 * 365) / 10, 6);
 
         // full balance that should be redeemable
-        uint256 strategyBalanceBeforeWithdraw = sGLP.balanceOf(
-            address(glpStrategy)
-        );
+        uint256 strategyBalanceBeforeWithdraw = sGLP.balanceOf(address(glpStrategy));
 
         // @audit user can only pass in totalSupplyOfShares to fully withdraw
         // uint256 totalSupplyOfShares = yieldBox.totalSupply(glpStratAssetId);
 
-        yieldBox.withdraw(
-            glpStratAssetId,
-            binanceWalletAddr,
-            binanceWalletAddr,
-            strategyBalanceBeforeWithdraw,
-            0
-        );
+        yieldBox.withdraw(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, strategyBalanceBeforeWithdraw, 0);
 
-        uint256 strategyBalanceAfterWithdraw = sGLP.balanceOf(
-            address(glpStrategy)
-        );
+        uint256 strategyBalanceAfterWithdraw = sGLP.balanceOf(address(glpStrategy));
 
         // only dust amount due to rounding should remain in strategy
-        assertTrue(
-            strategyBalanceAfterWithdraw <= 1,
-            "balance remains in strategy"
-        );
+        assertTrue(strategyBalanceAfterWithdraw <= 1, "balance remains in strategy");
     }
 
     function test_rewards_always_withdrawable_multiple() public isArbFork {
@@ -561,9 +451,7 @@ contract GlpStrategyTest is Test {
 
         // Bob tries to withdraw his amount which should be the remaining balance of the strategy
         vm.startPrank(bob);
-        uint256 amountRemainingInStrategy = sGLP.balanceOf(
-            address(glpStrategy)
-        );
+        uint256 amountRemainingInStrategy = sGLP.balanceOf(address(glpStrategy));
 
         yieldBox.withdraw(glpStratAssetId, bob, bob, amountRemainingInStrategy, 0);
         vm.stopPrank();
@@ -573,10 +461,7 @@ contract GlpStrategyTest is Test {
     function test_withdraw_zero_reverts() public isArbFork prankBinance {
         uint256 ethBuyin = 1 ether;
 
-        uint256 userSGlpBefore = _buyStakeWrapAndDeposit(
-            binanceWalletAddr,
-            ethBuyin
-        );
+        uint256 userSGlpBefore = _buyStakeWrapAndDeposit(binanceWalletAddr, ethBuyin);
 
         // warps time forward then harvests the rewards
         uint256 interval = 525600; // using the interval from compound harvest test
@@ -618,8 +503,9 @@ contract GlpStrategyTest is Test {
         vm.stopPrank();
     }
 
-
-    /** Oracle tests: these test that calls to the Oracle that revert are correctly caught  */
+    /**
+     * Oracle tests: these test that calls to the Oracle that revert are correctly caught
+     */
     function test_harvest_oracle_reverts() public isArbFork prankBinance {
         ITapiocaOracle wethGlpOracle = ITapiocaOracle(address(0x1));
 
@@ -667,11 +553,7 @@ contract GlpStrategyTest is Test {
         _withdrawFromStrategy(userSGlpBefore);
     }
 
-    function test_harvest_oracle_not_successful()
-        public
-        isArbFork
-        prankBinance
-    {
+    function test_harvest_oracle_not_successful() public isArbFork prankBinance {
         uint256 ethBuyin = 1 ether;
         _buyGLPAndStake(ethBuyin);
 
@@ -693,23 +575,17 @@ contract GlpStrategyTest is Test {
     }
 
     /**
-        Simple tests to achieve coverage
-    **/
+     * Simple tests to achieve coverage
+     *
+     */
     function test_name() public {
-        assertTrue(
-            keccak256(abi.encodePacked(glpStrategy.name())) ==
-                keccak256(abi.encodePacked("sGLP"))
-        );
+        assertTrue(keccak256(abi.encodePacked(glpStrategy.name())) == keccak256(abi.encodePacked("sGLP")));
     }
 
     function test_description() public {
         assertTrue(
-            keccak256(abi.encodePacked(glpStrategy.description())) ==
-                keccak256(
-                    abi.encodePacked(
-                        "Holds staked GLP tokens and compounds the rewards"
-                    )
-                )
+            keccak256(abi.encodePacked(glpStrategy.description()))
+                == keccak256(abi.encodePacked("Holds staked GLP tokens and compounds the rewards"))
         );
     }
 
@@ -733,7 +609,9 @@ contract GlpStrategyTest is Test {
         glpStrategy.safeApprove(testToken, address(0x1), type(uint256).max);
     }
 
-    /** Admin Functions */
+    /**
+     * Admin Functions
+     */
     function test_setSlippage() public {
         uint256 slippage = 65;
         vm.expectEmit();
@@ -757,7 +635,7 @@ contract GlpStrategyTest is Test {
     }
 
     function test_paused() public {
-        glpStrategy.updatePaused(true);
+        glpStrategy.setPause(true);
         assertTrue(glpStrategy.paused());
     }
 
@@ -804,13 +682,7 @@ contract GlpStrategyTest is Test {
         // Deposit into strategy
         tsGLP.approve(address(yieldBox), amount);
         // yieldBox makes call to GlpStrategy::deposited
-        yieldBox.depositAsset(
-            glpStratAssetId,
-            binanceWalletAddr,
-            binanceWalletAddr,
-            amount,
-            0
-        );
+        yieldBox.depositAsset(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, amount, 0);
     }
 
     function _depositIntoStrategy(address depositor, uint256 amount) internal {
@@ -821,23 +693,14 @@ contract GlpStrategyTest is Test {
     }
 
     function _withdrawFromStrategy(uint256 amount) internal {
-        yieldBox.withdraw(
-            glpStratAssetId,
-            binanceWalletAddr,
-            binanceWalletAddr,
-            amount,
-            0
-        );
+        yieldBox.withdraw(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, amount, 0);
     }
 
     function _withdrawFromStrategy(address depositor, uint256 amount) internal {
         yieldBox.withdraw(glpStratAssetId, depositor, depositor, amount, 0);
     }
 
-    function _buyStakeAndWrap(
-        address depositor,
-        uint256 amount
-    ) public returns (uint256 depositorGlpBalance) {
+    function _buyStakeAndWrap(address depositor, uint256 amount) public returns (uint256 depositorGlpBalance) {
         _buyGLPAndStake(amount);
 
         depositorGlpBalance = sGLP.balanceOf(depositor);
@@ -845,10 +708,10 @@ contract GlpStrategyTest is Test {
         _wrapSGLP(depositor, depositorGlpBalance);
     }
 
-    function _buyStakeWrapAndDeposit(
-        address depositor,
-        uint256 amount
-    ) internal returns (uint256 depositorGlpBalance) {
+    function _buyStakeWrapAndDeposit(address depositor, uint256 amount)
+        internal
+        returns (uint256 depositorGlpBalance)
+    {
         _buyGLPAndStake(amount);
 
         // wraps and deposits GLP amount bought by depositor
