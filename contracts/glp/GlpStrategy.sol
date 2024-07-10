@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 // External
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Tapioca
@@ -11,9 +12,10 @@ import {IGmxRewardTracker} from "tapioca-strategies/interfaces/gmx/IGmxRewardTra
 import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
-import {BaseERC20Strategy} from "tap-yieldbox/strategies/BaseStrategy.sol";
-import {IYieldBox} from "tap-yieldbox/interfaces/IYieldBox.sol";
+import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
+import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
 import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
+import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 
 /*
 ████████╗ █████╗ ██████╗ ██╗ ██████╗  ██████╗ █████╗ 
@@ -24,7 +26,7 @@ import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
    ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝
 */
 
-contract GlpStrategy is BaseERC20Strategy, Ownable {
+contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
     using SafeERC20 for IERC20;
 
     // *********************************** //
@@ -43,15 +45,15 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
     IGlpManager private immutable glpManager;
     IGmxVester private immutable glpVester;
 
-    bool public paused;
-
     ITapiocaOracle public wethGlpOracle;
     bytes public wethGlpOracleData;
 
     uint256 private _slippage = 50;
     uint256 private constant _MAX_SLIPPAGE = 10000;
+    ICluster internal cluster;
 
     event SlippageUpdated(uint256 indexed oldVal, uint256 indexed newVal);
+    event ClusterUpdated(ICluster indexed oldCluster, ICluster indexed newCluster);
 
     // *********************************** //
     /* ============ ERROR ============ */
@@ -63,7 +65,8 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
     error NotAuthorized();
     error NotValid();
     error Failed();
-    error Paused();
+    error PauserNotAuthorized();
+    error EmptyAddress();
 
     constructor(
         IYieldBox _yieldBox,
@@ -123,8 +126,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
 
         // Convert WETH to GLP
         (, uint256 glpPrice) = wethGlpOracle.peek(wethGlpOracleData);
-        uint256 amountInGlp = (wethAmount * glpPrice) / 1e18;
-        amount = amountInGlp - (amountInGlp * _slippage) / 10_000;
+        amount = (wethAmount * glpPrice) / 1e18;
     }
 
     // *********************************** //
@@ -140,6 +142,29 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
     // *********************************** //
     /* ============ OWNER ============ */
     // *********************************** //
+    /**
+     * @notice Un/Pauses this contract.
+    */
+    function setPause(bool _pauseState) external {
+        if (!cluster.hasRole(msg.sender, keccak256("PAUSABLE")) && msg.sender != owner()) revert PauserNotAuthorized();
+        if (_pauseState) {
+            _pause();
+        } else {
+            _unpause();
+        }
+    }
+
+ 
+    /**
+     * @notice updates the Cluster address.
+     * @dev can only be called by the owner.
+     * @param _cluster the new address.
+     */
+    function setCluster(ICluster _cluster) external onlyOwner {
+        if (address(_cluster) == address(0)) revert EmptyAddress();
+        emit ClusterUpdated(cluster, _cluster);
+        cluster = _cluster;
+    }
 
     /// @notice sets the slippage used in swap operations
     /// @param _val the new slippage amount
@@ -149,11 +174,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
         _slippage = _val;
     }
 
-    /// @notice updates the pause state
-    /// @param _val the new state
-    function updatePaused(bool _val) external onlyOwner {
-        paused = _val;
-    }
 
     // *********************************** //
     /* ============ INTERNAL ============ */
@@ -169,8 +189,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable {
      * @notice Deposits the specified amount into the strategy
      * @dev Since the contract strategy is for tsGLP, we need to unwrap it to sGLP
      */
-    function _deposited(uint256 amount) internal override {
-        if (paused) revert Paused();
+    function _deposited(uint256 amount) internal whenNotPaused override {
         ITOFT(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
         harvest();
     }
