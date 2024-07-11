@@ -309,11 +309,15 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         (address[] memory tokens, uint256[] memory rewards) = IStargateV2MultiRewarder(_rewarder).getRewards(address(lpToken), address(this));
 
         uint256 _index = _findIndex(tokens, STG);
-        uint256 rewardAmount = rewards[_index];
-        if (rewardAmount == 0) return 0;
+        uint256 stgRewardAmount = rewards[_index];
+        _index = _findIndex(tokens, ARB);
+        uint256 arbRewardAmount = rewards[_index];
+        if (stgRewardAmount == 0 && arbRewardAmount == 0) return 0;
 
         (, uint256 stgPrice) = stgInputTokenOracle.peek(stgInputTokenOracleData);
-        amount = (rewardAmount * stgPrice) / 1e18;
+        (, uint256 arbPrice) = arbInputTokenOracle.peek(arbInputTokenOracleData);
+        amount = (stgRewardAmount * stgPrice) / 1e18;
+        amount += (arbRewardAmount * arbPrice) / 1e18;
     }
     
     /**
@@ -410,7 +414,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         farm.deposit(address(lpToken), lpAmount);
         lpToken.safeApprove(address(farm), 0);
 
-        event AmountDeposited(uint256 lpAmount);
+        emit AmountDeposited(lpAmount);
     }
 
 }
