@@ -17,7 +17,8 @@ import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
 import {OracleMock} from "tapioca-mocks/OracleMock.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
-
+import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
+import {Cluster} from "tapioca-periph/Cluster/Cluster.sol";
 import "forge-std/Test.sol";
 
 contract GlpStrategyTest is Test {
@@ -45,7 +46,7 @@ contract GlpStrategyTest is Test {
     ToftMock tsGLP;
     IERC20 sGLP;
     Pearlmit pearlmit;
-
+    Cluster cluster;
     /**
      * Vars
      */
@@ -108,6 +109,7 @@ contract GlpStrategyTest is Test {
 
         // Periphery contracts
         pearlmit = new Pearlmit("Pearlmit", "1", address(this), 0);
+        cluster = new Cluster(1, msg.sender);
 
         // Deploy contracts
         tsGLP = new ToftMock(address(sGLP), "Toft", "TOFT");
@@ -129,6 +131,9 @@ contract GlpStrategyTest is Test {
         vm.label(address(glpStrategy), "glpStrategy");
         yieldBox.registerAsset(TokenType.ERC20, address(tsGLP), IStrategy(address(glpStrategy)), 0);
         glpStratAssetId = yieldBox.ids(TokenType.ERC20, address(tsGLP), IStrategy(address(glpStrategy)), 0);
+
+        //setup cluster
+        glpStrategy.setCluster(cluster);
     }
 
     /**
