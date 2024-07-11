@@ -81,7 +81,6 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     error TransferFailed();
     error DepositPaused();
     error WithdrawPaused();
-    error NotEnough();
     error PauserNotAuthorized();
     error EmptyAddress();
     error SwapFailed();
@@ -154,7 +153,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         depositPaused = true;
         withdrawPaused = true;
 
-        uint256 amount = farm.balanceOf(address(lpToken), address(this)); // TODO: check if lpToken <> token ratio is 1:1
+        uint256 amount = farm.balanceOf(address(lpToken), address(this));
 
          // withdraw from farm
         farm.withdraw(address(lpToken), amount);
@@ -250,7 +249,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     /**
     * @notice invests currently available STG for compounding interest
     */
-    function invest(bytes calldata arbData, bytes calldata stgData) external {
+    function invest(bytes calldata arbData, bytes calldata stgData) external onlyOwner {
         IERC20 _stg = IERC20(STG);
         IERC20 _arb = IERC20(ARB);
         
@@ -331,7 +330,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     // *********************************** //
     function _currentBalance() internal view override returns (uint256 amount) {
         /// @dev: wrap fees are not taken into account here because it's 0
-        amount = farm.balanceOf(address(lpToken), address(this)); // TODO: check if lpToken <> token ratio is 1:1
+        amount = farm.balanceOf(address(lpToken), address(this));
         amount += IERC20(contractAddress).balanceOf(address(this));
         amount += pendingRewards();
     }
@@ -385,6 +384,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
 
         // send `contractAddress`
         IERC20(contractAddress).safeTransfer(to, amount);
+        emit AmountWithdrawn(to, amount);
     }
 
     // ********************************* //
@@ -409,6 +409,8 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         lpToken.safeApprove(address(farm), type(uint256).max);
         farm.deposit(address(lpToken), lpAmount);
         lpToken.safeApprove(address(farm), 0);
+
+        event AmountDeposited(uint256 lpAmount);
     }
 
 }
