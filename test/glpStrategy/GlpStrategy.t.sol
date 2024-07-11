@@ -139,10 +139,11 @@ contract GlpStrategyTest is Test {
     /**
      * Tests
      */
+    // @dev This test may fail depending on FORKING_ARBITRUM_BLOCK_NUMBER.
+    // Set it to 75601925 for the test to pass.
     function test_constructor() public isArbFork {
         uint256 glpPrice = glpManager.getPrice(true);
         assertLe(glpPrice, 1041055094190371419655569666477, "glpPrice not within bounds");
-
         uint256 wethPrice = gmxVault.getMaxPrice(weth) / 1e12;
         assertApproxEqAbs(wethPrice, 1805 * 1e18, 2 * 1e18, "weth price not within bounds");
     }
