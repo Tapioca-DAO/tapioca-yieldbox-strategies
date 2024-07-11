@@ -25,8 +25,9 @@ contract ToftMock is ERC20 {
         return amount;
     }
 
-    function unwrap(address to, uint256 amount) external {
+    function unwrap(address to, uint256 amount) external returns (uint256) {
         _burn(msg.sender, amount);
         IERC20(erc20).transfer(to, amount);
+        return amount;
     }
 }
