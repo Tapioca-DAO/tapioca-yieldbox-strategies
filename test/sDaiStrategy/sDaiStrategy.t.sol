@@ -8,6 +8,7 @@ import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
 import {ISavingsDai} from "tapioca-periph/interfaces/external/makerdao/ISavingsDai.sol";
 import {sDaiStrategy} from "contracts/sdai/sDaiStrategy.sol";
 import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
+import {IPearlmit} from "tapioca-periph/interfaces/periph/IPearlmit.sol";
 
 import "forge-std/Test.sol";
 
@@ -101,7 +102,7 @@ contract SDaiStrategyTest is Test {
         pearlmit = new Pearlmit("Pearlmit", "1", address(this), 0);
 
         // deploy contracts
-        tDai = new ToftMock(address(dai), "Toft", "TOFT");
+        tDai = new ToftMock(address(dai), "Toft", "TOFT", IPearlmit(address(pearlmit)));
         vm.label(address(tDai), "tDai");
         yieldBox = new YieldBox(IWrappedNative(wethAddress), new YieldBoxURIBuilder(), pearlmit, address(this));
         vm.label(address(yieldBox), "yieldBox");
