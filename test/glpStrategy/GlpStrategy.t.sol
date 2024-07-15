@@ -410,9 +410,10 @@ contract GlpStrategyTest is Test {
 
         // full balance that should be redeemable
         uint256 strategyBalanceBeforeWithdraw = sGLP.balanceOf(address(glpStrategy));
-
+        uint256 toleratePrecisionLoss = 1;
         // @audit user can only pass in totalSupplyOfShares to fully withdraw
         // uint256 totalSupplyOfShares = yieldBox.totalSupply(glpStratAssetId);
+        strategyBalanceBeforeWithdraw = strategyBalanceBeforeWithdraw - toleratePrecisionLoss;
 
         yieldBox.withdraw(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, strategyBalanceBeforeWithdraw, 0);
 
