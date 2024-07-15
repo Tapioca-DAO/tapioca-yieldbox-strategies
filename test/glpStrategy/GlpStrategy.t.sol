@@ -681,6 +681,13 @@ contract GlpStrategyTest is Test {
 
     function _wrapSGLP(address recipient, uint256 balanceToWrap) internal {
         sGLP.approve(address(tsGLP), balanceToWrap);
+        uint200 amount200 = SafeCast.toUint200(balanceToWrap);
+        uint48 deadline = SafeCast.toUint48(block.timestamp);
+
+        // Pearlmit approval
+        pearlmit.approve(20, address(sGLP), 0, address(tsGLP), amount200, deadline);
+        sGLP.approve(address(pearlmit), amount200);
+
         tsGLP.wrap(recipient, recipient, balanceToWrap);
     }
 
