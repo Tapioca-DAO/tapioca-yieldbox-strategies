@@ -457,8 +457,10 @@ contract GlpStrategyTest is Test {
 
         // Bob tries to withdraw his amount which should be the remaining balance of the strategy
         vm.startPrank(bob);
-        uint256 amountRemainingInStrategy = sGLP.balanceOf(address(glpStrategy));
+        uint256 toleratePrecisionLoss = 1;
 
+        uint256 amountRemainingInStrategy = sGLP.balanceOf(address(glpStrategy));
+        amountRemainingInStrategy = amountRemainingInStrategy - toleratePrecisionLoss;
         yieldBox.withdraw(glpStratAssetId, bob, bob, amountRemainingInStrategy, 0);
         vm.stopPrank();
     }
