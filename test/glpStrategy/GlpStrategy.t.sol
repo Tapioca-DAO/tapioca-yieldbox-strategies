@@ -165,6 +165,12 @@ contract GlpStrategyTest is Test {
 
         // Wrap sGLP and deposit into YieldBox/Strategy
         uint256 glpBefore = sGLP.balanceOf(binanceWalletAddr);
+        uint200 amount200 = SafeCast.toUint200(glpBefore);
+        uint48 deadline = SafeCast.toUint48(block.timestamp);
+
+        // Pearlmit approval
+        pearlmit.approve(20, address(sGLP), 0, address(tsGLP), amount200, deadline);
+        sGLP.approve(address(pearlmit), amount200);
         {
             // Wrap sGLP
             sGLP.approve(address(tsGLP), glpBefore);
