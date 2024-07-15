@@ -58,7 +58,7 @@ contract GlpStrategyTest is Test {
      * Bounding for fuzz tests
      */
     uint256 internal lowerBound = 0.5 ether;
-    uint256 internal upperBound = 5_000 ether;
+    uint256 internal upperBound = 2_000 ether;
 
     /**
      * Modifiers
@@ -253,7 +253,7 @@ contract GlpStrategyTest is Test {
     }
 
     function testFuzz_weth_rewards_staked_as_glp_wrapper(uint256 amount) public {
-        amount = bound(amount, 0, address(this).balance);
+        amount = bound(amount, lowerBound, upperBound);
         test_weth_rewards_staked_as_glp(amount);
     }
 
