@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 // External
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // Tapioca
 import {IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "yieldbox/YieldBox.sol";
@@ -19,6 +20,7 @@ import {MockERC20} from "contracts/mocks/MockERC20.sol";
 import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
 import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
 import {Cluster} from "tapioca-periph/Cluster/Cluster.sol";
+import {IPearlmit} from "tapioca-periph/interfaces/periph/IPearlmit.sol";
 import "forge-std/Test.sol";
 
 contract GlpStrategyTest is Test {
@@ -54,6 +56,7 @@ contract GlpStrategyTest is Test {
     address public binanceWalletAddr;
     address public weth;
 
+    using SafeCast for uint256;
     /**
      * Bounding for fuzz tests
      */
