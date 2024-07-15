@@ -112,7 +112,7 @@ contract GlpStrategyTest is Test {
         cluster = new Cluster(1, msg.sender);
 
         // Deploy contracts
-        tsGLP = new ToftMock(address(sGLP), "Toft", "TOFT");
+        tsGLP = new ToftMock(address(sGLP), "Toft", "TOFT", IPearlmit(address(pearlmit)));
         vm.label(address(tsGLP), "tsGLP");
         yieldBox = new YieldBox(IWrappedNative(weth), new YieldBoxURIBuilder(), pearlmit, address(this));
         vm.label(address(yieldBox), "yieldBox");
