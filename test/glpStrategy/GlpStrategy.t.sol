@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 // External
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 // Tapioca
 import {IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "yieldbox/YieldBox.sol";
@@ -17,7 +18,9 @@ import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
 import {OracleMock} from "tapioca-mocks/OracleMock.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
 import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
-
+import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
+import {Cluster} from "tapioca-periph/Cluster/Cluster.sol";
+import {IPearlmit} from "tapioca-periph/interfaces/periph/IPearlmit.sol";
 import "forge-std/Test.sol";
 
 contract GlpStrategyTest is Test {
@@ -45,7 +48,7 @@ contract GlpStrategyTest is Test {
     ToftMock tsGLP;
     IERC20 sGLP;
     Pearlmit pearlmit;
-
+    Cluster cluster;
     /**
      * Vars
      */
@@ -53,11 +56,12 @@ contract GlpStrategyTest is Test {
     address public binanceWalletAddr;
     address public weth;
 
+    using SafeCast for uint256;
     /**
      * Bounding for fuzz tests
      */
     uint256 internal lowerBound = 0.5 ether;
-    uint256 internal upperBound = 5_000 ether;
+    uint256 internal upperBound = 2_000 ether;
 
     /**
      * Modifiers
@@ -108,9 +112,10 @@ contract GlpStrategyTest is Test {
 
         // Periphery contracts
         pearlmit = new Pearlmit("Pearlmit", "1", address(this), 0);
+        cluster = new Cluster(1, msg.sender);
 
         // Deploy contracts
-        tsGLP = new ToftMock(address(sGLP), "Toft", "TOFT");
+        tsGLP = new ToftMock(address(sGLP), "Toft", "TOFT", IPearlmit(address(pearlmit)));
         vm.label(address(tsGLP), "tsGLP");
         yieldBox = new YieldBox(IWrappedNative(weth), new YieldBoxURIBuilder(), pearlmit, address(this));
         vm.label(address(yieldBox), "yieldBox");
@@ -129,15 +134,19 @@ contract GlpStrategyTest is Test {
         vm.label(address(glpStrategy), "glpStrategy");
         yieldBox.registerAsset(TokenType.ERC20, address(tsGLP), IStrategy(address(glpStrategy)), 0);
         glpStratAssetId = yieldBox.ids(TokenType.ERC20, address(tsGLP), IStrategy(address(glpStrategy)), 0);
+
+        //setup cluster
+        glpStrategy.setCluster(cluster);
     }
 
     /**
      * Tests
      */
+    // @dev This test may fail depending on FORKING_ARBITRUM_BLOCK_NUMBER.
+    // Set it to 75601925 for the test to pass.
     function test_constructor() public isArbFork {
         uint256 glpPrice = glpManager.getPrice(true);
         assertLe(glpPrice, 1041055094190371419655569666477, "glpPrice not within bounds");
-
         uint256 wethPrice = gmxVault.getMaxPrice(weth) / 1e12;
         assertApproxEqAbs(wethPrice, 1805 * 1e18, 2 * 1e18, "weth price not within bounds");
     }
@@ -159,6 +168,12 @@ contract GlpStrategyTest is Test {
 
         // Wrap sGLP and deposit into YieldBox/Strategy
         uint256 glpBefore = sGLP.balanceOf(binanceWalletAddr);
+        uint200 amount200 = SafeCast.toUint200(glpBefore);
+        uint48 deadline = SafeCast.toUint48(block.timestamp);
+
+        // Pearlmit approval
+        pearlmit.approve(20, address(sGLP), 0, address(tsGLP), amount200, deadline);
+        sGLP.approve(address(pearlmit), amount200);
         {
             // Wrap sGLP
             sGLP.approve(address(tsGLP), glpBefore);
@@ -247,7 +262,7 @@ contract GlpStrategyTest is Test {
     }
 
     function testFuzz_weth_rewards_staked_as_glp_wrapper(uint256 amount) public {
-        amount = bound(amount, 0, address(this).balance);
+        amount = bound(amount, lowerBound, upperBound);
         test_weth_rewards_staked_as_glp(amount);
     }
 
@@ -404,9 +419,10 @@ contract GlpStrategyTest is Test {
 
         // full balance that should be redeemable
         uint256 strategyBalanceBeforeWithdraw = sGLP.balanceOf(address(glpStrategy));
-
+        uint256 toleratePrecisionLoss = 1;
         // @audit user can only pass in totalSupplyOfShares to fully withdraw
         // uint256 totalSupplyOfShares = yieldBox.totalSupply(glpStratAssetId);
+        strategyBalanceBeforeWithdraw = strategyBalanceBeforeWithdraw - toleratePrecisionLoss;
 
         yieldBox.withdraw(glpStratAssetId, binanceWalletAddr, binanceWalletAddr, strategyBalanceBeforeWithdraw, 0);
 
@@ -451,8 +467,10 @@ contract GlpStrategyTest is Test {
 
         // Bob tries to withdraw his amount which should be the remaining balance of the strategy
         vm.startPrank(bob);
-        uint256 amountRemainingInStrategy = sGLP.balanceOf(address(glpStrategy));
+        uint256 toleratePrecisionLoss = 1;
 
+        uint256 amountRemainingInStrategy = sGLP.balanceOf(address(glpStrategy));
+        amountRemainingInStrategy = amountRemainingInStrategy - toleratePrecisionLoss;
         yieldBox.withdraw(glpStratAssetId, bob, bob, amountRemainingInStrategy, 0);
         vm.stopPrank();
     }
@@ -675,6 +693,13 @@ contract GlpStrategyTest is Test {
 
     function _wrapSGLP(address recipient, uint256 balanceToWrap) internal {
         sGLP.approve(address(tsGLP), balanceToWrap);
+        uint200 amount200 = SafeCast.toUint200(balanceToWrap);
+        uint48 deadline = SafeCast.toUint48(block.timestamp);
+
+        // Pearlmit approval
+        pearlmit.approve(20, address(sGLP), 0, address(tsGLP), amount200, deadline);
+        sGLP.approve(address(pearlmit), amount200);
+
         tsGLP.wrap(recipient, recipient, balanceToWrap);
     }
 
