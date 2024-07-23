@@ -8,3 +8,6 @@
 [submodule "lib/tap-utils"]
 	path = lib/tap-utils
 	url = https://github.com/Tapioca-DAO/tap-utils
+[submodule "gitmodule/tapioca-sdk"]
+	path = gitmodule/tapioca-sdk
+	url = https://github.com/Tapioca-DAO/tapioca-yieldbox-strategies
