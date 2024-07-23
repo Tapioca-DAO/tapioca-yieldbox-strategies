@@ -4,8 +4,8 @@ pragma solidity 0.8.22;
 import {ERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // Tapioca
-import {PearlmitHandler} from "../../gitmodule/tapioca-periph/contracts/pearlmit/PearlmitHandler.sol";
-import {IPearlmit} from "../../gitmodule/tapioca-periph/contracts/interfaces/periph/IPearlmit.sol";
+import {PearlmitHandler} from "tap-utils/pearlmit/PearlmitHandler.sol";
+import {IPearlmit} from "tap-utils/interfaces/periph/IPearlmit.sol";
 /*
 ████████╗ █████╗ ██████╗ ██╗ ██████╗  ██████╗ █████╗ 
 ╚══██╔══╝██╔══██╗██╔══██╗██║██╔═══██╗██╔════╝██╔══██╗
