@@ -8,20 +8,21 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 // Tapioca
 import {IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "yieldbox/YieldBox.sol";
 import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
-import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
-import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
+import {ITOFT} from "tap-utils/interfaces/oft/ITOFT.sol";
+import {ITapiocaOracle} from "tap-utils/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVault} from "tapioca-strategies/interfaces/gmx/IGmxVault.sol";
 import {GlpStrategy} from "tapioca-strategies/glp/GlpStrategy.sol";
 import {GlpStrategyWrapper} from "./GlpStrategyWrapper.sol";
 import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
-import {OracleMock} from "tapioca-mocks/OracleMock.sol";
 import {MockERC20} from "contracts/mocks/MockERC20.sol";
-import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
-import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
-import {Cluster} from "tapioca-periph/Cluster/Cluster.sol";
-import {IPearlmit} from "tapioca-periph/interfaces/periph/IPearlmit.sol";
+import {OracleMock} from "contracts/mocks/OracleMock.sol";
+import {Pearlmit} from "tap-utils/pearlmit/Pearlmit.sol";
+import {ICluster} from "tap-utils/interfaces/periph/ICluster.sol";
+import {Cluster} from "tap-utils/Cluster/Cluster.sol";
+import {IPearlmit} from "tap-utils/interfaces/periph/IPearlmit.sol";
 import "forge-std/Test.sol";
+
 
 contract GlpStrategyTest is Test {
     /**

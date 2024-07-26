@@ -13,10 +13,7 @@ optimizer_runs = 9999
 remappings = [
     "tapioca-strategies/=contracts/",
 	"tapioca-sdk/=gitmodule/tapioca-sdk/contracts/",
-    "tapioca-periph/=gitmodule/tapioca-periph/contracts/",
-    "yieldbox/=gitmodule/tap-yieldbox/contracts/",
-    "tapioca-mocks/=gitmodule/tapioca-mocks/contracts/",
-    "permitc/=gitmodule/tapioca-periph/gitmodule/permitc/src/",
+    "yieldbox/=lib/tap-yieldbox/contracts/"
 ]
 
 

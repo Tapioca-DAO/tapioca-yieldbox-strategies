@@ -5,10 +5,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IYieldBox, YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "yieldbox/YieldBox.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
-import {ISavingsDai} from "tapioca-periph/interfaces/external/makerdao/ISavingsDai.sol";
+import {ISavingsDai} from "tap-utils/interfaces/external/makerdao/ISavingsDai.sol";
 import {sDaiStrategy} from "contracts/sdai/sDaiStrategy.sol";
-import {Pearlmit} from "tapioca-periph/pearlmit/Pearlmit.sol";
-import {IPearlmit} from "tapioca-periph/interfaces/periph/IPearlmit.sol";
+import {Pearlmit} from "tap-utils/pearlmit/Pearlmit.sol";
+import {IPearlmit} from "tap-utils/interfaces/periph/IPearlmit.sol";
 
 import "forge-std/Test.sol";
 
