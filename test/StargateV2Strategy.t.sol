@@ -13,16 +13,16 @@ import {YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from
 import {IStargateV2Staking} from "tapioca-strategies/interfaces/stargatev2/IStargateV2Staking.sol";
 import {StargateV2Strategy} from "tapioca-strategies/StargateV2Strategy/StargateV2Strategy.sol";
 import {IStargateV2Pool} from "tapioca-strategies/interfaces/stargatev2/IStargateV2Pool.sol";
-import {Pearlmit, IPearlmit, PearlmitHash} from "tapioca-periph/pearlmit/Pearlmit.sol";
-import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
-import {IZeroXSwapper} from "tapioca-periph/interfaces/periph/IZeroXSwapper.sol";
+import {Pearlmit, IPearlmit, PearlmitHash} from "tap-utils/pearlmit/Pearlmit.sol";
+import {ITapiocaOracle} from "tap-utils/interfaces/periph/ITapiocaOracle.sol";
+import {IZeroXSwapper} from "tap-utils/interfaces/periph/IZeroXSwapper.sol";
 import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
-import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
-import {ZeroXSwapper} from "tapioca-periph/Swapper/ZeroXSwapper.sol";
-import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
+import {ICluster} from "tap-utils/interfaces/periph/ICluster.sol";
+import {ZeroXSwapper} from "tap-utils/Swapper/ZeroXSwapper.sol";
+import {ITOFT} from "tap-utils/interfaces/oft/ITOFT.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
-import {Cluster} from "tapioca-periph/Cluster/Cluster.sol";
-import {OracleMock} from "tapioca-mocks/OracleMock.sol";
+import {Cluster} from "tap-utils/Cluster/Cluster.sol";
+import {OracleMock} from "tapioca-strategies/mocks/OracleMock.sol";
 
 import {ZeroXSwapperMockTarget} from "tapioca-strategies/mocks/ZeroXSwapperMockTarget.sol";
 import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
@@ -37,7 +37,7 @@ contract StargateV2StrategyTest is Test {
     string constant ENV_FARM_ADDRESS = "STARGATEV2_FARM";
     string constant ENV_USDC = "USDC";
     string constant ENV_WETH = "WETH";
-    string constant RPC_URL = "RPC_URL";
+    string constant RPC_URL = "ARBITRUM_RPC_URL";
     string constant FORKING_BLOCK_NUMBER = "FORKING_BLOCK_NUMBER";
     uint256 ARB_FORK;
 
@@ -85,9 +85,9 @@ contract StargateV2StrategyTest is Test {
         pearlmit = new Pearlmit("Test", "1", address(this), 0);
         stgOracleMock = new OracleMock("stgOracleMock", "SOM", 1e18);
         arbOracleMock = new OracleMock("arbOracleMock", "SOM", 1e18);
-        tUsdc = new ToftMock(address(usdc), "Toft", "TOFT");
+        tUsdc = new ToftMock(address(usdc), "Toft", "TOFT", IPearlmit(address(pearlmit)));
         tUsdc.setPearlmit(IPearlmit(address(pearlmit)));
-        yieldBox = new YieldBox(IWrappedNative(address(weth)), new YieldBoxURIBuilder());
+        yieldBox = new YieldBox(IWrappedNative(address(weth)), new YieldBoxURIBuilder(), pearlmit, address(this));
         cluster = new Cluster(0, address(this));
         swapperTarget = new ZeroXSwapperMockTarget();
         swapper = new ZeroXSwapper(address(swapperTarget), ICluster(address(cluster)), address(this));
