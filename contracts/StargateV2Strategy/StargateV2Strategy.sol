@@ -350,6 +350,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     }
 
    
+    /// @dev If StargatePool convertRate is > 1 the amount received will not be exact due Stargate conversion between LD and SD .
     function _withdraw(address to, uint256 amount) internal override nonReentrant {
         if (withdrawPaused) revert WithdrawPaused();
 
@@ -385,10 +386,12 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         //       - reset approvals
         inputToken.safeApprove(address(pearlmit), 0);
         pearlmit.clearAllowance(address(this), 20, address(inputToken), 0);
-
+        
+        // retrieve total amount to withdraw, due received from Stargate can diff from `toWithdrawFromPool` if StargatePool convertRate is > 1
+        uint256 withdrawalAmount = assetInContract + received;
         // send `contractAddress`
-        IERC20(contractAddress).safeTransfer(to, amount);
-        emit AmountWithdrawn(to, amount);
+        IERC20(contractAddress).safeTransfer(to, withdrawalAmount);
+        emit AmountWithdrawn(to, withdrawalAmount);
     }
 
     // ********************************* //
