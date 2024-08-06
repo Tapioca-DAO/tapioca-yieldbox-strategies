@@ -32,10 +32,10 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
     
-    IStargateV2Pool public pool;
+    IStargateV2Pool public immutable pool;
     IStargateV2Staking public farm;
-    IERC20 public inputToken; //erc20 of token.erc20()
-    IERC20 public lpToken;
+    IERC20 public immutable inputToken; //erc20 of token.erc20()
+    IERC20 public immutable lpToken;
     IZeroXSwapper public swapper;
 
     ITapiocaOracle public stgInputTokenOracle;
@@ -68,7 +68,6 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     event AmountWithdrawn(address indexed to, uint256 amount);
     event ClusterUpdated(ICluster indexed oldCluster, ICluster indexed newCluster);
     event SwapperUpdated(IZeroXSwapper indexed oldCluster, IZeroXSwapper indexed newCluster);
-    event PoolUpdated(address indexed oldAddy, address indexed newAddy);
     event FarmUpdated(address indexed oldAddy, address indexed newAddy);
     event Paused(bool prev, bool crt, bool isDepositType);
     event ArbOracleUpdated(address indexed oldAddy, address indexed newAddy);
@@ -196,17 +195,6 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         if (address(_swapper) == address(0)) revert EmptyAddress();
         emit SwapperUpdated(swapper, _swapper);
         swapper = _swapper;
-    }
-
-    /**
-     * @notice updates the StargateV2 pool address.
-     * @dev can only be called by the owner.
-     * @param _pool the new address.
-     */
-    function setPool(address _pool) external onlyOwner {
-        if (address(_pool) == address(0)) revert EmptyAddress();
-        emit PoolUpdated(address(pool), _pool);
-        pool = IStargateV2Pool(_pool);
     }
 
     /**
