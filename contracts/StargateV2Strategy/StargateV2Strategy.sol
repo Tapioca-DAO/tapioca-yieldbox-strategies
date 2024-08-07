@@ -305,19 +305,23 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     * @return amount The amount of STG that should be harvested
     */
     function pendingRewards() public view returns (uint256 amount) {
+        uint256 tokenIndex;
         address _rewarder = farm.rewarder(address(lpToken));
         (address[] memory tokens, uint256[] memory rewards) = IStargateV2MultiRewarder(_rewarder).getRewards(address(lpToken), address(this));
 
-        uint256 _index = _findIndex(tokens, STG);
-        uint256 stgRewardAmount = rewards[_index];
-        _index = _findIndex(tokens, ARB);
-        uint256 arbRewardAmount = rewards[_index];
-        if (stgRewardAmount == 0 && arbRewardAmount == 0) return 0;
+        tokenIndex = _findIndex(tokens, STG);
+        if (tokenIndex != 404 ) {
+            (, uint256 stgPrice) = stgInputTokenOracle.peek(stgInputTokenOracleData);
+            amount += (rewards[tokenIndex] * stgPrice) / 1e18;
+        }
+        
+        tokenIndex = _findIndex(tokens, ARB);
+        if (tokenIndex != 404 ) {
+            (, uint256 arbPrice) = arbInputTokenOracle.peek(arbInputTokenOracleData);
+            amount += ( rewards[tokenIndex] * arbPrice) / 1e18;
+        }
 
-        (, uint256 stgPrice) = stgInputTokenOracle.peek(stgInputTokenOracleData);
-        (, uint256 arbPrice) = arbInputTokenOracle.peek(arbInputTokenOracleData);
-        amount = (stgRewardAmount * stgPrice) / 1e18;
-        amount += (arbRewardAmount * arbPrice) / 1e18;
+        return amount;
     }
     
     /**
@@ -401,7 +405,8 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
                 return i;
             }
         }
-        revert TokenNotValid();
+        // if index not found, return an arbitrary number 404, unexpected to have 404 different rewards in one staking contract
+        return 404;
     }
 
      function _depositAndStake(uint256 amount) private {

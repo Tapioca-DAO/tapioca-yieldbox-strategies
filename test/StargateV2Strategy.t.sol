@@ -35,10 +35,10 @@ contract StargateV2StrategyTest is Test {
     string constant ENV_BINANCE_WALLET_ADDRESS = "BINANCE_WALLET_ADDRESS";
     string constant ENV_POOL_ADDRESS = "STARGATEV2_POOL";
     string constant ENV_FARM_ADDRESS = "STARGATEV2_FARM";
-    string constant ENV_USDC = "USDC";
-    string constant ENV_WETH = "WETH";
+    string constant ENV_USDC = "ARB_USDC";
+    string constant ENV_WETH = "ARB_WETH";
     string constant RPC_URL = "ARBITRUM_RPC_URL";
-    string constant FORKING_BLOCK_NUMBER = "FORKING_BLOCK_NUMBER";
+    string constant FORKING_BLOCK_NUMBER = "FORKING_ARBITRUM_BLOCK_NUMBER";
     uint256 ARB_FORK;
 
 
