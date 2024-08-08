@@ -1,0 +1,11 @@
+StargateV2Strategy_claim.t.sol
+├── when array is empty
+│   └── it should revert
+└── when array is non-empty
+    ├── when array length more than one
+    │   └── it should revert with TokenNotValid
+    └── when array length is one
+        ├── when item at index zero is not lpToken
+        │   └── it should revert with TokenNotValid
+        └── when item at intex zero is lpToken
+            └── it should claim

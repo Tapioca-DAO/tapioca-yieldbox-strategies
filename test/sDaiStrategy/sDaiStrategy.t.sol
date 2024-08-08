@@ -19,7 +19,7 @@ contract SDaiStrategyTest is Test {
     string constant ENV_BINANCE_WALLET_ADDRESS = "BINANCE_WALLET_ADDRESS";
     string constant ENV_DAI_ADDRESS = "DAI_ADDRESS";
     string constant ENV_SAVINGS_DAI_ADDRESS = "SDAI";
-    string constant ENV_WETH_ADDRESS = "WETH_ADDRESS";
+    string constant ENV_WETH_ADDRESS = "WETH";
     string constant RPC_URL = "RPC_URL";
     string constant FORKING_BLOCK_NUMBER = "FORKING_BLOCK_NUMBER";
     uint256 MAINNET_FORK;

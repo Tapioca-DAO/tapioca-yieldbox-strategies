@@ -1,0 +1,21 @@
+StargateV2Strategy_withdraw.t.sol
+├── when withdrawas are paused
+│   └── it should revert with WithdrawPaused
+└── when withdrawas are not paused
+    ├── when strategy has enough unstaked balance
+    │   ├── it should transfer to the receiver
+    │   └── it should not decrease farm balance
+    └── when strategy does not have enough balance
+        ├── when there's a deposited position
+        │   ├── when strategy has zero balance
+        │   │   ├── it should redeem the entire amount from farm
+        │   │   ├── it should decrease farm balance
+        │   │   ├── it should wrap & transfer to the receiver
+        │   │   └── it should leave zero allowance on inputToken for pearlmit
+        │   └── when strategy has less than the request amount
+        │       ├── it should redeem a partial amount from farm
+        │       ├── it should decrease farm balance
+        │       ├── it should wrap & transfer to the receiver
+        │       └── it should leave zero allowance on inputToken for pearlmit
+        └── when there's no deposit
+            └── it should revert

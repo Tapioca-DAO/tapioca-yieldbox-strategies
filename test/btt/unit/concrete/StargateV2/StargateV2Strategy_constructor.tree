@@ -1,0 +1,18 @@
+StargateV2Strategy_constructor.t.sol
+├── when strategy is created with the right parameters
+│   ├── it should have the right pool
+│   ├── it should have the right farm
+│   ├── it should have the right inputToken
+│   ├── it should have the right lpToken
+│   ├── it should have the right stgInputTokenOracle
+│   ├── it should have the right arbInputTokenOracle
+│   ├── it should have the right swapper
+│   └── it should transfer the ownership to the righ account
+└── when parameters are wrong
+    ├── when pool is not valid
+    │   ├── when pool is address zero
+    │   │   └── it should revert
+    │   └── when pool is not the right type
+    │       └── it should revert
+    └── when farm is not valid
+        └── it should revert
