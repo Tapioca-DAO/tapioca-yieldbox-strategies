@@ -34,7 +34,7 @@ contract GlpStrategyTest is Test {
     string constant ENV_STAKED_GLP = "STAKED_GLP";
     string constant ENV_GMX_VAULT = "GMX_VAULT";
     string constant RPC_URL = "ARBITRUM_RPC_URL";
-    string constant FORKING_BLOCK_NUMBER = "FORKING_ARBITRUM_BLOCK_NUMBER";
+    string constant FORKING_BLOCK_NUMBER = "FORKING_BLOCK_NUMBER";
     uint256 ARB_FORK;
 
     /**
