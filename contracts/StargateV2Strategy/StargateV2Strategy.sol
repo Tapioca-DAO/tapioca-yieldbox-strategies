@@ -216,8 +216,19 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
      */
     function setFarm(address _farm) external onlyOwner {
         if (address(_farm) == address(0)) revert EmptyAddress();
+        // Withdraw and claim rewards from the previous farm
+        uint256 stakeAmount = farm.balanceOf(address(lpToken), address(this));
+        farm.withdraw(address(lpToken), stakeAmount);
+
         emit FarmUpdated(address(farm), _farm);
         farm = IStargateV2Staking(_farm);
+
+        // Deposit in new farm
+        uint256 lpBalance = lpToken.balanceOf(address(this));
+
+        lpToken.safeApprove(address(farm), lpBalance);
+        farm.deposit(address(lpToken), lpBalance);
+        lpToken.safeApprove(address(farm), 0);
     }
 
     /**
