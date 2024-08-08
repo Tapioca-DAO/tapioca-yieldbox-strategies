@@ -23,11 +23,14 @@ import {ITOFT} from "tap-utils/interfaces/oft/ITOFT.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 import {Cluster} from "tap-utils/Cluster/Cluster.sol";
 import {OracleMock} from "tapioca-strategies/mocks/OracleMock.sol";
-
+import {stdStorage, StdStorage} from "forge-std/Test.sol";              
+import {StargateMultiRewarder} from "./external/StargateMultiRewarder.sol";
 import {ZeroXSwapperMockTarget} from "tapioca-strategies/mocks/ZeroXSwapperMockTarget.sol";
 import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
+
 
 contract StargateV2StrategyTest is Test {
     address owner;
@@ -270,4 +273,63 @@ contract StargateV2StrategyTest is Test {
         IERC20(tUsdc).approve(address(yieldBox), type(uint256).max);
         yieldBox.depositAsset(tUsdcAssetId, address(this), address(this), amount, 0);
     }
+
+    function test_setFarm_e2e_withRewards() public isArbFork {
+        address newOwner = makeAddr("OWNER");
+        address newFarm = makeAddr('NEW_FARM');
+        /// Setup new StargateV2Staking and MultiRewarder ///
+
+        // Clone a StargateV2Staking instance via vm.etch and set owner
+        bytes memory farmBytecode = address(farm).code;
+        vm.etch(newFarm, farmBytecode);
+        vm.store(newFarm, bytes32(uint256(0)), bytes32(uint256(uint160(newOwner))));
+
+        // Deploy StargateMultiRewarder
+        address newRewarder = deployContract(abi.encodePacked(StargateMultiRewarder.creationCode(), abi.encode(newFarm)));
+        
+        IStargateV2Staking newFarmContract = IStargateV2Staking(newFarm);
+        IStargateV2MultiRewarder newRewarderContract = IStargateV2MultiRewarder(newRewarder);
+
+        assertEq(newRewarderContract.staking(), newFarm, "New rewarder immutable staking address is not correctly initialized");
+
+        // Stargate: Setup pool to new farm and rewarder
+        vm.startPrank(newOwner);
+        newFarmContract.setPool(pool.lpToken(), newRewarder);
+        vm.stopPrank();
+
+        assertTrue(newFarmContract.isPool(pool.lpToken()), "Cloned staking pool is not initialized");
+        assertEq(newFarmContract.rewarder(pool.lpToken()),  newRewarder, "Cloned staking pool rewarder is not initialized");
+
+        /// Simulate deposits and pending rewards ///
+        
+        uint256 amount = 10_000_000; // 10 USDC
+
+        deal(usdc, binanceWalletAddr, amount);
+        _deposit(amount);
+
+        vm.warp(1921684352);
+        
+        // Check pending stake before setFarm
+        assertEq(newFarmContract.balanceOf(pool.lpToken(), address(strat)), 0, "Current stake in new farm should be zero");
+        assertEq(farm.balanceOf(pool.lpToken(), address(strat)), amount, "Current stake in old farm should be deposited USDC LP amount");
+        
+
+        // Set new farm at strategy
+        strat.setFarm(newFarm);
+        assertEq(address(strat.farm()), newFarm);
+        
+        // Check pending stake post setFarm
+        assertEq(newFarmContract.balanceOf(pool.lpToken(), address(strat)), amount, "Current stake in new farm should be previous farm amount");
+        assertEq(farm.balanceOf(pool.lpToken(), address(strat)), 0, "Current stake in old farm should be zero");
+    }
+
+
+    function deployContract(bytes memory bytecode) internal returns (address instance) {
+      assembly{
+            instance := create(0, add(bytecode, 0x20), mload(bytecode))
+            if iszero(extcodesize(instance)) {
+                revert(0, 0)
+            }
+      }
+   }
 }
