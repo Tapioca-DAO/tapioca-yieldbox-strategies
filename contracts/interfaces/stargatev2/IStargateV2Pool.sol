@@ -10,4 +10,6 @@ interface IStargateV2Pool {
     ) external payable returns (uint256 amountLD);
 
     function redeem(uint256 _amountLD, address _receiver) external returns (uint256 amountLD);
+
+    function sharedDecimals() external view returns (uint8);
 }
