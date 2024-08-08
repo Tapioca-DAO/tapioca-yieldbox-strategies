@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 // External
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -45,6 +46,10 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     bytes public arbInputTokenOracleData;
 
     ICluster internal cluster;
+    
+    /// @dev StargateBase: The rate between local decimals and shared decimals.
+    uint256 public immutable stargateConvertRate;
+
     bool public depositPaused;
     bool public withdrawPaused;
 
@@ -115,6 +120,8 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         arbInputTokenOracleData = _arbInputTokenOracleData;
 
         swapper = _swapper;
+
+        stargateConvertRate = 10 ** (IERC20Metadata(address(inputToken)).decimals() - pool.sharedDecimals());
 
         transferOwnership(_owner);
     }
@@ -333,8 +340,8 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
     /* ============ INTERNAL ============ */
     // *********************************** //
     function _currentBalance() internal view override returns (uint256 amount) {
-        /// @dev: wrap fees are not taken into account here because it's 0
-        amount = farm.balanceOf(address(lpToken), address(this));
+        /// @dev: de-dust balance of LP token to follow StargatePool.redeem() logic if StargatePool convertRate is > 1
+        amount = _sd2ld(_ld2sd(farm.balanceOf(address(lpToken), address(this))));
         amount += IERC20(contractAddress).balanceOf(address(this));
         amount += pendingRewards();
     }
@@ -390,6 +397,27 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         IERC20(contractAddress).safeTransfer(to, amount);
         emit AmountWithdrawn(to, amount);
     }
+
+    /// @notice Translate an amount in SD to LD
+    /// @dev Since SD <= LD by definition, convertRate >= 1, so there is no rounding errors in this function.
+    /// @param _amountSD The amount in SD
+    /// @return amountLD The same value expressed in LD
+    function _sd2ld(uint64 _amountSD) internal view returns (uint256 amountLD) {
+        unchecked {
+            amountLD = _amountSD * stargateConvertRate;
+        }
+    }
+
+    /// @notice Translate an value in LD to SD
+    /// @dev Since SD <= LD by definition, convertRate >= 1, so there might be rounding during the cast.
+    /// @param _amountLD The value in LD
+    /// @return amountSD The same value expressed in SD
+    function _ld2sd(uint256 _amountLD) internal view returns (uint64 amountSD) {
+        unchecked {
+            amountSD = SafeCast.toUint64(_amountLD / stargateConvertRate);
+        }
+    }
+
 
     // ********************************* //
     /* ============ PRIVATE ============ */
