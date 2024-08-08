@@ -1,0 +1,11 @@
+StargateV2Strategy_deposit.t.sol
+├── when deposits are paused
+│   └── it should revert with DepositPaused
+└── when deposits are not paused
+    ├── when strategy does not receive the requested amount
+    │   └── it should revert
+    └── when strategy has received the proper amount
+        ├── it should unwrap and increase farm deposit
+        ├── it should leave zero approval on inputToken for pool
+        ├── it should leave zero approval on lpToken for farm
+        └── it should increase currentBalance 

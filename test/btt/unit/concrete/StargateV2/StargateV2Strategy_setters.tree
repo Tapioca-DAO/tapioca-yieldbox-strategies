@@ -1,0 +1,60 @@
+StargateV2Strategy_setters.t.sol
+├── when rescueEth is called
+│   ├── given caller is not owner
+│   │   └── it should revert with owner error
+│   ├── given amount is higher than available
+│   │   └── it should revert with TransferFailed
+│   └── given amount is available
+│       └── it should rescue requested amount
+├── when emergencyWithdraw is called
+│   ├── given not owner
+│   │   └── it should revert with owner error
+│   └── given caller is owner
+│       ├── it should set depositPaused on true
+│       ├── it should set withdrawPaused on true
+│       ├── it should withdraw the entire amount available on the farm
+│       └── it should wrap and leave it on the contract
+├── when setCluster is called
+│   ├── given sender is not owner
+│   │   └── it should revert with owner error
+│   ├── given cluster is address zero
+│   │   └── it should revert with EmptyAddress
+│   └── given cluster address is valid
+│       └── it should set the new cluster
+├── when setSwapper is called
+│   ├── given no owner
+│   │   └── it should revert with owner error
+│   ├── given swapper is address zero
+│   │   └── it should revert with EmptyAddress
+│   └── given swapper address is valid
+│       └── it should set the new swapper
+├── when setFarm is called
+│   ├── given sender is not the owner
+│   │   └── it should revert with owner error
+│   ├── given farm is address zero
+│   │   └── it should revert with EmptyAddress
+│   └── given farm address is valid
+│       └── it should set the new farm
+├── when setStgOracle is called
+│   ├── when caller is different than owner
+│   │   └── it should revert with owner error
+│   ├── given oracle is address zero
+│   │   └── it should revert with EmptyAddress
+│   └── given oracle address is valid
+│       └── it should set the new stgInputTokenOracle
+├── when setArbOracle is called
+│   ├── when caller is not owner
+│   │   └── it should revert with owner error
+│   ├── when oracle is address zero
+│   │   └── it should revert with EmptyAddress
+│   └── when oracle address is valid
+│       └── it should set the new arbInputTokenOracle
+└── when invest is called
+    ├── given contract has no rewards
+    │   └── it should do nothing
+    └── given contract has reward
+        └── when contract has ARB and STG rewards
+            ├── given swap amount is less than minAmountOut
+            │   └── it should revert with SwapFailed
+            └── given swap amount is valid
+                └── it should increase farm balance

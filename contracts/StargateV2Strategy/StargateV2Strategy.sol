@@ -11,12 +11,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IStargateV2MultiRewarder} from "tapioca-strategies/interfaces/stargatev2/IStargateV2MultiRewarder.sol";
 import {IStargateV2Staking} from "tapioca-strategies/interfaces/stargatev2/IStargateV2Staking.sol";
 import {IStargateV2Pool} from "tapioca-strategies/interfaces/stargatev2/IStargateV2Pool.sol";
-import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
-import {IZeroXSwapper} from "tapioca-periph/interfaces/periph/IZeroXSwapper.sol";
-import {IPearlmit} from "tapioca-periph/interfaces/periph/IPearlmit.sol";
+import {ITapiocaOracle} from "tap-utils/interfaces/periph/ITapiocaOracle.sol";
+import {IZeroXSwapper} from "tap-utils/interfaces/periph/IZeroXSwapper.sol";
+import {IPearlmit} from "tap-utils/interfaces/periph/IPearlmit.sol";
 import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
-import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
-import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
+import {ICluster} from "tap-utils/interfaces/periph/ICluster.sol";
+import {ITOFT} from "tap-utils/interfaces/oft/ITOFT.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 
 /*

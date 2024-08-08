@@ -2,8 +2,11 @@
 pragma solidity 0.8.22;
 
 import {ERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Pearlmit, IPearlmit, PearlmitHash} from "tapioca-periph/pearlmit/Pearlmit.sol";
+import {Pearlmit, IPearlmit, PearlmitHash} from "tap-utils/pearlmit/Pearlmit.sol";
 
+// Tapioca
+import {PearlmitHandler} from "tap-utils/pearlmit/PearlmitHandler.sol";
+import {IPearlmit} from "tap-utils/interfaces/periph/IPearlmit.sol";
 /*
 ████████╗ █████╗ ██████╗ ██╗ ██████╗  ██████╗ █████╗ 
 ╚══██╔══╝██╔══██╗██╔══██╗██║██╔═══██╗██╔════╝██╔══██╗
@@ -13,18 +16,19 @@ import {Pearlmit, IPearlmit, PearlmitHash} from "tapioca-periph/pearlmit/Pearlmi
    ╚═╝   ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝
 */
 
-contract ToftMock is ERC20 {
+contract ToftMock is ERC20, PearlmitHandler {
+    error TOFT_NotValid();
+    error TOFT_AllowanceNotValid();
+
     address public erc20;
-    IPearlmit public pearlmit;
 
     error FailedToWrap();
 
-    constructor(address erc20_, string memory name_, string memory symbol_) ERC20(name_, symbol_) {
+    constructor(address erc20_, string memory name_, string memory symbol_, IPearlmit _pearlmit)
+        ERC20(name_, symbol_)
+        PearlmitHandler(_pearlmit)
+    {
         erc20 = erc20_;
-    }
-
-    function setPearlmit(IPearlmit _pearlmit) external {
-        pearlmit = _pearlmit;
     }
 
     function wrap(address from, address to, uint256 amount) external payable returns (uint256 minted) {

@@ -1,0 +1,16 @@
+StargateV2Strategy_view.t.sol
+├── when name is called
+│   └── it should return value which length is not zero
+├── when description is called
+│   └── it should return value which length is not zero
+└── when pendingRewards is called
+    ├── when rewards are available
+    │   ├── when oracle returns a valid rate
+    │   │   └── it should return a non zero value
+    │   └── when oracle returns an invalid rate and does not revert
+    │       └── it should return 0
+    └── when rewards are not available
+        ├── when received rewards are not accepted
+        │   └── it should revert
+        └── when received rewards are available but with zero value
+            └── it should return 0

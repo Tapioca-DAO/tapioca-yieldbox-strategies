@@ -43,9 +43,9 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@boringcrypto/boring-solidity@https://github.com/boringcrypto/BoringSolidity":
+"@boringcrypto/boring-solidity@boringcrypto/BoringSolidity#78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc":
   version "2.0.3"
-  resolved "https://github.com/boringcrypto/BoringSolidity#78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc"
+  resolved "https://codeload.github.com/boringcrypto/BoringSolidity/tar.gz/78f4817d9c0d95fe9c45cd42e307ccd22cf5f4fc"
 
 "@colors/colors@1.5.0":
   version "1.5.0"

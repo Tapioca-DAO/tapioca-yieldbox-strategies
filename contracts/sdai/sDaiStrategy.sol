@@ -7,9 +7,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Tapioca
-import {ISavingsDai} from "tapioca-periph/interfaces/external/makerdao/ISavingsDai.sol";
+import {ISavingsDai} from "tap-utils/interfaces/external/makerdao/ISavingsDai.sol";
 import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
-import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
+import {ICluster} from "tap-utils/interfaces/periph/ICluster.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 import {ITDai} from "./interfaces/ITDai.sol";
 

@@ -7,4 +7,7 @@ interface IStargateV2Staking {
     function deposit(address token, uint256 amount) external;
     function withdraw(address token, uint256 amount) external;
     function claim(address[] calldata lpTokens) external;
+
+    function owner() external view returns (address);
+    function setPool(address token, address newRewarder) external;
 }

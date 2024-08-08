@@ -7,41 +7,38 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-// Tapioca 
+// Tapioca
 import {IStargateV2MultiRewarder} from "tapioca-strategies/interfaces/stargatev2/IStargateV2MultiRewarder.sol";
 import {YieldBox, YieldBoxURIBuilder, IWrappedNative, TokenType, IStrategy} from "yieldbox/YieldBox.sol";
 import {IStargateV2Staking} from "tapioca-strategies/interfaces/stargatev2/IStargateV2Staking.sol";
 import {StargateV2Strategy} from "tapioca-strategies/StargateV2Strategy/StargateV2Strategy.sol";
 import {IStargateV2Pool} from "tapioca-strategies/interfaces/stargatev2/IStargateV2Pool.sol";
-import {Pearlmit, IPearlmit, PearlmitHash} from "tapioca-periph/pearlmit/Pearlmit.sol";
-import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
-import {IZeroXSwapper} from "tapioca-periph/interfaces/periph/IZeroXSwapper.sol";
+import {Pearlmit, IPearlmit, PearlmitHash} from "tap-utils/pearlmit/Pearlmit.sol";
+import {ITapiocaOracle} from "tap-utils/interfaces/periph/ITapiocaOracle.sol";
+import {IZeroXSwapper} from "tap-utils/interfaces/periph/IZeroXSwapper.sol";
 import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
-import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
-import {ZeroXSwapper} from "tapioca-periph/Swapper/ZeroXSwapper.sol";
-import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
+import {ICluster} from "tap-utils/interfaces/periph/ICluster.sol";
+import {ZeroXSwapper} from "tap-utils/Swapper/ZeroXSwapper.sol";
+import {ITOFT} from "tap-utils/interfaces/oft/ITOFT.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
-import {Cluster} from "tapioca-periph/Cluster/Cluster.sol";
-import {OracleMock} from "tapioca-mocks/OracleMock.sol";
+import {Cluster} from "tap-utils/Cluster/Cluster.sol";
+import {OracleMock} from "tapioca-strategies/mocks/OracleMock.sol";
 
 import {ZeroXSwapperMockTarget} from "tapioca-strategies/mocks/ZeroXSwapperMockTarget.sol";
 import {ToftMock} from "tapioca-strategies/mocks/ToftMock.sol";
 
 import "forge-std/Test.sol";
 
-
-contract StargateV2StrategyTest is Test { 
+contract StargateV2StrategyTest is Test {
     address owner;
     string constant ENV_BINANCE_WALLET_ADDRESS = "BINANCE_WALLET_ADDRESS";
     string constant ENV_POOL_ADDRESS = "STARGATEV2_POOL";
     string constant ENV_FARM_ADDRESS = "STARGATEV2_FARM";
     string constant ENV_USDC = "USDC";
     string constant ENV_WETH = "WETH";
-    string constant RPC_URL = "RPC_URL";
+    string constant RPC_URL = "ARBITRUM_RPC_URL";
     string constant FORKING_BLOCK_NUMBER = "FORKING_BLOCK_NUMBER";
     uint256 ARB_FORK;
-
-
 
     address public binanceWalletAddr;
     address public weth;
@@ -60,12 +57,13 @@ contract StargateV2StrategyTest is Test {
     uint256 tUsdcAssetId;
 
     /**
-    * Modifiers
-    */
+     * Modifiers
+     */
     modifier isArbFork() {
         vm.selectFork(ARB_FORK);
         _;
     }
+
     function setUp() public {
         string memory rpcUrl = vm.envString(RPC_URL);
         uint256 forkingBlockNumber = vm.envUint(FORKING_BLOCK_NUMBER);
@@ -85,25 +83,25 @@ contract StargateV2StrategyTest is Test {
         pearlmit = new Pearlmit("Test", "1", address(this), 0);
         stgOracleMock = new OracleMock("stgOracleMock", "SOM", 1e18);
         arbOracleMock = new OracleMock("arbOracleMock", "SOM", 1e18);
-        tUsdc = new ToftMock(address(usdc), "Toft", "TOFT");
+        tUsdc = new ToftMock(address(usdc), "Toft", "TOFT", IPearlmit(address(pearlmit)));
         tUsdc.setPearlmit(IPearlmit(address(pearlmit)));
-        yieldBox = new YieldBox(IWrappedNative(address(weth)), new YieldBoxURIBuilder());
+        yieldBox = new YieldBox(IWrappedNative(address(weth)), new YieldBoxURIBuilder(), pearlmit, address(this));
         cluster = new Cluster(0, address(this));
         swapperTarget = new ZeroXSwapperMockTarget();
         swapper = new ZeroXSwapper(address(swapperTarget), ICluster(address(cluster)), address(this));
 
         strat = new StargateV2Strategy(
-        IYieldBox(address(yieldBox)),
-        ICluster(address(cluster)),
-        address(tUsdc),
-        address(pool),
-        address(farm),
-        ITapiocaOracle(address(stgOracleMock)),
-        "0x",
-        ITapiocaOracle(address(arbOracleMock)),
-        "0x",
-        IZeroXSwapper(address(swapper)),
-        address(this)
+            IYieldBox(address(yieldBox)),
+            ICluster(address(cluster)),
+            address(tUsdc),
+            address(pool),
+            address(farm),
+            ITapiocaOracle(address(stgOracleMock)),
+            "0x",
+            ITapiocaOracle(address(arbOracleMock)),
+            "0x",
+            IZeroXSwapper(address(swapper)),
+            address(this)
         );
         vm.label(address(strat), "StrategyV2Strategy");
 
@@ -138,7 +136,6 @@ contract StargateV2StrategyTest is Test {
         // make sure it was deposited
         uint256 farmBalance = farm.balanceOf(address(strat.lpToken()), address(strat));
         assertEq(farmBalance, amount);
-
 
         yieldBox.withdraw(tUsdcAssetId, address(this), address(this), amount, 0);
         uint256 tUsdcBalance = tUsdc.balanceOf(address(this));
@@ -193,13 +190,14 @@ contract StargateV2StrategyTest is Test {
         bool arbOrStgRewards = stgBalance > 0 || arbBalance > 0;
         assertTrue(arbOrStgRewards);
 
-
         //arb swap data
         IZeroXSwapper.SZeroXSwapData memory arbZeroXSwapData = IZeroXSwapper.SZeroXSwapData({
             sellToken: IERC20(arb),
             buyToken: IERC20(address(usdc)),
             swapTarget: payable(swapperTarget),
-            swapCallData: abi.encodeWithSelector(ZeroXSwapperMockTarget.transferTokens.selector, address(usdc), arbBalance/1e12)
+            swapCallData: abi.encodeWithSelector(
+                ZeroXSwapperMockTarget.transferTokens.selector, address(usdc), arbBalance / 1e12
+            )
         });
 
         vm.prank(binanceWalletAddr);
@@ -209,18 +207,16 @@ contract StargateV2StrategyTest is Test {
             sellToken: IERC20(stg),
             buyToken: IERC20(address(usdc)),
             swapTarget: payable(swapperTarget),
-            swapCallData: abi.encodeWithSelector(ZeroXSwapperMockTarget.transferTokens.selector, address(usdc), stgBalance/1e12)
+            swapCallData: abi.encodeWithSelector(
+                ZeroXSwapperMockTarget.transferTokens.selector, address(usdc), stgBalance / 1e12
+            )
         });
 
-        StargateV2Strategy.SSwapData memory stgSwapData = StargateV2Strategy.SSwapData({
-            minAmountOut: 0,
-            data: stgZeroXSwapData
-        });
+        StargateV2Strategy.SSwapData memory stgSwapData =
+            StargateV2Strategy.SSwapData({minAmountOut: 0, data: stgZeroXSwapData});
 
-        StargateV2Strategy.SSwapData memory arbSwapData = StargateV2Strategy.SSwapData({
-            minAmountOut: 0,
-            data: arbZeroXSwapData
-        });
+        StargateV2Strategy.SSwapData memory arbSwapData =
+            StargateV2Strategy.SSwapData({minAmountOut: 0, data: arbZeroXSwapData});
 
         uint256 farmBalanceBefore = farm.balanceOf(address(strat.lpToken()), address(strat));
 
@@ -263,9 +259,6 @@ contract StargateV2StrategyTest is Test {
         assertEq(farmBalance, 0);
     }
 
-
-
-
     function _deposit(uint256 amount) private {
         vm.prank(binanceWalletAddr);
         IERC20(usdc).transfer(address(this), amount);
@@ -276,6 +269,5 @@ contract StargateV2StrategyTest is Test {
 
         IERC20(tUsdc).approve(address(yieldBox), type(uint256).max);
         yieldBox.depositAsset(tUsdcAssetId, address(this), address(this), amount, 0);
-
     }
 }

@@ -3,18 +3,20 @@ pragma solidity 0.8.22;
 
 // External
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Tapioca
 import {IGmxRewardRouterV2} from "tapioca-strategies/interfaces/gmx/IGmxRewardRouter.sol";
 import {IGmxRewardTracker} from "tapioca-strategies/interfaces/gmx/IGmxRewardTracker.sol";
-import {ITapiocaOracle} from "tapioca-periph/interfaces/periph/ITapiocaOracle.sol";
+import {ITapiocaOracle} from "tap-utils/interfaces/periph/ITapiocaOracle.sol";
 import {IGlpManager} from "tapioca-strategies/interfaces/gmx/IGlpManager.sol";
 import {IGmxVester} from "tapioca-strategies/interfaces/gmx/IGmxVester.sol";
+import {IPearlmit} from "tap-utils/interfaces/periph/IPearlmit.sol";
 import {BaseERC20Strategy} from "yieldbox/strategies/BaseStrategy.sol";
-import {ICluster} from "tapioca-periph/interfaces/periph/ICluster.sol";
-import {ITOFT} from "tapioca-periph/interfaces/oft/ITOFT.sol";
+import {ICluster} from "tap-utils/interfaces/periph/ICluster.sol";
+import {ITOFT} from "tap-utils/interfaces/oft/ITOFT.sol";
 import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 
 /*
@@ -28,6 +30,7 @@ import {IYieldBox} from "yieldbox/interfaces/IYieldBox.sol";
 
 contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
     using SafeERC20 for IERC20;
+    using SafeCast for uint256;
 
     // *********************************** //
     /* ============ STATE ============ */
@@ -144,7 +147,7 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
     // *********************************** //
     /**
      * @notice Un/Pauses this contract.
-    */
+     */
     function setPause(bool _pauseState) external {
         if (!cluster.hasRole(msg.sender, keccak256("PAUSABLE")) && msg.sender != owner()) revert PauserNotAuthorized();
         if (_pauseState) {
@@ -154,7 +157,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         }
     }
 
- 
     /**
      * @notice updates the Cluster address.
      * @dev can only be called by the owner.
@@ -174,7 +176,6 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
         _slippage = _val;
     }
 
-
     // *********************************** //
     /* ============ INTERNAL ============ */
     // *********************************** //
@@ -189,9 +190,8 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
      * @notice Deposits the specified amount into the strategy
      * @dev Since the contract strategy is for tsGLP, we need to unwrap it to sGLP
      */
-    function _deposited(uint256 amount) internal whenNotPaused override {
+    function _deposited(uint256 amount) internal override whenNotPaused {
         ITOFT(contractAddress).unwrap(address(this), amount); // unwrap the tsGLP to sGLP to this contract
-        harvest();
     }
 
     /**
@@ -200,12 +200,19 @@ contract GlpStrategy is BaseERC20Strategy, Ownable, Pausable {
      */
     function _withdraw(address to, uint256 amount) internal override {
         if (amount == 0) revert NotValid();
-        _claimRewards(); // Claim rewards before withdrawing
-        _buyGlp(); // Buy GLP with WETH rewards
 
-        sGLP.safeApprove(contractAddress, amount);
-        ITOFT(contractAddress).wrap(address(this), to, amount); // wrap the sGLP to tsGLP to `to`, as a transfer
-        sGLP.safeApprove(contractAddress, 0);
+        ITOFT toft = ITOFT(contractAddress);
+        IPearlmit pearlmit = toft.pearlmit();
+        // Approve the sGLP to the pearlmit contract, then pearlmit approve the tsGLP to use sGLP contract
+        sGLP.safeApprove(address(pearlmit), amount);
+        pearlmit.approve(20, address(sGLP), 0, contractAddress, amount.toUint200(), block.timestamp.toUint48());
+
+        uint256 wrapped = toft.wrap(address(this), address(this), amount); // wrap the sGLP to tsGLP first
+        IERC20(contractAddress).safeTransfer(to, wrapped); // transfer the tsGLP to the recipient
+
+        // reset the approval
+        sGLP.safeApprove(address(pearlmit), 0);
+        pearlmit.clearAllowance(address(this), 20, address(sGLP), 0);
     }
 
     /// @notice Claim GMX rewards, only in WETH.
