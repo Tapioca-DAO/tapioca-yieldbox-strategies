@@ -261,6 +261,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         if(availableStg > 0) {
             // swap STG to usdc
             SSwapData memory swapData = abi.decode(stgData, (SSwapData));
+            if (address(swapData.data.buyToken) != address(inputToken)) revert TokenNotValid();
             _stg.safeApprove(address(swapper), availableStg);
             uint256 amountOut = swapper.swap(swapData.data, availableStg, swapData.minAmountOut);
             _stg.safeApprove(address(swapper), 0);
@@ -273,6 +274,7 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         if (availableArb > 0) {
             // swap STG to usdc
             SSwapData memory swapData = abi.decode(arbData, (SSwapData));
+            if (address(swapData.data.buyToken) != address(inputToken)) revert TokenNotValid();
             _arb.safeApprove(address(swapper), availableArb);
             uint256 amountOut = swapper.swap(swapData.data, availableArb, swapData.minAmountOut);
             _arb.safeApprove(address(swapper), 0);
