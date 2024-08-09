@@ -227,6 +227,34 @@ contract StargateV2StrategyTest is Test {
         assertGt(farmBalanceAfter, farmBalanceBefore);
     }
 
+    function test_invest_stg_must_revert_if_wrong_token() public isArbFork {
+        //arb swap data
+        address arb = strat.ARB();
+        uint256 arbBalance = IERC20(arb).balanceOf(address(strat));
+
+        IZeroXSwapper.SZeroXSwapData memory arbZeroXSwapData = IZeroXSwapper.SZeroXSwapData({
+            sellToken: IERC20(usdc),
+            buyToken: IERC20(address(arb)), // replace USDC address with ARB address to ensure it fails due invalid output token
+            swapTarget: payable(swapperTarget),
+            swapCallData: abi.encodeWithSelector(ZeroXSwapperMockTarget.transferTokens.selector, address(usdc), arbBalance/1e12)
+        });
+
+        StargateV2Strategy.SSwapData memory arbSwapData = StargateV2Strategy.SSwapData({
+            minAmountOut: 0,
+            data: arbZeroXSwapData
+        });
+
+        StargateV2Strategy.SSwapData memory stgSwapData;
+
+        // Set ARB 1 wei balance to enter condition in strategy
+        deal(arb, address(strat), 1);
+
+        cluster.updateContract(0, address(strat), true);
+        
+        vm.expectRevert(StargateV2Strategy.TokenNotValid.selector);
+        strat.invest(abi.encode(arbSwapData), abi.encode(stgSwapData));
+    }
+
     function test_emergencyWithdraw_stg() public isArbFork {
         uint256 amount = 10_000_000; // 10 USDC
 
