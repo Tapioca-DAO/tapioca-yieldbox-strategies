@@ -173,7 +173,6 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
 
         //     - reset approvals
         inputToken.safeApprove(address(pearlmit), 0);
-        pearlmit.clearAllowance(address(this), 20, address(inputToken), 0);
     }
 
     /**
@@ -384,7 +383,6 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
         toft.wrap(address(this), address(this), received); // wrap fees are 0
         //       - reset approvals
         inputToken.safeApprove(address(pearlmit), 0);
-        pearlmit.clearAllowance(address(this), 20, address(inputToken), 0);
 
         // send `contractAddress`
         IERC20(contractAddress).safeTransfer(to, amount);
