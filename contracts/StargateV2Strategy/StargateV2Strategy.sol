@@ -311,14 +311,18 @@ contract StargateV2Strategy is BaseERC20Strategy, Ownable, ReentrancyGuard {
 
         tokenIndex = _findIndex(tokens, STG);
         if (tokenIndex != 404 ) {
-            (, uint256 stgPrice) = stgInputTokenOracle.peek(stgInputTokenOracleData);
-            amount += (rewards[tokenIndex] * stgPrice) / 1e18;
+            (bool stgOracleActive, uint256 stgPrice) = stgInputTokenOracle.peek(stgInputTokenOracleData);
+            if (stgOracleActive) {
+                amount += (rewards[tokenIndex] * stgPrice) / 1e18;
+            }
         }
         
         tokenIndex = _findIndex(tokens, ARB);
         if (tokenIndex != 404 ) {
-            (, uint256 arbPrice) = arbInputTokenOracle.peek(arbInputTokenOracleData);
-            amount += ( rewards[tokenIndex] * arbPrice) / 1e18;
+            (bool arbOracleActive, uint256 arbPrice) = arbInputTokenOracle.peek(arbInputTokenOracleData);
+            if (arbOracleActive) {
+                amount += ( rewards[tokenIndex] * arbPrice) / 1e18;
+            }
         }
 
         return amount;
